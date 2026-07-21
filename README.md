@@ -47,6 +47,46 @@ The final step required no retraining: diagnostic analysis of raw patch-text sim
 
 Large, morphologically-distinct organs (liver, lungs, heart) reach 0.78-0.83 IoU with text supervision alone. Small, low-contrast organs (pancreas) remain harder even after calibration — an inherent limit of weakly-supervised methods.
 
+## Caption ablation
+
+To characterize how much the model actually uses the prompt text (rather than memorizing organ appearance from images alone), the fine-tuned v4 model was re-evaluated with five prompt formulation levels — text embeddings the only variable, no retraining:
+
+| Level | Description | Example (liver) |
+|---|---|---|
+| **L1** | Class name only | `"liver"` |
+| **L2** | Generic clinical caption | `"Axial CT scan of the liver."` |
+| **L3** | Position-only (organ name removed, position kept) | `"The liver occupies the left portion of the image extending toward the center in the top half."` |
+| **L4** | Full anatomical description (used during training) | Multi-sentence description with morphology, position, adjacent structures |
+| **L5** | Adversarial (L4 with left/right and top/bottom swapped) | L4 with `LEFT ↔ RIGHT` and `top ↔ bottom` |
+
+### Overall results
+
+| Level | mIoU | Dice |
+|---|---:|---:|
+| L1 class_name | 0.607 | 0.728 |
+| L2 generic_clinical | 0.627 | 0.744 |
+| L3 position_only | 0.561 | 0.684 |
+| **L4 full_anatomical** | **0.627** | **0.744** |
+| L5 adversarial | 0.458 | 0.583 |
+
+### Per-class heatmap
+
+![Caption ablation heatmap](diagnostics/caption_ablation.png)
+
+### Findings
+
+**1. Class names carry most of the signal (L1 ≈ 96% of L4).** Fine-tuning made the organ-name → visual-region mapping strong enough that a single word reaches 96% of the mIoU obtained from the full multi-sentence descriptions.
+
+**2. Position language is a refinement, not a substitute (L3 < L1).** Removing organ identity while keeping position cues *lowers* IoU below the class-name-only baseline. The model needs to know *what* to look for before *where* becomes useful.
+
+**3. Bilateral pairs are prompt-sensitive; unilateral organs are prompt-robust.** Under L5 (adversarial position swaps), classes that rely on left/right disambiguation collapse (kidney-left -63%, lung-left -57%, femurs -55%) while organs with unique positions are unaffected (liver, spleen, heart, bladder unchanged). This is direct evidence that the model *uses* text position cues for localization — it isn't image-only classification with text as a passenger.
+
+**4. Pancreas is data-limited, not prompt-limited.** IoU stays at 0.21-0.22 across every level, including L1 (just the word "pancreas") and L4 (full description). Prompt engineering will not fix pancreas; the ceiling is inherent to weakly-supervised text-driven segmentation for small, low-contrast structures.
+
+### Unintended natural experiment
+
+The L3 prompt for `lung-right` was auto-generated via Claude Haiku and contained a labeling error — the first two words are `"The left lung..."` describing the right lung's position. This single-word inconsistency contradicts the class label the model was trained against, and IoU on `lung-right` at L3 collapsed to 0.23 while `lung-left` at L3 held at 0.83. In effect: **one word swapped in one of eleven prompts cost 55 IoU points on the affected class** — a real-world illustration of the prompt sensitivity L5 was designed to probe.
+
 ### Qualitative masks
 
 ![Pseudo-mask summary](figures/totalseg/totalseg_summary.png)
