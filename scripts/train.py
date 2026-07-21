@@ -40,15 +40,26 @@ def main():
                         help="DataLoader worker processes (default 4; set 0 if errors)")
     parser.add_argument("--lambda_patch", type=float, default=0.5,
                         help="Weight for patch-level contrastive loss (0 = disabled, default 0.5)")
+    parser.add_argument("--resume_from", type=str, default=None,
+                        help="Checkpoint to use as starting weights (optional)")
     parser.add_argument("--device", type=str,
                         default="cuda" if torch.cuda.is_available() else "cpu")
     args = parser.parse_args()
 
     print(f"Device: {args.device}")
-    print("Loading BioMedCLIP (base weights — no checkpoint)...")
     model, _, _ = open_clip.create_model_and_transforms(MODEL_NAME)
     model = model.to(args.device)
     freeze_model(model)
+
+    if args.resume_from:
+        ckpt_path = Path(args.resume_from)
+        if not ckpt_path.is_absolute():
+            ckpt_path = Path(__file__).parent.parent / ckpt_path
+        ckpt = torch.load(str(ckpt_path), map_location=args.device, weights_only=False)
+        model.load_state_dict(ckpt["model_state_dict"], strict=False)
+        print(f"Starting from {ckpt_path.name} (epoch {ckpt['epoch']}, val {ckpt['val_loss']:.4f})")
+    else:
+        print("Starting from base BioMedCLIP weights")
 
     trainable = sum(p.numel() for p in model.parameters() if p.requires_grad)
     total     = sum(p.numel() for p in model.parameters())
@@ -100,7 +111,7 @@ def main():
     trainer.train(epochs=args.epochs)
     if trainer.patch_loss_fn is not None:
         trainer.patch_loss_fn.remove_hook()
-    print(f"Done. Best val loss: {trainer.best_val_loss:.4f}")
+    print("Done.")
 
 
 if __name__ == "__main__":

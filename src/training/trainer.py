@@ -53,7 +53,6 @@ class Trainer:
         self.warmup_steps = warmup_steps
         self._peak_lr = lr
         self._step = 0
-        self.best_val_loss = float("inf")
 
     def _encode_batch(self, images, tokens):
         images = images.to(self.device)
@@ -135,7 +134,4 @@ class Trainer:
             val_loss = self.val_epoch()
             elapsed = time.time() - t0
             print(f"Epoch {epoch+1}/{epochs} | train={train_loss:.4f} | val={val_loss:.4f} | {elapsed:.0f}s")
-            if val_loss < self.best_val_loss:
-                self.best_val_loss = val_loss
-                self.save_checkpoint(epoch, val_loss)
-                print(f"  New best checkpoint saved (val={val_loss:.4f})")
+            self.save_checkpoint(epoch, val_loss)

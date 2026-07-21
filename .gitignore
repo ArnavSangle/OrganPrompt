@@ -15,9 +15,13 @@ checkpoints/
 /Totalsegmentator_dataset_v201/
 Totalsegmentator_dataset_v201.zip
 
+# Reference papers (local only)
+papers/
+
 # Claude Code internal
 .claude/
 docs/superpowers/
+.superpowers/
 
 # Temp / scratch
 debug_gradcam.py

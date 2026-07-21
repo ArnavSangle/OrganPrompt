@@ -1,9 +1,11 @@
-"""Evaluate pseudo-masks against TotalSegmentator ground-truth using IoU.
+"""Evaluate pseudo-masks against TotalSegmentator ground-truth.
+
+Metrics: IoU, HD95, Dice, Sensitivity, Precision, RVE, NSD
 
 Usage:
     python scripts/evaluate_masks.py
     python scripts/evaluate_masks.py --masks_dir data/totalseg_masks
-    python scripts/evaluate_masks.py --threshold 0.5
+    python scripts/evaluate_masks.py --threshold 0.5 --nsd_tolerance 3
 """
 
 import argparse
@@ -13,6 +15,7 @@ from collections import defaultdict
 from pathlib import Path
 
 import numpy as np
+from scipy.ndimage import binary_erosion, distance_transform_edt
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
@@ -22,7 +25,6 @@ DEFAULT_MASKS_DIR = Path("data/totalseg_masks")
 
 
 def _compute_iou(pred: np.ndarray, gt: np.ndarray) -> float | None:
-    """Compute IoU between two binary arrays. Returns None if GT is empty."""
     if not gt.any():
         return None
     intersection = (pred & gt).sum()
@@ -30,11 +32,65 @@ def _compute_iou(pred: np.ndarray, gt: np.ndarray) -> float | None:
     return float(intersection) / float(union) if union > 0 else 0.0
 
 
+def _compute_dice(pred: np.ndarray, gt: np.ndarray) -> float | None:
+    if not gt.any():
+        return None
+    intersection = (pred & gt).sum()
+    denom = pred.sum() + gt.sum()
+    return float(2 * intersection) / float(denom) if denom > 0 else 0.0
+
+
+def _compute_hd95(pred: np.ndarray, gt: np.ndarray) -> float | None:
+    if not gt.any() or not pred.any():
+        return None
+    pred_surface = pred ^ binary_erosion(pred)
+    gt_surface   = gt   ^ binary_erosion(gt)
+    d_pred = distance_transform_edt(~pred)[gt_surface]
+    d_gt   = distance_transform_edt(~gt)[pred_surface]
+    return float(np.percentile(np.concatenate([d_pred, d_gt]), 95))
+
+
+def _compute_sensitivity(pred: np.ndarray, gt: np.ndarray) -> float | None:
+    if not gt.any():
+        return None
+    tp = (pred & gt).sum()
+    fn = (~pred & gt).sum()
+    return float(tp) / float(tp + fn) if (tp + fn) > 0 else 0.0
+
+
+def _compute_precision(pred: np.ndarray, gt: np.ndarray) -> float | None:
+    if not gt.any():
+        return None
+    tp = (pred & gt).sum()
+    fp = (pred & ~gt).sum()
+    return float(tp) / float(tp + fp) if (tp + fp) > 0 else 0.0
+
+
+def _compute_rve(pred: np.ndarray, gt: np.ndarray) -> float | None:
+    if not gt.any():
+        return None
+    gt_vol = float(gt.sum())
+    return float(abs(pred.sum() - gt_vol)) / gt_vol if gt_vol > 0 else 0.0
+
+
+def _compute_nsd(pred: np.ndarray, gt: np.ndarray, tolerance: float) -> float | None:
+    if not gt.any() or not pred.any():
+        return None
+    pred_surface = pred ^ binary_erosion(pred)
+    gt_surface   = gt   ^ binary_erosion(gt)
+    # fraction of each surface within tolerance of the other
+    pred_within = (distance_transform_edt(~gt_surface)[pred_surface] <= tolerance).sum()
+    gt_within   = (distance_transform_edt(~pred_surface)[gt_surface] <= tolerance).sum()
+    denom = pred_surface.sum() + gt_surface.sum()
+    return float(pred_within + gt_within) / float(denom) if denom > 0 else 0.0
+
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--masks_dir", default=str(DEFAULT_MASKS_DIR))
-    parser.add_argument("--threshold", type=float, default=0.5,
-                        help="Threshold to binarise soft pseudo-masks (default 0.5)")
+    parser.add_argument("--threshold", type=float, default=0.5)
+    parser.add_argument("--nsd_tolerance", type=float, default=3.0,
+                        help="Surface distance tolerance in pixels for NSD (default 3)")
     args = parser.parse_args()
 
     masks_dir = Path(args.masks_dir)
@@ -45,34 +101,55 @@ def main():
     with open(meta_path) as f:
         metadata = json.load(f)
 
-    per_class_ious: dict[int, list[float]] = defaultdict(list)
+    per: dict[str, dict[int, list[float]]] = {k: defaultdict(list)
+        for k in ("iou", "dice", "hd95", "sens", "prec", "rve", "nsd")}
 
     for entry in metadata:
         pseudo_mask = np.load(entry["mask_path"])
         gt_mask     = np.load(entry["gt_mask_path"])
+        pred = pseudo_mask >= args.threshold
+        gt   = gt_mask > 0.5
+        c    = entry["true_label"]
 
-        pred_binary = pseudo_mask >= args.threshold
-        gt_binary   = gt_mask > 0.5
+        for key, fn in [
+            ("iou",  lambda p, g: _compute_iou(p, g)),
+            ("dice", lambda p, g: _compute_dice(p, g)),
+            ("hd95", lambda p, g: _compute_hd95(p, g)),
+            ("sens", lambda p, g: _compute_sensitivity(p, g)),
+            ("prec", lambda p, g: _compute_precision(p, g)),
+            ("rve",  lambda p, g: _compute_rve(p, g)),
+            ("nsd",  lambda p, g: _compute_nsd(p, g, args.nsd_tolerance)),
+        ]:
+            val = fn(pred, gt)
+            if val is not None:
+                per[key][c].append(val)
 
-        iou = _compute_iou(pred_binary, gt_binary)
-        if iou is not None:
-            per_class_ious[entry["true_label"]].append(iou)
+    header = (f"{'Class':<15} {'N':>5}  {'IoU':>6}  {'Dice':>6}  {'HD95':>7}"
+              f"  {'Sens':>6}  {'Prec':>6}  {'RVE':>6}  {'NSD':>6}")
+    print(f"\n{header}")
+    print("-" * len(header))
 
-    print(f"\n{'Class':<15} {'N':>6}  {'IoU':>6}")
-    print("-" * 30)
-    all_ious = []
     results = {}
-    for class_idx in range(len(CLASS_NAMES)):
-        ious = per_class_ious.get(class_idx, [])
-        mean_iou = float(np.mean(ious)) if ious else float("nan")
-        results[CLASS_NAMES[class_idx]] = {"n": len(ious), "iou": mean_iou}
-        all_ious.extend(ious)
-        print(f"{CLASS_NAMES[class_idx]:<15} {len(ious):>6}  {mean_iou:>6.4f}")
+    agg: dict[str, list[float]] = {k: [] for k in per}
 
-    miou = float(np.mean(all_ious)) if all_ious else float("nan")
-    results["mIoU"] = miou
-    print("-" * 30)
-    print(f"{'mIoU':<15} {'':>6}  {miou:>6.4f}")
+    for class_idx in range(len(CLASS_NAMES)):
+        name = CLASS_NAMES[class_idx]
+        n    = len(per["iou"].get(class_idx, []))
+        vals = {k: (float(np.mean(per[k][class_idx])) if per[k][class_idx] else float("nan"))
+                for k in per}
+        results[name] = {"n": n, **vals}
+        for k in per:
+            agg[k].extend(per[k][class_idx])
+        print(f"{name:<15} {n:>5}  {vals['iou']:>6.4f}  {vals['dice']:>6.4f}"
+              f"  {vals['hd95']:>7.2f}  {vals['sens']:>6.4f}  {vals['prec']:>6.4f}"
+              f"  {vals['rve']:>6.4f}  {vals['nsd']:>6.4f}")
+
+    print("-" * len(header))
+    means = {k: float(np.mean(agg[k])) if agg[k] else float("nan") for k in per}
+    results["mean"] = means
+    print(f"{'mean':<15} {'':>5}  {means['iou']:>6.4f}  {means['dice']:>6.4f}"
+          f"  {means['hd95']:>7.2f}  {means['sens']:>6.4f}  {means['prec']:>6.4f}"
+          f"  {means['rve']:>6.4f}  {means['nsd']:>6.4f}")
 
     out_path = masks_dir / "results.json"
     with open(out_path, "w") as f:
