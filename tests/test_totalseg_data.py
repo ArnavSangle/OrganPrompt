@@ -9,6 +9,10 @@ from src.data.totalsegmentator import (
     TotalSegmentatorDataset, load_totalsegmentator,
 )
 
+import sys
+sys.path.insert(0, str(Path(__file__).parent.parent / "scripts"))
+from evaluate_masks import _compute_iou
+
 ALL_SEG_NAMES = [
     "urinary_bladder", "femur_left", "femur_right", "heart",
     "kidney_left", "kidney_right", "liver",
@@ -105,3 +109,28 @@ def test_load_totalsegmentator_splits(fake_root):
     assert vol_dirs(train_ds).isdisjoint(vol_dirs(val_ds))
     assert vol_dirs(train_ds).isdisjoint(vol_dirs(test_ds))
     assert vol_dirs(val_ds).isdisjoint(vol_dirs(test_ds))
+
+
+def test_iou_perfect():
+    """IoU of identical binary masks should be 1.0."""
+    mask = np.ones((224, 224), dtype=np.float32)
+    iou = _compute_iou(mask > 0.5, mask > 0.5)
+    assert abs(iou - 1.0) < 1e-6
+
+
+def test_iou_no_overlap():
+    """IoU of non-overlapping masks should be 0.0."""
+    pred = np.zeros((224, 224), dtype=bool)
+    pred[:112, :] = True
+    gt = np.zeros((224, 224), dtype=bool)
+    gt[112:, :] = True
+    iou = _compute_iou(pred, gt)
+    assert abs(iou) < 1e-6
+
+
+def test_iou_empty_gt_returns_none():
+    """IoU when GT is empty should return None (skip)."""
+    pred = np.ones((224, 224), dtype=bool)
+    gt   = np.zeros((224, 224), dtype=bool)
+    result = _compute_iou(pred, gt)
+    assert result is None
