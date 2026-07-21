@@ -1,12 +1,11 @@
-"""Fine-tune BioMedCLIP on OrganAMNIST image-text pairs.
+"""Fine-tune BioMedCLIP on TotalSegmentator axial CT slices (text-supervised).
 
 Usage:
-    python scripts/train.py
-    python scripts/train.py --epochs 20 --batch_size 64 --lr 5e-5
+    python scripts/train.py --root Totalsegmentator_dataset_v201
+    python scripts/train.py --root Totalsegmentator_dataset_v201 --epochs 20 --batch_size 32 --lr 1e-4
 """
 
 import argparse
-import json
 import sys
 from pathlib import Path
 
@@ -17,92 +16,66 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 
 import open_clip
 from open_clip import get_tokenizer
-from src.data.organmnist import load_organamnist
+from src.data.totalsegmentator import load_totalsegmentator
 from src.data.dataset import ImageTextDataset
 from src.training.freeze import freeze_model
 from src.training.trainer import Trainer
+from src.labels.templates import FEW_SHOT_TEMPLATES
 
 MODEL_NAME = "hf-hub:microsoft/BiomedCLIP-PubMedBERT_256-vit_base_patch16_224"
-CAPTIONS_PATH = Path(__file__).parent.parent / "data" / "prepared" / "captions.json"
-
-
-def load_captions() -> dict[int, list[str]]:
-    with open(CAPTIONS_PATH) as f:
-        data = json.load(f)
-    class_captions: dict[int, list[str]] = {i: [] for i in range(11)}
-    for record in data["splits"]["train"]:
-        label = record["label"]
-        if not class_captions[label]:
-            class_captions[label] = (
-                [record["zero_shot"]] +
-                [record["few_shot"]] +
-                record["variants"]
-            )
-    return class_captions
 
 
 def main():
     parser = argparse.ArgumentParser()
+    parser.add_argument("--root", required=True,
+                        help="Path to Totalsegmentator_dataset_v201/")
     parser.add_argument("--epochs", type=int, default=10)
     parser.add_argument("--batch_size", type=int, default=32)
     parser.add_argument("--lr", type=float, default=1e-4)
     parser.add_argument("--warmup_steps", type=int, default=200)
-    parser.add_argument("--checkpoint_dir", type=str, default="checkpoints")
+    parser.add_argument("--checkpoint_dir", type=str, default="checkpoints/totalseg")
+    parser.add_argument("--top_k", type=int, default=5,
+                        help="Slices per organ per volume (default 5)")
     parser.add_argument("--device", type=str,
                         default="cuda" if torch.cuda.is_available() else "cpu")
     args = parser.parse_args()
 
     print(f"Device: {args.device}")
-    print("Loading BioMedCLIP...")
+    print("Loading BioMedCLIP (base weights — no checkpoint)...")
     model, _, _ = open_clip.create_model_and_transforms(MODEL_NAME)
     model = model.to(args.device)
     freeze_model(model)
 
     trainable = sum(p.numel() for p in model.parameters() if p.requires_grad)
-    total = sum(p.numel() for p in model.parameters())
-    print(f"Model on: {next(model.parameters()).device}", flush=True)
+    total     = sum(p.numel() for p in model.parameters())
     print(f"Trainable params: {trainable:,} / {total:,} ({100*trainable/total:.1f}%)")
 
-    print("Loading tokenizer...", flush=True)
+    print("Loading tokenizer...")
     tokenizer = get_tokenizer(MODEL_NAME)
-    print("Tokenizer ready.", flush=True)
 
-    print("Loading OrganAMNIST...", flush=True)
-    train_ds_raw, val_ds_raw, _ = load_organamnist(size=224)
-    print("OrganAMNIST loaded.", flush=True)
-    print("Loading captions...", flush=True)
-    captions = load_captions()
-    print("Pre-tokenizing captions...", flush=True)
+    print("Pre-tokenizing FEW_SHOT_TEMPLATES...")
     tokenized_captions = {
-        label: [tokenizer([cap])[0] for cap in caps]
-        for label, caps in captions.items()
+        label: [tokenizer([cap])[0] for cap in [caption]]
+        for label, caption in FEW_SHOT_TEMPLATES.items()
     }
-    print("Captions ready.", flush=True)
+
+    print(f"Loading TotalSegmentator from {args.root} (top_k={args.top_k})...")
+    train_ds_raw, val_ds_raw, _ = load_totalsegmentator(args.root, top_k=args.top_k)
 
     train_ds = ImageTextDataset(train_ds_raw, tokenized_captions)
-    val_ds = ImageTextDataset(val_ds_raw, tokenized_captions)
-    print("Datasets wrapped.", flush=True)
+    val_ds   = ImageTextDataset(val_ds_raw,   tokenized_captions)
+    print(f"Train: {len(train_ds)} slices | Val: {len(val_ds)} slices")
 
     pin_memory = args.device == "cuda"
     train_loader = DataLoader(train_ds, batch_size=args.batch_size,
                               shuffle=True, num_workers=0, pin_memory=pin_memory)
-    val_loader = DataLoader(val_ds, batch_size=args.batch_size,
-                            shuffle=False, num_workers=0, pin_memory=pin_memory)
-    print("DataLoaders ready.", flush=True)
+    val_loader   = DataLoader(val_ds,   batch_size=args.batch_size,
+                              shuffle=False, num_workers=0, pin_memory=pin_memory)
 
-    print(f"Train: {len(train_ds)} images | Val: {len(val_ds)} images")
-    print(f"Starting training: {args.epochs} epochs, lr={args.lr}, batch={args.batch_size}", flush=True)
-
-    # Verify GPU is actually being used
     if args.device == "cuda":
-        images_sample, tokens_sample, _ = next(iter(train_loader))
-        images_sample = images_sample.to(args.device)
-        tokens_sample = tokens_sample.to(args.device)
-        print(f"Image tensor device: {images_sample.device}", flush=True)
-        print(f"Token tensor device: {tokens_sample.device}", flush=True)
-        next_param = next(model.parameters())
-        print(f"Model device: {next_param.device}", flush=True)
-        del images_sample, tokens_sample
+        images_s, tokens_s, _ = next(iter(train_loader))
+        print(f"Image device check: {images_s.to(args.device).device}")
+        del images_s, tokens_s
 
     trainer = Trainer(
         model=model,
