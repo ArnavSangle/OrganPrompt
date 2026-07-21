@@ -29,3 +29,4 @@ debug_gradcam.py
 # OS
 .DS_Store
 Thumbs.db
+.claudeignore
