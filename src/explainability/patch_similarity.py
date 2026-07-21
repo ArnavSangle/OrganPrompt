@@ -5,13 +5,17 @@ from scipy import ndimage
 
 
 class BioMedCLIPPatchSimilarity:
-    """Patch-text similarity saliency map for BioMedCLIP.
+    """Patch-text similarity saliency map using multi-layer feature fusion.
 
-    Hooks model.visual.trunk.norm to capture all 197 token features after the
-    final LayerNorm. Projects each of the 196 patch tokens through the visual
-    head (768→512), then computes:
+    Hooks model.visual.trunk.blocks[8..11] to capture patch token features
+    from 4 ViT blocks. Averages the 196 patch tokens across all 4 layers,
+    projects through the visual head (768→512), then computes:
 
         CAM = sim(patch, positive_prompt) - max(sim(patch, negative_prompts))
+
+    Multi-layer fusion combines semantic responses (blocks 10-11) with
+    fine-grained texture/edge responses (blocks 8-9) for better boundary
+    localization than using the final norm layer alone.
 
     Returns a (image_size, image_size) float32 heatmap in [0, 1].
     No backward pass required — pure forward.
@@ -20,20 +24,23 @@ class BioMedCLIPPatchSimilarity:
     def __init__(self, model, device: str = "cuda"):
         self.model = model
         self.device = device
-        self._token_features: torch.Tensor | None = None
-        self._hook = None
-        self._register_hook()
+        self._layer_features: list[torch.Tensor] = []
+        self._hooks: list = []
+        self._register_hooks()
 
-    def _register_hook(self) -> None:
-        def _forward(module, input, output):
-            self._token_features = output.detach()  # (1, 197, 768)
+    def _register_hooks(self) -> None:
+        for block_idx in [8, 9, 10, 11]:
+            block = self.model.visual.trunk.blocks[block_idx]
 
-        self._hook = self.model.visual.trunk.norm.register_forward_hook(_forward)
+            def _forward(module, input, output, _idx=block_idx):
+                self._layer_features.append(output.detach())  # (1, 197, 768)
+
+            self._hooks.append(block.register_forward_hook(_forward))
 
     def remove_hooks(self) -> None:
-        if self._hook:
-            self._hook.remove()
-            self._hook = None
+        for h in self._hooks:
+            h.remove()
+        self._hooks.clear()
 
     @torch.no_grad()
     def generate(
@@ -55,15 +62,19 @@ class BioMedCLIPPatchSimilarity:
         Returns:
             mask: (image_size, image_size) float32 array in [0, 1]
         """
-        self.model.encode_image(image)  # triggers hook → fills _token_features
+        self._layer_features.clear()
+        self.model.encode_image(image)  # triggers 4 hooks → fills _layer_features
 
-        # patch tokens: drop CLS (index 0), project to 512-dim, normalise
-        patch_tokens = self._token_features[0, 1:, :]          # (196, 768)
-        patch_emb    = self.model.visual.head(patch_tokens)     # (196, 512)
-        patch_emb    = F.normalize(patch_emb, dim=-1)           # (196, 512)
+        # Stack: (4, 1, 197, 768) → mean → (197, 768) → drop CLS → (196, 768)
+        stacked = torch.stack(self._layer_features, dim=0)   # (4, 1, 197, 768)
+        fused   = stacked.mean(dim=0)[0]                     # (197, 768)
+        patch_tokens = fused[1:, :]                          # (196, 768) — drop CLS
+
+        patch_emb = self.model.visual.head(patch_tokens)     # (196, 512)
+        patch_emb = F.normalize(patch_emb, dim=-1)           # (196, 512)
 
         # positive similarity
-        cam = patch_emb @ text_features[target_class]           # (196,)
+        cam = patch_emb @ text_features[target_class]        # (196,)
 
         # subtract max hard-negative similarity
         if neg_text_features is not None:
@@ -71,7 +82,7 @@ class BioMedCLIPPatchSimilarity:
             cam = cam - neg_sim
 
         # reshape to 14×14
-        grid = int(cam.shape[0] ** 0.5)   # 14 for ViT-B/16 at 224px
+        grid = int(cam.shape[0] ** 0.5)    # 14 for ViT-B/16 at 224px
         cam  = cam.reshape(grid, grid)
 
         # normalise to [0, 1]
