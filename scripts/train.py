@@ -38,6 +38,8 @@ def main():
                         help="Slices per organ per volume (default 5)")
     parser.add_argument("--num_workers", type=int, default=4,
                         help="DataLoader worker processes (default 4; set 0 if errors)")
+    parser.add_argument("--lambda_patch", type=float, default=0.5,
+                        help="Weight for patch-level contrastive loss (0 = disabled, default 0.5)")
     parser.add_argument("--device", type=str,
                         default="cuda" if torch.cuda.is_available() else "cpu")
     args = parser.parse_args()
@@ -61,8 +63,11 @@ def main():
         for label, caption in FEW_SHOT_TEMPLATES.items()
     }
 
-    print(f"Loading TotalSegmentator from {args.root} (top_k={args.top_k})...")
-    train_ds_raw, val_ds_raw, _ = load_totalsegmentator(args.root, top_k=args.top_k)
+    include_masks = args.lambda_patch > 0
+    print(f"Loading TotalSegmentator from {args.root} (top_k={args.top_k}, masks={include_masks})...")
+    train_ds_raw, val_ds_raw, _ = load_totalsegmentator(
+        args.root, top_k=args.top_k, include_masks=include_masks
+    )
 
     train_ds = ImageTextDataset(train_ds_raw, tokenized_captions)
     val_ds   = ImageTextDataset(val_ds_raw,   tokenized_captions)
@@ -77,10 +82,11 @@ def main():
                               pin_memory=pin_memory, persistent_workers=args.num_workers > 0)
 
     if args.device == "cuda":
-        images_s, tokens_s, _ = next(iter(train_loader))
+        images_s, tokens_s, *_ = next(iter(train_loader))
         print(f"Image device check: {images_s.to(args.device).device}")
         del images_s, tokens_s
 
+    print(f"lambda_patch={args.lambda_patch} ({'enabled' if args.lambda_patch > 0 else 'disabled'})")
     trainer = Trainer(
         model=model,
         train_loader=train_loader,
@@ -89,8 +95,11 @@ def main():
         lr=args.lr,
         warmup_steps=args.warmup_steps,
         checkpoint_dir=args.checkpoint_dir,
+        lambda_patch=args.lambda_patch,
     )
     trainer.train(epochs=args.epochs)
+    if trainer.patch_loss_fn is not None:
+        trainer.patch_loss_fn.remove_hook()
     print(f"Done. Best val loss: {trainer.best_val_loss:.4f}")
 
 

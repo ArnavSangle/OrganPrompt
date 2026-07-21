@@ -3,6 +3,7 @@ UNFREEZE_PATTERNS = [
     "visual.trunk.blocks.9",
     "visual.trunk.blocks.10",
     "visual.trunk.blocks.11",
+    "visual.head",          # needed for patch-level contrastive loss
     "text.transformer.encoder.layer.8",
     "text.transformer.encoder.layer.9",
     "text.transformer.encoder.layer.10",

@@ -64,9 +64,10 @@ class TotalSegmentatorDataset(Dataset):
     Each item in eval mode:     (image_tensor (3,224,224), label_int, gt_mask (224,224))
     """
 
-    def __init__(self, items: list[dict], eval_mode: bool = False):
+    def __init__(self, items: list[dict], eval_mode: bool = False, include_masks: bool = False):
         self.items = items
         self.eval_mode = eval_mode
+        self._return_masks = eval_mode or include_masks
 
     def __len__(self) -> int:
         return len(self.items)
@@ -93,7 +94,7 @@ class TotalSegmentatorDataset(Dataset):
                 img.unsqueeze(0), size=(224, 224), mode="bilinear", align_corners=False
             ).squeeze(0)
 
-        if self.eval_mode:
+        if self._return_masks:
             vol_dir = Path(item["volume_dir"])
             gt = self._load_gt_mask(vol_dir, organ_class, item["slice_idx"])
             return img, organ_class, gt
@@ -118,6 +119,7 @@ def load_totalsegmentator(
     top_k: int = 5,
     seed: int = 42,
     cache_path: str | Path | None = None,
+    include_masks: bool = False,
 ) -> tuple[Dataset, Dataset, Dataset]:
     """Return (train_ds, val_ds, test_ds) from TotalSegmentator.
 
@@ -170,7 +172,7 @@ def load_totalsegmentator(
         print(f"Saved slice index to {cache_path}")
 
     return (
-        TotalSegmentatorDataset(split_items["train"]),
-        TotalSegmentatorDataset(split_items["val"]),
-        TotalSegmentatorDataset(split_items["test"], eval_mode=True),
+        TotalSegmentatorDataset(split_items["train"], include_masks=include_masks),
+        TotalSegmentatorDataset(split_items["val"],   include_masks=include_masks),
+        TotalSegmentatorDataset(split_items["test"],  eval_mode=True),
     )

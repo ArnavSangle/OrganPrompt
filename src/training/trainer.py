@@ -5,18 +5,21 @@ import torch.nn.functional as F
 from torch.utils.data import DataLoader
 from open_clip.loss import SigLipLoss
 
+from src.training.patch_loss import PatchContrastiveLoss
+
 
 class Trainer:
-    """Fine-tunes BioMedCLIP with SigLipLoss.
+    """Fine-tunes BioMedCLIP with SigLipLoss + optional patch-level contrastive loss.
 
     Args:
         model: BioMedCLIP model with freeze_model() already applied.
-        train_loader: DataLoader yielding (image, caption, label) batches.
+        train_loader: DataLoader yielding (image, caption, label, gt_mask) batches.
         val_loader: DataLoader for validation.
         device: "cuda" or "cpu".
         lr: Peak learning rate for AdamW.
         warmup_steps: Number of linear warmup steps.
         checkpoint_dir: Directory to save .pt checkpoints.
+        lambda_patch: Weight for patch-level contrastive loss (0 = disabled).
     """
 
     def __init__(
@@ -28,6 +31,7 @@ class Trainer:
         lr: float = 1e-4,
         warmup_steps: int = 100,
         checkpoint_dir: str = "checkpoints",
+        lambda_patch: float = 0.0,
     ):
         self.model = model
         self.train_loader = train_loader
@@ -37,6 +41,7 @@ class Trainer:
         self.checkpoint_dir.mkdir(parents=True, exist_ok=True)
 
         self.loss_fn = SigLipLoss()
+        self.patch_loss_fn = PatchContrastiveLoss(model, lambda_patch=lambda_patch) if lambda_patch > 0 else None
         self.optimizer = torch.optim.AdamW(
             [p for p in model.parameters() if p.requires_grad],
             lr=lr,
@@ -54,8 +59,8 @@ class Trainer:
         images = images.to(self.device)
         tokens = tokens.to(self.device)
         image_features = F.normalize(self.model.encode_image(images), dim=-1)
-        text_features = F.normalize(self.model.encode_text(tokens), dim=-1)
-        return image_features, text_features
+        text_features  = F.normalize(self.model.encode_text(tokens),  dim=-1)
+        return image_features, text_features  # patch hook fires during encode_image
 
     def _warmup_lr(self):
         if self._step < self.warmup_steps:
@@ -67,17 +72,18 @@ class Trainer:
         self.model.train()
         total_loss, n_batches = 0.0, 0
         n_total = len(self.train_loader)
-        for images, captions, _ in self.train_loader:
+        for images, captions, _, gt_masks in self.train_loader:
             self._step += 1
             self._warmup_lr()
             self.optimizer.zero_grad()
             image_features, text_features = self._encode_batch(images, captions)
             logit_bias = getattr(self.model, "logit_bias", None)
-            loss = self.loss_fn(
-                image_features, text_features,
-                self.model.logit_scale.exp(),
-                logit_bias,
-            )
+            logit_scale = self.model.logit_scale.exp()
+            loss = self.loss_fn(image_features, text_features, logit_scale, logit_bias)
+            if self.patch_loss_fn is not None:
+                loss = loss + self.patch_loss_fn(
+                    text_features, gt_masks.to(self.device), logit_scale.item()
+                )
             loss.backward()
             torch.nn.utils.clip_grad_norm_(
                 [p for p in self.model.parameters() if p.requires_grad], 1.0
@@ -93,7 +99,7 @@ class Trainer:
     def val_epoch(self) -> float:
         self.model.eval()
         total_loss, n_batches = 0.0, 0
-        for images, captions, _ in self.val_loader:
+        for images, captions, *_ in self.val_loader:
             image_features, text_features = self._encode_batch(images, captions)
             logit_bias = getattr(self.model, "logit_bias", None)
             loss = self.loss_fn(

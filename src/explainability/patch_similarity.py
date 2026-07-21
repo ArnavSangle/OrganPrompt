@@ -103,6 +103,84 @@ class BioMedCLIPPatchSimilarity:
         return cam.astype(np.float32)
 
 
+class BioMedCLIPGradCAM:
+    """Gradient-weighted Class Activation Map for BioMedCLIP (ViT-B/16).
+
+    Backprops image-text cosine similarity through the ViT to get
+    gradient-weighted patch activation maps at block 11.
+
+        CAM = ReLU( mean_channel(grads) · acts ) for the 196 patch tokens
+
+    Unlike patch-text similarity, this uses the global CLS-token alignment
+    the model learned during training, so it works even when patch tokens
+    lack explicit spatial discrimination.
+
+    Requires one backward pass per image (slower than BioMedCLIPPatchSimilarity).
+    """
+
+    def __init__(self, model, device: str = "cuda"):
+        self.model = model
+        self.device = device
+        self._activations: torch.Tensor | None = None
+        self._gradients: torch.Tensor | None = None
+        self._hooks: list = []
+        self._register_hooks()
+
+    def _register_hooks(self) -> None:
+        block = self.model.visual.trunk.blocks[11]
+
+        def _fwd(module, input, output):
+            self._activations = output  # (1, 197, 768)
+
+        def _bwd(module, grad_input, grad_output):
+            self._gradients = grad_output[0]  # (1, 197, 768)
+
+        self._hooks.append(block.register_forward_hook(_fwd))
+        self._hooks.append(block.register_full_backward_hook(_bwd))
+
+    def remove_hooks(self) -> None:
+        for h in self._hooks:
+            h.remove()
+        self._hooks.clear()
+
+    def generate(
+        self,
+        image: torch.Tensor,
+        text_features: torch.Tensor,
+        target_class: int,
+        image_size: int = 224,
+    ) -> np.ndarray:
+        """
+        Args:
+            image: (1, 3, H, W) on self.device
+            text_features: (num_classes, 512) L2-normalised, on self.device
+            target_class: index into text_features to explain
+            image_size: spatial size of the returned mask
+
+        Returns:
+            mask: (image_size, image_size) float32 array in [0, 1]
+        """
+        self.model.zero_grad()
+        image = image.detach().requires_grad_(True)
+
+        image_features = F.normalize(self.model.encode_image(image), dim=-1)
+        score = (image_features @ text_features[target_class]).sum()
+        score.backward()
+
+        # Vanilla gradient: d(score)/d(image) — no hooks, works if any gradient flows
+        # Sum absolute gradient across colour channels → (1, H, W) → (H, W)
+        cam = image.grad.abs().sum(dim=1).squeeze()  # (224, 224)
+
+        # normalise to [0, 1]
+        cam_min, cam_max = cam.min(), cam.max()
+        if cam_max > cam_min:
+            cam = (cam - cam_min) / (cam_max - cam_min)
+        else:
+            cam = torch.zeros_like(cam)
+
+        return cam.cpu().numpy().astype(np.float32)
+
+
 def post_process_mask(
     mask: np.ndarray,
     threshold: float = 0.4,

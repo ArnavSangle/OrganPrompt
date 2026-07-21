@@ -1,12 +1,14 @@
-"""Generate patch-text similarity pseudo-masks for the TotalSegmentator test split.
+"""Generate saliency pseudo-masks for the TotalSegmentator test split.
 
-CAM = sim(patch_tokens, positive_prompt) - max(sim(patch_tokens, negative_prompts))
+Methods:
+    gradcam   (default) backprop image-text similarity through ViT block 11
+    patch_sim  cosine similarity between projected patch tokens and text
 
 Usage:
+    python scripts/generate_masks.py --root Totalsegmentator_dataset_v201
     python scripts/generate_masks.py --root Totalsegmentator_dataset_v201 --checkpoint checkpoints/totalseg/epoch_009_val3.0132.pt
-    python scripts/generate_masks.py --root Totalsegmentator_dataset_v201 --limit 100
-    python scripts/generate_masks.py --root Totalsegmentator_dataset_v201 --no_negatives
-    python scripts/generate_masks.py --root Totalsegmentator_dataset_v201 --no_postprocess
+    python scripts/generate_masks.py --root Totalsegmentator_dataset_v201 --method patch_sim --no_negatives
+    python scripts/generate_masks.py --root Totalsegmentator_dataset_v201 --limit 100 --no_postprocess
 """
 
 import argparse
@@ -23,9 +25,9 @@ from open_clip import get_tokenizer
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from src.data.totalsegmentator import load_totalsegmentator
-from src.labels.templates import CLASS_NAMES, FEW_SHOT_TEMPLATES, NEGATIVE_PROMPTS
+from src.labels.templates import CLASS_NAMES, FEW_SHOT_TEMPLATES
 from src.training.freeze import UNFREEZE_PATTERNS
-from src.explainability.patch_similarity import BioMedCLIPPatchSimilarity, post_process_mask
+from src.explainability.patch_similarity import BioMedCLIPGradCAM, BioMedCLIPPatchSimilarity, post_process_mask
 
 MODEL_NAME    = "hf-hub:microsoft/BiomedCLIP-PubMedBERT_256-vit_base_patch16_224"
 OUTPUT_DIR    = Path("data/totalseg_masks")
@@ -83,8 +85,10 @@ def main():
                         help="Only process first N test images (default: all)")
     parser.add_argument("--target_class", type=int, default=None,
                         help="Explain this class for every image (default: true label)")
+    parser.add_argument("--method", choices=["gradcam", "patch_sim"], default="gradcam",
+                        help="Saliency method (default: gradcam)")
     parser.add_argument("--no_negatives", action="store_true",
-                        help="Skip hard-negative suppression")
+                        help="patch_sim only: skip class-conditional negative suppression")
     parser.add_argument("--no_postprocess", action="store_true",
                         help="Skip morphological post-processing")
     args = parser.parse_args()
@@ -101,29 +105,37 @@ def main():
     pos_templates = [FEW_SHOT_TEMPLATES[i] for i in range(len(CLASS_NAMES))]
     text_features = encode_texts(model, tokenizer, pos_templates, args.device)  # (11, 512)
 
-    neg_features = None
-    if not args.no_negatives:
-        print(f"Encoding {len(NEGATIVE_PROMPTS)} hard-negative prompts...")
-        neg_features = encode_texts(model, tokenizer, NEGATIVE_PROMPTS, args.device)
-
     print(f"Loading TotalSegmentator test split from {args.root}...")
     test_ds = get_dataset(args.root, top_k=args.top_k)
     n = min(len(test_ds), args.limit) if args.limit else len(test_ds)
-    print(f"Generating masks for {n} images...")
+    print(f"Method: {args.method} | Images: {n}")
 
-    patch_sim = BioMedCLIPPatchSimilarity(model, device=args.device)
-    metadata  = []
+    if args.method == "gradcam":
+        explainer = BioMedCLIPGradCAM(model, device=args.device)
+    else:
+        explainer = BioMedCLIPPatchSimilarity(model, device=args.device)
+    use_negatives = (args.method == "patch_sim") and (not args.no_negatives)
+
+    metadata = []
 
     for idx in range(n):
         image, label, gt_mask = test_ds[idx]
         target = args.target_class if args.target_class is not None else label
 
         image_tensor = image.unsqueeze(0).to(args.device)
-        mask = patch_sim.generate(
-            image_tensor, text_features,
-            target_class=target,
-            neg_text_features=neg_features,
-        )
+
+        if args.method == "gradcam":
+            mask = explainer.generate(image_tensor, text_features, target_class=target)
+        else:
+            neg_features = None
+            if use_negatives:
+                neg_idx = [i for i in range(len(CLASS_NAMES)) if i != target]
+                neg_features = text_features[neg_idx]
+            mask = explainer.generate(
+                image_tensor, text_features,
+                target_class=target,
+                neg_text_features=neg_features,
+            )
 
         if not args.no_postprocess:
             mask = post_process_mask(mask)
@@ -146,7 +158,7 @@ def main():
         if (idx + 1) % 500 == 0 or (idx + 1) == n:
             print(f"  {idx+1}/{n}", flush=True)
 
-    patch_sim.remove_hooks()
+    explainer.remove_hooks()
 
     meta_path = OUTPUT_DIR / "metadata.json"
     with open(meta_path, "w") as f:
