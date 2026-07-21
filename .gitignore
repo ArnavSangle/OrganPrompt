@@ -30,3 +30,5 @@ debug_gradcam.py
 .DS_Store
 Thumbs.db
 .claudeignore
+TrainingOutput*.txt
+*_training_output.txt
