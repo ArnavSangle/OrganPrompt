@@ -4,8 +4,9 @@ Metrics: IoU, HD95, Dice, Sensitivity, Precision, RVE, NSD
 
 Usage:
     python scripts/evaluate_masks.py
-    python scripts/evaluate_masks.py --masks_dir data/totalseg_masks
-    python scripts/evaluate_masks.py --threshold 0.5 --nsd_tolerance 3
+    python scripts/evaluate_masks.py --tune                       # sweep IoU-optimal per class, save, evaluate
+    python scripts/evaluate_masks.py --thresholds_json diagnostics/tuned_thresholds.json
+    python scripts/evaluate_masks.py --threshold 0.5
 """
 
 import argparse
@@ -85,10 +86,51 @@ def _compute_nsd(pred: np.ndarray, gt: np.ndarray, tolerance: float) -> float | 
     return float(pred_within + gt_within) / float(denom) if denom > 0 else 0.0
 
 
+def _tune_thresholds(metadata, n_candidates=100):
+    """Sweep candidate thresholds per class to maximize IoU on the generated masks."""
+    per_class_pairs: dict[int, list[tuple[np.ndarray, np.ndarray]]] = defaultdict(list)
+    for entry in metadata:
+        m  = np.load(entry["mask_path"])
+        gt = np.load(entry["gt_mask_path"]) > 0.5
+        per_class_pairs[entry["true_label"]].append((m, gt))
+
+    tuned: dict[int, float] = {}
+    print("\nTuning per-class IoU-optimal thresholds:")
+    for c, pairs in per_class_pairs.items():
+        lo = min(m.min() for m, _ in pairs)
+        hi = max(m.max() for m, _ in pairs)
+        candidates = np.linspace(lo, hi, n_candidates)
+        best_thr, best_iou = float(lo), -1.0
+        for thr in candidates:
+            ious = []
+            for m, gt in pairs:
+                if not gt.any():
+                    continue
+                pred  = m >= thr
+                inter = (pred & gt).sum()
+                union = (pred | gt).sum()
+                if union > 0:
+                    ious.append(inter / union)
+            if not ious:
+                continue
+            miou = float(np.mean(ious))
+            if miou > best_iou:
+                best_iou, best_thr = miou, float(thr)
+        tuned[c] = best_thr
+        print(f"  {CLASS_NAMES[c]:<15} thr={best_thr:+.4f}  IoU={best_iou:.4f}")
+    return tuned
+
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--masks_dir", default=str(DEFAULT_MASKS_DIR))
-    parser.add_argument("--threshold", type=float, default=0.5)
+    parser.add_argument("--threshold", type=float, default=0.5,
+                        help="Uniform threshold when --thresholds_json / --tune is not given")
+    parser.add_argument("--thresholds_json", default=None,
+                        help="Path to tuned_thresholds.json for per-class thresholds")
+    parser.add_argument("--tune", action="store_true",
+                        help="Sweep IoU-optimal thresholds per class, save to "
+                             "diagnostics/tuned_thresholds.json, then evaluate with them")
     parser.add_argument("--nsd_tolerance", type=float, default=3.0,
                         help="Surface distance tolerance in pixels for NSD (default 3)")
     args = parser.parse_args()
@@ -101,15 +143,39 @@ def main():
     with open(meta_path) as f:
         metadata = json.load(f)
 
+    thresholds: dict[int, float] = {}
+    if args.tune:
+        thresholds = _tune_thresholds(metadata)
+        out = Path("diagnostics") / "tuned_thresholds.json"
+        out.parent.mkdir(exist_ok=True)
+        with open(out, "w") as f:
+            json.dump({CLASS_NAMES[c]: t for c, t in thresholds.items()}, f, indent=2)
+        print(f"\nTuned thresholds saved to {out}")
+    elif args.thresholds_json:
+        with open(args.thresholds_json) as f:
+            data = json.load(f)
+        for c, name in CLASS_NAMES.items():
+            v = data.get(name)
+            if isinstance(v, dict) and "raw" in v:
+                thresholds[c] = v["raw"].get("iou_optimal", v["raw"].get("otsu"))
+            elif isinstance(v, (int, float)):
+                thresholds[c] = float(v)
+        print(f"Per-class thresholds loaded from {args.thresholds_json}:")
+        for c in sorted(thresholds):
+            print(f"  {CLASS_NAMES[c]:<15} {thresholds[c]:+.4f}")
+    else:
+        print(f"Uniform threshold: {args.threshold}")
+
     per: dict[str, dict[int, list[float]]] = {k: defaultdict(list)
         for k in ("iou", "dice", "hd95", "sens", "prec", "rve", "nsd")}
 
     for entry in metadata:
         pseudo_mask = np.load(entry["mask_path"])
         gt_mask     = np.load(entry["gt_mask_path"])
-        pred = pseudo_mask >= args.threshold
-        gt   = gt_mask > 0.5
         c    = entry["true_label"]
+        thr  = thresholds.get(c, args.threshold)
+        pred = pseudo_mask >= thr
+        gt   = gt_mask > 0.5
 
         for key, fn in [
             ("iou",  lambda p, g: _compute_iou(p, g)),

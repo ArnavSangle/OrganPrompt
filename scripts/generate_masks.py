@@ -5,10 +5,9 @@ Methods:
     patch_sim  cosine similarity between projected patch tokens and text
 
 Usage:
-    python scripts/generate_masks.py --root Totalsegmentator_dataset_v201
-    python scripts/generate_masks.py --root Totalsegmentator_dataset_v201 --checkpoint checkpoints/totalseg/epoch_009_val3.0132.pt
-    python scripts/generate_masks.py --root Totalsegmentator_dataset_v201 --method patch_sim --no_negatives
-    python scripts/generate_masks.py --root Totalsegmentator_dataset_v201 --limit 100 --no_postprocess
+    python scripts/generate_masks.py --root Totalsegmentator_dataset_v201 --checkpoint checkpoints/totalseg_patch_v4/epoch_015_val3.7378.pt --method patch_sim
+    python scripts/generate_masks.py --root Totalsegmentator_dataset_v201 --method gradcam
+    python scripts/generate_masks.py --root Totalsegmentator_dataset_v201 --method patch_sim --use_negatives --postprocess
 """
 
 import argparse
@@ -87,10 +86,12 @@ def main():
                         help="Explain this class for every image (default: true label)")
     parser.add_argument("--method", choices=["gradcam", "patch_sim"], default="gradcam",
                         help="Saliency method (default: gradcam)")
-    parser.add_argument("--no_negatives", action="store_true",
-                        help="patch_sim only: skip class-conditional negative suppression")
-    parser.add_argument("--no_postprocess", action="store_true",
-                        help="Skip morphological post-processing")
+    parser.add_argument("--use_negatives", action="store_true",
+                        help="patch_sim only: subtract max other-class similarity "
+                             "(harmful for most classes; keep off unless benchmarking)")
+    parser.add_argument("--postprocess", action="store_true",
+                        help="Apply morphological post-processing (assumes mask in [0,1]; "
+                             "leave off when saving raw patch_sim similarities)")
     args = parser.parse_args()
 
     OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
@@ -114,7 +115,7 @@ def main():
         explainer = BioMedCLIPGradCAM(model, device=args.device)
     else:
         explainer = BioMedCLIPPatchSimilarity(model, device=args.device)
-    use_negatives = (args.method == "patch_sim") and (not args.no_negatives)
+    use_negatives = (args.method == "patch_sim") and args.use_negatives
 
     metadata = []
 
@@ -137,7 +138,7 @@ def main():
                 neg_text_features=neg_features,
             )
 
-        if not args.no_postprocess:
+        if args.postprocess:
             mask = post_process_mask(mask)
 
         out_path    = OUTPUT_DIR / f"{idx:06d}_class{label}_target{target}.npy"

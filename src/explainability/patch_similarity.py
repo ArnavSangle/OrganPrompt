@@ -17,8 +17,10 @@ class BioMedCLIPPatchSimilarity:
     fine-grained texture/edge responses (blocks 8-9) for better boundary
     localization than using the final norm layer alone.
 
-    Returns a (image_size, image_size) float32 heatmap in [0, 1].
-    No backward pass required — pure forward.
+    Returns a (image_size, image_size) float32 heatmap of RAW similarity
+    values (roughly [-0.3, +0.3] for a fine-tuned model). No per-image
+    normalization — per-class thresholds derived from a calibration set
+    (see scripts/analyze_similarities.py) are applied downstream.
     """
 
     def __init__(self, model, device: str = "cuda"):
@@ -85,14 +87,7 @@ class BioMedCLIPPatchSimilarity:
         grid = int(cam.shape[0] ** 0.5)    # 14 for ViT-B/16 at 224px
         cam  = cam.reshape(grid, grid)
 
-        # normalise to [0, 1]
-        cam_min, cam_max = cam.min(), cam.max()
-        if cam_max > cam_min:
-            cam = (cam - cam_min) / (cam_max - cam_min)
-        else:
-            cam = torch.zeros_like(cam)
-
-        # bilinear upsample to image_size
+        # bilinear upsample to image_size — return raw similarities, no normalization
         cam = F.interpolate(
             cam.unsqueeze(0).unsqueeze(0),
             size=(image_size, image_size),
