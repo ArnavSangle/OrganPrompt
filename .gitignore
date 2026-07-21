@@ -11,7 +11,9 @@ __pycache__/
 checkpoints/
 
 # Generated data (large)
-data/
+/data/
+/Totalsegmentator_dataset_v201/
+Totalsegmentator_dataset_v201.zip
 
 # Claude Code internal
 .claude/

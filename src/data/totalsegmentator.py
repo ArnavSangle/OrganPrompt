@@ -157,10 +157,7 @@ def load_totalsegmentator(
         split_items = {}
         for split_name, sdirs in split_dirs.items():
             print(f"  Indexing {split_name} ({len(sdirs)} volumes)...")
-            items = _build_index(sdirs, top_k)
-            for item in items:
-                item["split"] = split_name
-            split_items[split_name] = items
+            split_items[split_name] = _build_index(sdirs, top_k)
         all_items = [item for items in split_items.values() for item in items]
         cache_path.parent.mkdir(parents=True, exist_ok=True)
         with open(cache_path, "w") as f:
