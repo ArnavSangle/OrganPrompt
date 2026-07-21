@@ -6,9 +6,15 @@ encoder is also fine-tuned.
 
 Metrics: IoU, HD95, Dice, Sensitivity, Precision, RVE, NSD
 
+BioMedCLIPPatchSimilarity returns raw patch-text similarities (roughly
+[-0.3, +0.3]) since the inference-time calibration fix. Uses per-class
+thresholds from diagnostics/tuned_thresholds.json by default; override with
+--threshold for a uniform value.
+
 Usage:
-    python scripts/eval_checkpoints.py --checkpoint_dir checkpoints/totalseg_patch_v4 --root Totalsegmentator_dataset_v201
-    python scripts/eval_checkpoints.py --checkpoint_dir checkpoints/totalseg_patch_v4 --root Totalsegmentator_dataset_v201 --limit 500
+    python scripts/eval_checkpoints.py --checkpoint_dir checkpoints/totalseg_patch_v5 --root Totalsegmentator_dataset_v201
+    python scripts/eval_checkpoints.py --checkpoint_dir checkpoints/totalseg_patch_v5 --root Totalsegmentator_dataset_v201 --limit 500
+    python scripts/eval_checkpoints.py --checkpoint_dir checkpoints/totalseg_patch_v5 --root Totalsegmentator_dataset_v201 --threshold 0.0
 """
 
 import argparse
@@ -99,11 +105,33 @@ def main():
     parser.add_argument("--root", required=True)
     parser.add_argument("--limit", type=int, default=500,
                         help="Test images per checkpoint (default 500; use 0 for all)")
-    parser.add_argument("--threshold", type=float, default=0.5)
+    parser.add_argument("--threshold", type=float, default=None,
+                        help="Uniform threshold; overrides --thresholds_json if set")
+    parser.add_argument("--thresholds_json", default="diagnostics/tuned_thresholds.json",
+                        help="Per-class thresholds JSON (default: diagnostics/tuned_thresholds.json)")
     parser.add_argument("--nsd_tolerance", type=float, default=3.0,
                         help="Surface distance tolerance in pixels for NSD (default 3)")
     parser.add_argument("--device", default="cuda" if torch.cuda.is_available() else "cpu")
     args = parser.parse_args()
+
+    thresholds: dict[int, float] = {}
+    if args.threshold is not None:
+        print(f"Uniform threshold: {args.threshold}")
+    elif Path(args.thresholds_json).exists():
+        with open(args.thresholds_json) as f:
+            data = json.load(f)
+        for c, name in CLASS_NAMES.items():
+            v = data.get(name)
+            if isinstance(v, dict) and "raw" in v:
+                thresholds[c] = v["raw"].get("iou_optimal", v["raw"].get("otsu"))
+            elif isinstance(v, (int, float)):
+                thresholds[c] = float(v)
+        print(f"Per-class thresholds loaded from {args.thresholds_json}")
+    else:
+        raise FileNotFoundError(
+            f"{args.thresholds_json} not found — run `evaluate_masks.py --tune` first "
+            f"or pass --threshold explicitly"
+        )
 
     ckpt_dir  = Path(args.checkpoint_dir)
     ckpt_list = sorted(ckpt_dir.glob("epoch_*.pt"))
@@ -152,7 +180,8 @@ def main():
             image, label, gt_mask = test_ds[idx]
             image_tensor = image.unsqueeze(0).to(args.device)
             mask = patch_sim.generate(image_tensor, text_features, target_class=label)
-            pred = mask >= args.threshold
+            thr  = args.threshold if args.threshold is not None else thresholds.get(label, 0.0)
+            pred = mask >= thr
             gt   = np.asarray(gt_mask) > 0.5
 
             for key, fn in [
