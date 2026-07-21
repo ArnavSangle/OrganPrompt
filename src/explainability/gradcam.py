@@ -63,15 +63,12 @@ class BioMedCLIPGradCAM:
         score = (image_features * text_features[target_class]).sum()
         score.backward()
 
-        # activations / gradients: (1, 197, 768)
-        # drop CLS token (index 0), keep 196 patch tokens
-        acts  = self._activations[0, 1:, :]   # (196, 768)
-        grads = self._gradients[0, 1:, :]     # (196, 768)
+        # BioMedCLIP uses CLS-token pooling: only token 0 receives gradient.
+        # Use CLS gradient as channel importance weights, patch activations as spatial map.
+        cls_grads = self._gradients[0, 0, :]   # (768,) — channel importance
+        acts      = self._activations[0, 1:, :] # (196, 768) — spatial activations
 
-        # channel-wise gradient mean → weight activations
-        weights = grads.mean(dim=0)            # (768,)
-        cam = (acts * weights).sum(dim=-1)     # (196,)
-        cam = F.relu(cam)
+        cam = (acts * cls_grads).sum(dim=-1)   # (196,)
 
         # reshape to 14×14 spatial grid
         grid = int(cam.shape[0] ** 0.5)        # 14 for ViT-B/16 at 224px
