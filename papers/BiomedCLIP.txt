@@ -1,0 +1,1417 @@
+BiomedCLIP: a multimodal biomedical foundation model
+pretrained from fifteen million scientific image-text pairs
+
+Sheng Zhang1,∗, Yanbo Xu1,∗, Naoto Usuyama1,∗, Hanwen Xu2,∗, Jaspreet Bagga1,
+
+Robert Tinn1, Sam Preston1, Rajesh Rao1, Mu Wei1, Naveen Valluri1, Cliff Wong1,
+Andrea Tupini1, Yu Wang1, Matt Mazzola1, Swadheen Shukla1, Lars Liden1, Jianfeng Gao1,
+Angela Crabtree3, Brian Piening3, Carlo Bifulco3, Matthew P. Lungren1, Tristan Naumann1,
+Sheng Wang2,‡, and Hoifung Poon1,‡
+
+1Microsoft Research, Redmond, WA
+2Paul G. Allen School of Computer Science and Engineering, University of Washington, Seattle,
+WA
+3Providence Genomics, Portland, OR
+
+Abstract
+
+Biomedical data is inherently multimodal, comprising physical measurements and natural language narratives. A
+generalist biomedical AI model needs to simultaneously process different modalities of data, including text and im-
+ages. Therefore, training an effective generalist biomedical model requires high-quality multimodal data, such as
+parallel image-text pairs. Here, we present PMC-15M, a novel dataset that is two orders of magnitude larger than
+existing biomedical multimodal datasets such as MIMIC-CXR, and spans a diverse range of biomedical image types.
+PMC-15M contains 15 million biomedical image-text pairs collected from 4.4 million scientific articles. Based on
+PMC-15M, we have pretrained BiomedCLIP, a multimodal foundation model, with domain-specific adaptations tai-
+lored to biomedical vision-language processing. We conducted extensive experiments and ablation studies on standard
+biomedical imaging tasks from retrieval to classification to visual question-answering (VQA). BiomedCLIP achieved
+new state-of-the-art results in a wide range of standard datasets, including retrieval, image classification, and visual
+question answering, substantially outperforming prior approaches. Intriguingly, by large-scale pretraining on diverse
+biomedical image types, BiomedCLIP even outperforms state-of-the-art radiology-specific models such as BioViL in
+radiology-specific tasks such as RSNA pneumonia detection. We further illustrated how BiomedCLIP could promote
+privacy-preserving analysis of proprietary data by using PMC-15M as a proxy. In summary, BiomedCLIP is a fully
+open-access foundation model that achieves state-of-the-art performance on various biomedical tasks, paving the way
+for transformative multimodal biomedical discovery and applications. We release our models at aka.ms/biomedclip
+to facilitate future research in multimodal biomedical AI.
+
+5
+2
+0
+2
+
+n
+a
+J
+
+8
+
+]
+
+V
+C
+.
+s
+c
+[
+
+3
+v
+5
+1
+9
+0
+0
+.
+3
+0
+3
+2
+:
+v
+i
+X
+r
+a
+
+* Equal contribution
+‡ Corresponding authors. Emails: swang@cs.washington.edu, hoifung@microsoft.com
+
+1
+
+ 
+ 
+ 
+ 
+ 
+ 
+2
+
+Introduction
+
+Biomedical data is inherently multimodal, comprising both physical measurements and natural-language narratives
+[1, 2]. However, only a fraction of such data is interpreted and made available in structured forms, as manual curation is
+costly and hard to scale. Multimodal learning can alleviate the curation bottleneck by leveraging self-supervision from
+cross-modal correspondence. It also helps uncover predictive signals that may remain latent in standalone modalities
+through multimodal fusion. As a result, biomedical vision-language foundation models [3–10] have been developed
+to collectively model biomedical images (e.g., digital pathology and radiology images) and biomedical text (e.g.,
+scientific papers and clinical notes). There are two key advantages of biomedical vision-language foundation models.
+First, by pretraining on large-scale data using self-supervised learning, these models excel in low-resource settings,
+where only a small amount of fine-tuning data is accessible, across a diverse range of downstream applications, thereby
+substantially decreasing the cost associated with data annotation. Second, by pretraining on high-quality parallel
+image-text data, these models can solve tasks that require a comprehensive understanding of both image and text data,
+such as image description generation and visual question-answering.
+
+Since both advantages rely on high-quality biomedical image text data, obtaining such data is crucial to building an
+accurate and generalizable model. In contrast to the pretraining data used by general-domain vision-language models
+[11–13], the pretraining data used by existing biomedical vision-language models present three major limitations.
+First, many pretraining data are private data, resulting in the inaccessibility of many biomedical foundation models.
+Second, existing parallel image-text datasets in the biomedical domain are relatively small, ranging from 7k to 377k
+pairs (e.g., 377,110 pairs for MIMIC-CXR [14], 224,316 pairs for CheXpert [15], 7,562 pairs for ARCH [16], and
+87,952 pairs for ROCO [17]). Finally, existing datasets are generally lacking in diversity and most of them focus on
+chest X-ray, thus limiting their generalizability to other biomedical image types. Prior studies in general domains
+have demonstrated the advantage of pretraining on diverse, expansive datasets [11], with increasing efforts on mining
+web images and captions [18–21], yet biomedical image-text pairs are relatively scarce in such web resources and the
+quality varies.
+
+In this paper, we develop PMC-15M, a large biomedical dataset with high-quality parallel image-text pairs ex-
+tracted from scientific publications in PubMed Central (PMC)*. Comprising 15 million biomedical image-text pairs,
+PMC-15M aims to address the three limitations in prior biomedical vision-language models. First, PMC-15M is a
+public dataset collected from scientific papers, which are devoid of privacy issues. Foundation models trained on
+PMC-15M are thus openly accessible. Second, PMC-15M is two orders of magnitude larger than prior large datasets
+such as MIMIC-CXR. Finally, PMC-15M covers essentially any category of interest to biomedical research, spanning
+thirty major biomedical image types, offering a diverse and representative dataset for biomedical research and clinical
+practice.
+
+Based on PMC-15M, we have pretrained BiomedCLIP, a state-of-the-art biomedical vision-language foundation
+model that excels in a wide range of downstream applications such as cross-modal retrieval, zero-shot image classifi-
+cation, and medical visual question answering. BiomedCLIP outperformed the general-domain CLIP model [11] by
+a wide margin across the board, confirming the importance of exploring domain-specific models for biomedicine. By
+pretraining on much larger and more diverse data, BiomedCLIP also substantially outperformed prior state-of-the-art
+biomedical vision-language models such as PubMedCLIP and MedCLIP, especially in low-resource settings. Surpris-
+ingly, BiomedCLIP even outperformed radiology-specific state-of-the-art models such as BioViL [22] on radiology-
+specific tasks such as RSNA pneumonia detection [23], highlighting the potential of positive transfer in pretraining
+from diverse image categories. Finally, we explore the possibility of using PMC-15M as a proxy for analyzing propri-
+etary data using external models. To facilitate future biomedical multimodal research, we will release our BiomedCLIP
+models and scripts to reproduce PMC-15M at aka.ms/biomedclip upon publication.
+
+Results
+
+Overview of dataset, model and benchmark
+
+Dataset We have created PMC-15M, a large parallel image-text dataset from scientific papers collected from PubMed
+Central (PMC). See Fig. 1A, B. PMC is a comprehensive repository of biomedical research papers. We have previ-
+ously used PubMed papers to pretrain state-of-the-art biomedical large language models (e.g., PubMedBERT [24],
+
+*https://www.ncbi.nlm.nih.gov/pmc/
+
+3
+
+BioGPT [25]). Here, we propose to further leverage the abundant figure-caption pairs in PMC full-text articles for
+vision-language pretraining. PMC contains 4.4 million publicly available full-text articles (as of June 15, 2022). We
+downloaded and extracted compressed directories with complete article packages. Each article is represented as a
+package of XML, PDF, media, and supplementary materials. We extracted figure files and the matching captions,
+along with the PMID and the PMCID of the provenance articles. This yields a dataset with 15,282,336 image-caption
+pairs. We used Azure Databricks to process the data as it offered a scalable and reliable platform that is designed to
+handle large datasets and complex workflows in parallel using Apache Spark (Fig. 1C).
+
+We demonstrate the summary statistics of PMC-15M in Fig. 1A. We found that biomedical images are much
+larger than the standard image size (224 × 224) in general domains and biomedical image captions are much longer
+than the default max length (77) used by the standard CLIP method [11]. This necessitates the exploration of new
+model configurations for pretraining biomedical images and text. To probe the diversity and coverage of image classes
+in PMC-15M, we created PMC-Fine-Grained-46M by splitting each scientific figure into individual panel images
+(see Methods). We then used a curated taxonomy [26] with manually assigned image type keywords to estimate the
+frequency of each image type by assigning each image with the closest keywords in the learned embedding space from
+BiomedCLIP. The numbers likely overcount real class frequency but are close enough for a ball-park estimate. Fig.
+1B shows the top 30 image types in PMC-Fine-Grained-46M. Images in PMC are extremely diverse, ranging from
+generic biomedical illustration (e.g., statistical figures, graphs, charts, tables and forms) to radiography (e.g., magnetic
+resonance, computerized tomography, and X-ray) to digital pathology and microscopy (e.g., light microscopy, and
+electron microscopy), among others. The large size and diversity raise our confidence that PMC-15M can be used to
+train a state-of-the-art foundation model for biomedical vision-language processing.
+
+Modeling BiomedCLIP is an advanced adaptation of the CLIP (Contrastive Language–Image Pretraining) model [11],
+specifically tailored for the biomedical domain. CLIP trains image and text encoders to embed (image, text) pairs
+in a shared space, optimizing for a high cosine similarity among positive pairs and a low similarity for negative
+pairs through the InfoNCE loss [27]. Unlike the original CLIP, which was trained from scratch on internet-sourced
+image-text pairs, BiomedCLIP adapts this approach to better suit the unique characteristics of biomedical images and
+texts. This adaptation involves employing a domain-specific language model, PubMedBERT [24], in place of general-
+domain GPT-2 [28] for the text encoder, and adjusting the tokenizer and context size to accommodate the typically
+longer biomedical literature. This contrasts with PubMedCLIP [29] and MedCLIP [30], where PubMedCLIP simply
+fine-tunes the original CLIP on a limited dataset from PubMed Central and MedCLIP incorporates medical knowledge
+into the learning process but still within the constraints of the original CLIP architecture. BiomedCLIP also introduces
+domain-specific adaptations to the image processing, utilizing larger Vision Transformer models [31] and higher image
+resolutions to better capture the detailed visual information necessary for biomedical understanding. Additionally, it
+implements a patch dropout strategy [32] to maintain pretraining efficiency while enhancing model performance. The
+tailored batch size optimization of BiomedCLIP further underscores its custom adaptation for the biomedical domain.
+
+Benchmark The overarching objective of pretraining is to improve performance across a broad spectrum of down-
+stream applications. In general domains, comprehensive benchmarks like ELEVATER [33] have spurred rapid ad-
+vances in vision-language pretraining by facilitating direct comparison among pretrained models. In contrast, prior
+work on biomedical vision-language pretraining tends to use different tasks and datasets for downstream evaluation,
+e.g., [29, 30, 34]. To facilitate evaluations of biomedical vision-language pretraining and expedite progress in biomed-
+ical vision-language processing, we compile a collection of eight standard vision-language datasets spanning key
+downstream tasks: image-to-text and text-to-image retrieval, image classification, and visual question answering (Fig.
+1D). Table 1 provides an overview of the datasets used in downstream applications.
+
+BiomedCLIP enables accurate cross-modal retrieval
+
+We first evaluate the task of cross-modal retrieval which aims to retrieve the corresponding image from the caption
+(text-to-image retrieval) or vice versa (image-to-text retrieval). The retrieval tasks mirror various image search and
+text generation in real-world applications and can be evaluated automatically in held-out image-text pairs. We use a
+held-out test set from PMC-15M comprising 725,739 PMC image-caption pairs. The results are summarized in Fig.
+2A. We first notice that the general-domain CLIP model performs poorly in the biomedical domain, necessitating the
+development of a domain-specific vision language model. In contrast, BiomedCLIP attains remarkably high retrieval
+accuracy: out of over 700 thousand candidates, BiomedCLIP’s top-5 results contain the correct one over 77% of times,
+
+4
+
+and its top-1 results are correct over 56% of times. To our surprise, PubMedCLIP [29] performs even worse than CLIP,
+despite biomedical adaptation. We attribute this to the training data that PubMedCLIP used. Despite being named after
+PubMed, PubMedCLIP only used a small set of radiology image-text pairs in the continual pretraining of CLIP, which
+accounts for a small fraction of images in the biomedical literature. Moreover, continual pretraining on a small dataset
+In
+without extra care (e.g., augmenting with pretraining objective) may be prone to catastrophic forgetting [35].
+contrast, BiomedCLIP performs very well by pretraining on large-scale data from PMC-15M, further indicating the
+importance of utilizing a diverse and large dataset for domain-specific vision language models.
+
+To understand how BiomedCLIP outperforms general-domain CLIP in biomedical cross-modal retrieval, we show
+three random examples in Fig. 2B. In each example, we show the top-4 image retrieval results given the text prompt,
+with the correct answer shown in a gold box. General CLIP can find images matching common keywords such as
+“chest X-ray”, but have trouble differentiating subtle semantics such as “pleural effusion”, “spindle shaped cells”, or
+even important biomedical image categories like “ASL” (Arterial Spin Labeling). By contrast, BiomedCLIP recognizes
+not only high-level categories but also details like “a large pleural effusion on the right”. For example, the images
+retrieved by BiomedCLIP in the first example are completely correct according to the caption, except the right-bottom
+one, which still looks quite similar to the others. In the second example, BiomedCLIP is able to find the correct answer
+and additional H&E images with spindle-shaped cells, as described in the prompt, unlike general CLIP. We attribute
+BiomedCLIP’s ability of capturing both coarse-grained and fine-grained semantics to our diverse and large pretraining
+dataset PMC-15M.
+
+BiomedCLIP enables accurate biomedical image classification
+
+We next evaluate the performance of BiomedCLIP for biomedical image classification on five datasets (see Meth-
+ods). We investigate the zero-shot performance on BiomedCLIP models, where a short text prompt describing the
+class is used to assist the classification (Supplementary Table 10). BiomedCLIP exhibits superior performance
+on zero-shot classification, attaining the highest overall accuracy (mean of the scores) across all the datasets (Fig.
+3A,B). PubMedCLIP was continual pretrained using radiology data so it outperforms the general-domain CLIP on the
+RSNA benchmark but generally yields inferior performance on the digital pathology benchmarks such as LC25000
+and TCGA-TIL. PLIP [7] was pretrained on digital pathology data from social media, so performs reasonably well
+on some of the pathology benchmarks, but yields much inferior performance on RSNA. Surprisingly, PLIP also per-
+forms rather poorly on the pathology benchmark PCam. We suspect that the pathology images in PCam (lymph nodes
+with metastatic tumors) might be under-represented in the social media data PLIP was pretrained on. Med-Flamingo
+[10] was pre-trained as a few-shot learner on interleaved image-text data, with its pre-training data formulated as
+open-ended visual question answering (VQA). It almost always generates the same answer or choice regardless of the
+prompt template or test example, likely due to its pre-training nature, which limits its capability for zero-shot multi-
+modal reasoning and hinders its ability to follow instructions for closed-set classification. In contrast, BiomedCLIP
+achieves good results on all datasets from diverse image sources, again indicating the importance of pretraining on a
+diverse and large-scale dataset for building a foundational vision-language model.
+
+We also evaluate few-shot and full-shot performance on PCam and RSNA by linear probing the models with
+1%, 10%, and 100% of training data, respectively (Fig. 3C,D). Notably, by pretraining on diverse data across all
+biomedical image classes, BiomedCLIP even outperforms the state-of-the-art radiology-specific BioViL model [22]
+on the standard radiology benchmark RSNA. Furthermore, BiomedCLIP already outperforms fully supervised BioViL
+using only 10% of labeled data. As shown in (Fig. 1B), the radiology-related images used in BiomedCLIP pretraining
+are no more than MIMIC-CXR used in BioViL pretraining, and the image-text pairs are likely to be much noisier. This
+excludes the possibility that the superior performance of BiomedCLIP on RSNA stems from more radiology-specific
+pretraining. Instead, the overall pretraining on the large and diverse PMC-15M, including non-radiology image types,
+has helped pretrain a more robust image encoder, again indicating the superiority of using PMC-15M to develop a
+multimodal foundation model.
+
+BiomedCLIP improves medical visual question answering
+
+After observing the superior performance of BiomedCLIP on image classification, we then evaluate it on medical vi-
+sual question answering (VQA). Following the standard approach in prior work, we formulate VQA as a classification
+task using the METER [36] framework (see Methods). We evaluate the models on two standard datasets: VQ-RAD
+and SLAKE (Fig. 4A). We report the respective accuracies for open-ended questions and closed-ended questions as
+
+5
+
+well as the token-level F1. Again, BiomedCLIP exhibits superior performance compared to the radiology-specific
+state-of-the-art PubMedCLIP on both radiology benchmarks, with about one point and six points increases in overall
+accuracy respectively. BiomedCLIP’s gains are particularly pronounced for open-ended questions in VQA-RAD and
+for all question types in SLAKE. Furthermore, we see that BiomedCLIP achieves comparable performance comparing
+to the much larger model Med-PalM M (562B) [37] and the instruction-aware fine-tuned model BiomedGPT-B [6].
+Notably, LLaVA-Med [38], which integrates BiomedCLIP as the core vision encoder into the LLaVA framework and
+further fine-tunes it to follow open-ended instructions, achieves the highest VQA performance on both datasets.
+
+To further examine the answers provided by BiomedCLIP, we evaluate BiomedCLIP on some of the most chal-
+lenging examples highlighted in the PubMedCLIP paper [29], where all prior state-of-the-art models, including Pub-
+MedCLIP, failed to answer correctly (Fig. 4B-D). In the second example (Fig. 4C), prior models fail to return the
+right answer, whereas in the third example (Fig. 4D), their answers indicate that they even fail to understand what the
+question is about. BiomedCLIP nails both answers perfectly. In the first example, which is the most challenging one
+(Fig. 4B), MEVF misidentifies the body part as displayed in the image, whereas QCR and PubMedCLIP misinterpret
+the question as a binary one (yes/no). While BiomedCLIP didn’t get the correct answer either, it correctly identified
+the relevant organ as presented in the image. Since medical visual question answering requires both strong text un-
+derstanding and image understanding ability, we attribute the superior results of BiomedCLIP to the large number of
+parallel image-caption pairs in PMC-15M.
+
+BiomedCLIP and PMC-15M enable privacy-preserving analysis of proprietary data
+
+Finally, we investigate whether BiomedCLIP and PMC-15M can be used for privacy-preserving analysis of proprietary
+patient data (Fig. 5A). Proprietary patient data are often not allowed to be shared with external models, such as GPT4,
+preventing clinicians from using these models to analyze them. To tackle this, our idea is to use PMC-15M as a proxy
+for proprietary patient data. In particular, for each proprietary data point, we will use BiomedCLIP to retrieve the
+most similar data points in PMC-15M. We will then query external models using these similar public data points and
+aggregate the answers as the proxy output for the proprietary data point. During this process, the proprietary data point
+can be analyzed using external models without being exposed to GPT4.
+
+To test the accuracy of this approximation, we collected 980 radiology images and the associated clinical reports
+from Providence (see Methods) and treated them as proprietary patient data. We then compared the CheXbert-based
+labels assigned to the proprietary data and those labels assigned to the most similar data points in PMC-15M. We
+observe a good agreement between these labels in terms of recall and F1, which is substantially higher than the
+agreements by PLIP and CLIP. In particular, our method can get 88.80 and 95.04 recall on lung opacity and atelectasis
+(Fig. 5B), indicating that BiomedCLIP can accurately retrieve relevant data points in PMC-15M as high-quality
+proxies of proprietary radiology data. Meanwhile, BiomedCLIP gets a lower recall than CLIP on Cardiomegaly (Fig.
+5B), suggesting that the approximation using BiomedCLIP could be limited by the captions in the scientific papers,
+which might not present all conditions as comprehensively as clinical reports. Finally, we illustrated an example
+proprietary image from Providence with the top three retrieved PMC images using BiomedCLIP (Fig. 5C), and
+observed that the captions of the retrieved PMC images could cover the main findings from the clinical report of the
+proprietary image, further raising our confidence that BiomedCLIP and BiomedCLIP can be high-quality proxies to
+enable the privacy-preserving analysis of proprietary data.
+
+Discussion
+
+We present to our knowledge the largest study on biomedical vision-language pretraining using 15 million image-
+caption pairs extracted from PubMed Central full-text articles. Our pretraining data is at least two orders of magnitude
+larger than prior datasets, spanning an extremely diverse range of biomedical images. We conducted a systematic study
+on domain-specific adaptations for the biomedical domain and propose BiomedCLIP for biomedical vision-language
+processing. In extensive experiments on eight standard biomedical datasets, BiomedCLIP establishes new state of the
+art on standard applications such as cross-modal retrieval, image classification, and visual question answering. The
+promising results of our method indicate the effectiveness of BiomedCLIP on diverse biomedical image tasks and
+validate the advantage in conducting large-scale pretraining on extremely diverse data.
+
+Our work is most relevant to biomedical multimodal representation learning. Most existing vision-language pre-
+training works focus on chest X-ray (CXR) with limited amounts of training data. ConVIRT [34] pioneers the use of
+
+6
+
+naturally occurring medical image-text pairs for self-supervision and demonstrates the potential of contrastive learn-
+ing in vision-language pretraining. Their image encoders benefit downstream CXR classification and retrieval tasks.
+Their text encoder inherits a general-domain vocabulary, which leads to frequent encounters with out-of-vocabulary
+words when processing medical text. While the word-piece tokenization mitigates this issue, common biomedical
+terms are often shattered into pieces, leading to suboptimal performance [24]. GLoRIA [39] uses the same general-
+domain vocabulary and extends ConVIRT by jointly learning multimodal global and local representations of medical
+images via contrasting attention weighted image regions with words in the paired reports. LoVT [40] proposes a
+similar pretraining approach that aligns local representations of image regions and report sentences. [41] learn mul-
+timodal representations by maximizing the mutual information between local features of medical images and text.
+PubMedCLIP [29] fine-tunes the original CLIP on 80 thousand radiology image-caption pairs from the ROCO dataset
+[17] collected from PubMed Central [42], which is a tiny subset compared to PMC-15M. [43] propose a transformer-
+based framework for mix-up image-text pretraining, which uses masked vision/language modeling for image-only or
+text-only data and uses binary cross entropy for paired image-text data. They demonstrate the benefits of adopting
+pretrained models in three CXR applications, i.e., classification, retrieval, and image regeneration. MedCLIP [30]
+similarly extends contrastive learning to cover image-only and text-only data. They additionally introduce medical
+knowledge to alleviate false negatives. MedAug [44] leverages patient metadata to select positive image pairs that
+go beyond augmentations of the same image. BioViL [22] improves contrastive learning in self-supervised vision-
+language processing with radiology-specific semantic modeling tailored to CXR images and reports. It achieves the
+state of the art in radiology natural language inference and a range of CXR benchmarks. [45] show self-supervised
+multimodal pretraining on CXR data consistently outperforms ImageNet-pretrained models for CXR interpretation.
+
+In the future, we would like to explore further improvement on pretraining and fine-tuning, multimodal generation,
+as well as real-world applications such as image search, digital pathology, and multimodal fusion for precision health.
+While BiomedCLIP shows clear benefits of large-scale domain-specific pretraining for biomedical vision-language
+processing, there are several limitations in our current method: First, besides captions, in-line references (i.e., citances
+within the paper) can also be extracted and paired with the corresponding figures to create additional training signals.
+PMC-15M currently doesn’t include such data. Second, half of the images in PMC-15M are composite figures.
+Splitting such composite figures into sub-figures could enable more fine-grained modeling and potentially lead to better
+vision-language representations and grounding. PMC-Fine-Grained-46M is augmented with both in-line references
+and fine-grained image-text pairs. While our current us of PMC-Fine-Grained-46M is limited to tallying fine-grained
+image distribution, we plan to explore leveraging PMC-Fine-Grained-46M to enhance BiomedCLIP pretraining in
+future work. Third, due to computational constraints, the largest vision encoder we have explored is ViT-B, which
+is relatively small compared with ViT-L, ViT-H, and ViT-G. Similarly, we have been using a relatively low image
+resolution of 336. While this is more than sufficient for general-domain web images, biomedical images tend to have
+much higher resolution. E.g., more than 75% of images in PMC-15M have size larger than 336, as shown in Fig. 1.
+We plan to explore larger models and higher resolutions in future work. Finally, it would be interesting to apply our
+methodology to additional biomedical modalities other than images, where similar naturally co-occurring data abound,
+such as gene expression and sequence data along with textual descriptions.
+
+7
+
+Methods
+
+Details of creating PMC-15M
+
+PubMed Central Open Access Subset (PMC-OA) [46] contains 4.4 million publicly available full-text articles (as of
+June 15, 2022). We download PMC-OA from ncbi.nlm.nih.gov/pmc/tools/ftp/#indart and extract complete packages
+for articles that include XML, PDF, media, and supplementary materials. We use PubMed Parser [47] to parse the XML
+files and extract captions and the corresponding figure references, along with PMID and PMCID of the provenance
+articles. This processing results in JSON objects stored in JSONL format, where each line represents one article, for
+convenient post-processing. Articles without figure references, or with incorrectly formatted XML files with syntax
+errors or missing information errors are ignored. After this clean-up, we collect 15 million figure-caption pairs (PMC-
+15M) from over 3 million distinct articles.
+
+Details of creating PMC-Fine-Grained-46M
+
+PMC-Fine-Grained-46M is created using a novel data curation pipeline that extracts and refines image-text pairs
+from PMC-15M. The pipeline is designed to handle compound figures by breaking them down into sub-figures and
+captions, and it also incorporates in-line text references from articles as an additional data source for image-text
+pairs. The process begins with Data Ingestor, which downloads and processes article files. Then, Citance Extractor
+parses article text for figure references, and Caption Splitter uses regex and rules to separate figure captions into
+sub-captions with individual labels. Next, Citance Splitter assigns blocks of citances to each label, Optical Character
+Recognition (OCR) detects text in figures, and Label-To-Box Matcher matches labels with OCR-detected text. Finally,
+Figure Splitter segments compound images into panels (sub-figures), and Label-to-Panel Matcher assigns labels to the
+correct panels. The pipeline overcomes various challenges like inconsistent labeling styles, OCR errors, and the
+ambiguous positioning of labels relative to sub-figures. Advanced techniques and heuristics are employed, such as
+string matching for OCR text, layout analysis to correct OCR mistakes, and region-based heuristics to match labels
+with panels. Through this intricate process, the PMC-Fine-Grained-46M dataset, with 46 million image-text pairs, is
+carefully constructed to facilitate the development of vision-language representations in the biomedical domain.
+
+Cross-modal retrieval
+
+To evaluate the retrieval performance, we follow prior work [21] to precompute image and text embeddings and
+perform an approximate nearest neighbor search. Specifically, we use the pretrained vision encoder and text encoder
+from the CLIP models to precompute embeddings of figures and captions respectively. Given a figure embedding, we
+compute its cosine similarities with all captions in the test set and retrieve the k most similar captions. Our evaluation
+metric measures if the original caption for the figure is within the k retrieved captions, i.e., recall at top-k or R@k.
+Similarly, we evaluate Recall@k for text-to-image cross-modal retrieval.
+
+We consider several CLIP models as baselines: OpenAI CLIP [11], which is pretrained on 400 million general-
+domain (image, text) pairs collected from the Internet; PubMedCLIP [48], which fine-tunes OpenAI CLIP on 80k
+radiology image-caption pairs. We also compare with a variant of our BiomedCLIP (i.e., BiomedCLIP ViT-B/16-224-
+GPT/77), which continues pretraining OpenAI CLIP on PMC-15M.
+
+Biomedical image classification
+
+We use the evaluation toolkit ELEVATER [33] to facilitate our experiments on image classification. ELEVATER
+is an easy-to-use toolkit that can efficiently adapt pretrained vision-language models and automatically tune hyper-
+parameters. It supports zero-shot, few-shot and full-shot evaluations, with linear probing and full model fine-tuning
+available for the latter two settings. It also contains twenty image classification datasets collected from various do-
+mains, including a biomedical one PatchCamelyon, which we use in our experiments. In addition, we evaluate on
+three standard biomedical imaging benchmarks LC25000, TCGA-TIL and RSNA.
+
+An overview of the datasets can be found in Table 1. PatchCamelyon (PCam) [49] contains 327, 680 color images
+(96×96px), which were taken from histophathology scans of lymph node sections. The images have been assigned a
+binary label indicating whether or not they contain metastatic tissue. LC25000 [50] contains 25, 000 histopathology
+images (768×768px). These images were generated by augmentation from a collection of HIPAA-compliant, validated
+sources originally comprising 750 images of lung tissue (250 benign, 250 adenocarcinomas, and 250 squamous cell
+
+8
+
+carcinomas) and 500 images of colon tissue (250 benign and 250 adenocarcinomas). The dataset is divided into
+five classes: lung benign tissue, lung adenocarcinoma, lung squamous cell carcinoma, colon adenocarcinoma, and
+colon benign tissue, with each class containing 5,000 images. TCGA-TIL [51, 52] contains 2, 480 image patches
+(500×500px) that were partitioned from H&E whole-slide images from The Cancer Genome Atlas (TCGA) [53] lung
+adenocarcinoma (LUAD) cases (5.9% of the patches are labelled as LUAD). RSNA Pneumonia [23] contains about
+30, 000 frontal-view chest radiographs collected from the National Institutes of Health’s public database of chest X-
+rays. It contains binary labels classifying pneumonia against normal cases.
+
+We compare our method against competing methods, including CLIP, MedCLIP, PubMedCLIP, PLIP, Med-Flamingo
+
+and LLaVA-Med. MedCLIP [30] extends the pretraining to include large unpaired images and texts through contrastive
+learning. It uses the pretrained BioClinicalBERT and Swin Transformer [54] as the backbone text encoder and visual
+encoder respectively, and fine-tunes on MIMIC-CXR and CheXpert datasets. PubMedCLIP [29] fine-tunes CLIP on
+the Radiology Objects in COntext (ROCO) dataset [17], which consists of 80K radiology image-text pairs drawn from
+PubMed articles. PLIP [7] was pretrained on OpenPath, which contains about 208K pathology images paired with
+natural language descriptions from medical Twitter. Med-Flamingo [10] is a multimodal few-shot learner based on
+OpenFlamingo-9B, further pre-trained with 2M interleaved medical image-text data from publications and textbooks,
+formulated for open-ended visual question answering. LLaVA-Med [38] extends BiomedCLIP and is further tuned to
+master open-ended conversational semantics using GPT-4 generated instruction-following data. All the models, except
+the last two which use prompts to answer close-ended questions, are adapted into ELEVATER for evaluation.
+
+Medical Visual Question Answering
+
+We utilize the METER [36] framework to facilitate our experiments on visual question answering (VQA). It formulates
+the VQA task as a classification task. The core module of METER is a transformer-based co-attention multimodal
+fusion module that produces cross-modal representations over the image and text encodings, which are then fed to
+a classifier for predicting the final answer. We compare BiomedCLIP with general-domain CLIP, MAML (Model-
+Agnostic Meta-Learning) network pretrained only on visual data and PubMedCLIP. All three models were fine-tuned
+for VQA tasks using the QCR (Question answering via Conditional Reasoning) framework [55] that alternatively
+uses a MLP-based attention networks with conditional reasoning as the fusion module. Results for MAML, CLIP
+and PubMedCLIP are collected from [29]. We also compare our method with instruction-aware fine-tuned models
+BiomedGPT-B [6], which was fine-tuned on 25 curated datasets, LLaVA-Med and significantly larger model Med-
+PaLM M (562B) [37], which was fine-tuned on 12 open source datasets and 14 individual tasks.
+
+We evaluated our method and competing methods on VQA-RAD [56] and SLAKE [57] using accuracy and token-
+level F1 metrics. The accuracy metric evaluates string-level correctness by treating VQA as a classification task with
+a set of predefined answer candidates collected from the training data, while the token-level F1 metric assesses token-
+level matching by feeding the answers into GPT-2 to obtain tokens. The dataset VQA-RAD consists of 315 radiology
+images and 3, 515 question-answer pairs that were manually constructed by clinicians.
+Images in the test set are
+also present in the training set but the question-answer pairs do not overlap. SLAKE (English only) consists of 642
+radiology images and over 7, 000 question-answer pairs annotated by experienced physicians. It covers more human
+body parts than VQA-RAD and does not have common images between the training and test sets. See Supplementary
+Table 1 for details.
+
+Privacy-preserving proprietary data analysis
+
+We collected 980 chest X-ray images and the associated clinical reports from Providence Healthcare organization and
+treated them as proprietary data. We employed BiomedCLIP for image-to-image retrieval to find the most similar
+images in the PMC-15M dataset. To optimize computational efficiency, we downsampled PMC-15M in two steps.
+Initially, we sampled 1, 000 MIMIC-CXR seed images and used BiomedCLIP to retrieve 100, 000 CXR-relevant
+images from PMC-15M. Subsequently, we utilized BiomedCLIP to filter out the 90% least consistent image-caption
+pairs, based on low similarity scores between image and caption embeddings, resulting in a refined subset of 10, 000
+CXR images from PMC-15M used for final image-to-image retrieval.
+
+We obtained 13 CheXbert labels, excluding ‘No Findings’, for the proprietary images by running CheXbert on the
+Findings and Impression sections of their corresponding clinical reports. Each label was classified as either positive
+or negative, with uncertain, blank, and negative outputs from CheXbert all categorized as negative. For the retrieved
+
+9
+
+PMC images, we acquired labels by applying CheXbert to their corresponding captions. We conducted similar image-
+to-image retrieval experiments using PLIP and CLIP, evaluating label agreement between the top one retrieved and
+proprietary images through F1 and Recall metrics.
+
+Data availability
+
+We will provide scripts to reproduce PMC-15M and PMC-Fine-Grained-46M from PubMed Central Open-Access
+Data (PMC-OA), upon publication of this manuscript. These scripts will be made available at https://aka.ms/biomedclip.
+(Currently, this url is pointed to a preliminary model release at Hugging Face.)
+
+Code availability
+
+BiomedCLIP will be made fully available at https://aka.ms/biomedclip, including the model weights and relevant
+source code for pretraining, fine-tuning, and inference. We will also provide detailed methods and implementation
+steps to facilitate independent replication.
+
+10
+
+References
+
+[1] Moor, M. et al. Foundation models for generalist medical artificial intelligence. Nature 616, 259–265 (2023).
+
+[2] Tu, T. et al. Towards generalist biomedical ai. arXiv preprint arXiv:2307.14334 (2023).
+
+[3] Heiliger, L., Sekuboyina, A., Menze, B., Egger, J. & Kleesiek, J. Beyond medical imaging-a review of multi-
+
+modal deep learning in radiology (2022).
+
+[4] Huang, S.-C., Pareek, A., Seyyedi, S., Banerjee, I. & Lungren, M. P. Fusion of medical imaging and electronic
+health records using deep learning: a systematic review and implementation guidelines. NPJ digital medicine 3,
+1–9 (2020).
+
+[5] Ikezogwo, W. O. et al. Quilt-1m: One million image-text pairs for histopathology.
+
+arXiv preprint
+
+arXiv:2306.11207 (2023).
+
+[6] Zhang, K. et al. Biomedgpt: A unified and generalist biomedical generative pre-trained transformer for vision,
+
+language, and multimodal tasks. arXiv preprint arXiv:2305.17100 (2023).
+
+[7] Huang, Z., Bianchi, F., Yuksekgonul, M., Montine, T. J. & Zou, J. A visual–language foundation model for
+
+pathology image analysis using medical twitter. Nature medicine 29, 2307–2316 (2023).
+
+[8] Chen, Q., Hu, X., Wang, Z. & Hong, Y. Medblip: Bootstrapping language-image pre-training from 3d medical
+
+images and texts. arXiv preprint arXiv:2305.10799 (2023).
+
+[9] Xu, H. et al. A whole-slide foundation model for digital pathology from real-world data. Nature 1–8 (2024).
+
+[10] Moor, M. et al. Med-flamingo: a multimodal medical few-shot learner. In Machine Learning for Health (ML4H),
+
+353–367 (PMLR, 2023).
+
+[11] Radford, A. et al. Learning transferable visual models from natural language supervision.
+
+In International
+
+Conference on Machine Learning, 8748–8763 (PMLR, 2021).
+
+[12] Ramesh, A. et al. Zero-shot text-to-image generation. In International Conference on Machine Learning, 8821–
+
+8831 (PMLR, 2021).
+
+[13] Rombach, R., Blattmann, A., Lorenz, D., Esser, P. & Ommer, B. High-resolution image synthesis with latent
+diffusion models. In Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition,
+10684–10695 (2022).
+
+[14] Johnson, A. E. et al. Mimic-cxr, a de-identified publicly available database of chest radiographs with free-text
+
+reports. Scientific data 6, 1–8 (2019).
+
+[15] Irvin, J. et al. Chexpert: A large chest radiograph dataset with uncertainty labels and expert comparison. In
+
+Proceedings of the AAAI conference on artificial intelligence, vol. 33, 590–597 (2019).
+
+[16] Gamper, J. & Rajpoot, N. Multiple instance captioning: Learning representations from histopathology textbooks
+and articles. In Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition, 16549–
+16559 (2021).
+
+[17] Pelka, O., Koitka, S., R¨uckert, J., Nensa, F. & Friedrich, C. M. Radiology objects in context (roco): a multi-
+modal image dataset. In Intravascular Imaging and Computer Assisted Stenting and Large-Scale Annotation of
+Biomedical Data and Expert Label Synthesis, 180–189 (Springer, 2018).
+
+[18] Sharma, P., Ding, N., Goodman, S. & Soricut, R. Conceptual captions: A cleaned, hypernymed, image alt-
+text dataset for automatic image captioning. In Proceedings of the 56th Annual Meeting of the Association for
+Computational Linguistics (Volume 1: Long Papers), 2556–2565 (Association for Computational Linguistics,
+Melbourne, Australia, 2018). URL https://aclanthology.org/P18-1238.
+
+11
+
+[19] Changpinyo, S., Sharma, P., Ding, N. & Soricut, R. Conceptual 12m: Pushing web-scale image-text pre-training
+to recognize long-tail visual concepts. In Proceedings of the IEEE/CVF Conference on Computer Vision and
+Pattern Recognition, 3558–3568 (2021).
+
+[20] Srinivasan, K., Raman, K., Chen, J., Bendersky, M. & Najork, M. Wit: Wikipedia-based image text dataset for
+multimodal multilingual machine learning. In Proceedings of the 44th International ACM SIGIR Conference on
+Research and Development in Information Retrieval, 2443–2449 (2021).
+
+[21] Schuhmann, C. et al. Laion-5b: An open large-scale dataset for training next generation image-text models.
+
+arXiv preprint arXiv:2210.08402 (2022).
+
+[22] Boecking, B. et al. Making the most of text semantics to improve biomedical vision–language processing. In
+
+European Conference on Computer Vision (ECCV), 1–21 (Springer, 2022).
+
+[23] Shih, G. et al. Augmenting the national institutes of health chest radiograph dataset with expert annotations of
+
+possible pneumonia. Radiology. Artificial intelligence 1 (2019).
+
+[24] Gu, Y. et al. Domain-specific language model pretraining for biomedical natural language processing. ACM
+
+Transactions on Computing for Healthcare (HEALTH) 3, 1–23 (2021).
+
+[25] Luo, R. et al. Biogpt: generative pre-trained transformer for biomedical text generation and mining. Briefings in
+
+Bioinformatics 23 (2022).
+
+[26] Garc´ıa Seco de Herrera, A., M¨uller, H. & Bromuri, S. Overview of the ImageCLEF 2015 medical classification
+
+task. In Working Notes of CLEF 2015 (Cross Language Evaluation Forum) (2015).
+
+[27] Oord, A. v. d., Li, Y. & Vinyals, O. Representation learning with contrastive predictive coding. arXiv preprint
+
+arXiv:1807.03748 (2018).
+
+[28] Radford, A. et al. Language models are unsupervised multitask learners. OpenAI blog 1, 9 (2019).
+
+[29] Eslami, S., de Melo, G. & Meinel, C. Does clip benefit visual question answering in the medical domain as much
+
+as it does in the general domain? arXiv preprint arXiv:2112.13906 (2021).
+
+[30] Wang, Z., Wu, Z., Agarwal, D. & Sun, J. Medclip: Contrastive learning from unpaired medical images and text.
+
+arXiv preprint arXiv:2210.10163 (2022).
+
+[31] Dosovitskiy, A. et al. An image is worth 16x16 words: Transformers for image recognition at scale. arXiv
+
+preprint arXiv:2010.11929 (2020).
+
+[32] Li, Y., Fan, H., Hu, R., Feichtenhofer, C. & He, K. Scaling language-image pre-training via masking. arXiv
+
+preprint arXiv:2212.00794 (2022).
+
+[33] Li, C. et al. Elevater: A benchmark and toolkit for evaluating language-augmented visual models. Neural
+
+Information Processing Systems (2022).
+
+[34] Zhang, Y., Jiang, H., Miura, Y., Manning, C. D. & Langlotz, C. P. Contrastive learning of medical visual
+
+representations from paired images and text. arXiv preprint arXiv:2010.00747 (2020).
+
+[35] McCloskey, M. & Cohen, N. J. Catastrophic interference in connectionist networks: The sequential learning
+
+problem. In Psychology of learning and motivation, vol. 24, 109–165 (Elsevier, 1989).
+
+[36] Dou, Z.-Y. et al. An empirical study of training end-to-end vision-and-language transformers. In Conference on
+
+Computer Vision and Pattern Recognition (CVPR) (2022). URL https://arxiv.org/abs/2111.02387.
+
+[37] Tu, T. et al. Towards generalist biomedical ai. NEJM AI 1, AIoa2300138 (2024).
+
+[38] Li, C. et al. Llava-med: Training a large language-and-vision assistant for biomedicine in one day. Advances in
+
+Neural Information Processing Systems 36 (2024).
+
+12
+
+[39] Huang, S.-C., Shen, L., Lungren, M. P. & Yeung, S. GLoRIA: A multimodal global-local representation learn-
+In Proceedings of the IEEE/CVF International
+
+ing framework for label-efficient medical image recognition.
+Conference on Computer Vision, 3942–3951 (2021).
+
+[40] M¨uller, P., Kaissis, G., Zou, C. & Rueckert, D. Joint learning of localized representations from medical images
+
+and reports. In European Conference on Computer Vision, 685–701 (Springer, 2022).
+
+[41] Liao, R. et al. Multimodal representation learning via maximization of local mutual information. In International
+Conference on Medical Image Computing and Computer-Assisted Intervention, 273–283 (Springer, 2021).
+
+[42] Roberts, R. J. Pubmed central: The genbank of the published literature (2001).
+
+[43] Wang, X., Xu, Z., Tam, L., Yang, D. & Xu, D. Self-supervised image-text pre-training with mixed data in chest
+
+x-rays. arXiv preprint arXiv:2103.16022 (2021).
+
+[44] Vu, Y. N. T. et al. Medaug: Contrastive learning leveraging patient metadata improves representations for chest
+x-ray interpretation. In Jung, K., Yeung, S., Sendak, M., Sjoding, M. & Ranganath, R. (eds.) Proceedings of
+the 6th Machine Learning for Healthcare Conference, vol. 149 of Proceedings of Machine Learning Research,
+755–769 (PMLR, 2021). URL https://proceedings.mlr.press/v149/vu21a.html.
+
+[45] Iyer, N. S. et al. Self-supervised pretraining enables high-performance chest x-ray interpretation across clinical
+distributions. medRxiv (2022). URL https://www.medrxiv.org/content/early/2022/11/25/2022.11.19.22282519.
+https://www.medrxiv.org/content/early/2022/11/25/2022.11.19.22282519.full.pdf.
+
+[46] Pmc open access subset. [Internet] (2003). URL https://www.ncbi.nlm.nih.gov/pmc/tools/openftlist/.
+
+[47] Achakulvisut, T., Acuna, D. & Kording, K. Pubmed parser: A python parser for pubmed open-access xml
+subset and medline xml dataset xml dataset. Journal of Open Source Software 5, 1979 (2020). URL https:
+//doi.org/10.21105/joss.01979.
+
+[48] Eslami, S., de Melo, G. & Meinel, C. Does CLIP benefit visual question answering in the medical domain as
+
+much as it does in the general domain? arXiv e-prints (2021). 2112.13906.
+
+[49] Veeling, B. S., Linmans, J., Winkens, J., Cohen, T. & Welling, M. Rotation equivariant CNNs for digital pathol-
+
+ogy (2018). 1806.03962.
+
+[50] Borkowski, A. A. et al. Lung and colon cancer histopathological image dataset (lc25000). arXiv preprint
+
+arXiv:1912.12142 (2019).
+
+[51] Saltz, J., Gupta, R., Hou, L. et al. Tumor-infiltrating lymphocytes maps from tcga h&e whole slide pathology
+
+images. Cancer Imaging Arch (2018).
+
+[52] Saltz, J. et al. Spatial organization and molecular correlation of tumor-infiltrating lymphocytes using deep learn-
+
+ing on pathology images. Cell reports 23, 181–193 (2018).
+
+[53] Clark, K. et al. The cancer imaging archive (tcia): maintaining and operating a public information repository.
+
+Journal of digital imaging 26, 1045–1057 (2013).
+
+[54] Liu, Z. et al. Swin transformer: Hierarchical vision transformer using shifted windows. In Proceedings of the
+
+IEEE/CVF International Conference on Computer Vision (ICCV) (2021).
+
+[55] Zhan, L.-M., Liu, B., Fan, L., Chen, J. & Wu, X.-M. Medical visual question answering via conditional reasoning.
+
+In Proceedings of the 28th ACM International Conference on Multimedia, 2345–2354 (2020).
+
+[56] Lau, J. J., Gayen, S., Ben Abacha, A. & Demner-Fushman, D. A dataset of clinically generated visual questions
+
+and answers about radiology images. Scientific data 5, 1–10 (2018).
+
+[57] Liu, B. et al. Slake: A semantically-labeled knowledge-enhanced dataset for medical visual question answering.
+
+In 2021 IEEE 18th International Symposium on Biomedical Imaging (ISBI), 1650–1654 (IEEE, 2021).
+
+13
+
+[58] He, K., Zhang, X., Ren, S. & Sun, J. Deep residual learning for image recognition. In Proceedings of the IEEE
+
+conference on computer vision and pattern recognition, 770–778 (2016).
+
+[59] Vaswani, A. et al. Attention is all you need. Advances in neural information processing systems 30 (2017).
+
+[60] Sennrich, R., Haddow, B. & Birch, A. Neural machine translation of rare words with subword units. In Pro-
+ceedings of the 54th Annual Meeting of the Association for Computational Linguistics (Volume 1: Long Papers),
+1715–1725 (Association for Computational Linguistics, Berlin, Germany, 2016). URL https://aclanthology.org/
+P16-1162.
+
+[61] Kudo, T. & Richardson, J. SentencePiece: A simple and language independent subword tokenizer and deto-
+In Proceedings of the 2018 Conference on Empirical Methods in Natural
+kenizer for neural text processing.
+Language Processing: System Demonstrations, 66–71 (Association for Computational Linguistics, Brussels,
+Belgium, 2018). URL https://aclanthology.org/D18-2012.
+
+[62] Cherti, M. et al. Reproducible scaling laws for contrastive language-image learning.
+
+arXiv preprint
+
+arXiv:2212.07143 (2022).
+
+[63] Loshchilov, I. & Hutter, F. Decoupled weight decay regularization. arXiv preprint arXiv:1711.05101 (2017).
+
+[64] Ilharco, G. et al. Openclip (2021). URL https://doi.org/10.5281/zenodo.5143773.
+
+[65] Li, S. et al.
+
+Pytorch distributed: Experiences on accelerating data parallel
+
+training.
+
+arXiv preprint
+
+arXiv:2006.15704 (2020).
+
+[66] Paszke, A. et al. Pytorch: An imperative style, high-performance deep learning library. Advances in neural
+
+information processing systems 32 (2019).
+
+Task
+
+Dataset
+
+Metric
+
+Description
+
+Cross-Modal
+Retrieval
+
+PMC-15M Recall@k
+
+PCam
+
+Accuracy
+
+LC25000
+(Lung)
+
+Accuracy
+
+Image
+Classification
+
+LC25000
+(Colon)
+
+Accuracy
+
+TCGA-TIL
+
+AUROC
+
+RSNA
+
+Accuracy
+
+VQA
+
+VQA-RAD
+
+Accuracy
+
+SLAKE
+
+Accuracy
+
+Given textual description
+(caption), retrieve the
+corresponding image, or vice
+versa. (Image size: see Fig. 1A)
+Binary classification on whether a
+histopathology image of lymph
+node contains metastatic tumor
+tissue. (Image size: 96×96)
+Ternary classification (benign,
+adenocarcinoma, squamous cell
+carcinoma) on histopathology
+images of lung tissue. (Image size:
+768×768)
+Binary classification (benign,
+adenocarcinoma) on
+histopathology images of colon
+tissue. (Image size: 768×768)
+Binary classification on whether
+lung H&E whole-slide image
+patches show adenocarcinoma.
+(Image size: 512×512)
+Binary classification on whether
+chest X-rays show pneumonia.
+(Image size: 500×500)
+Answer clinician questions about
+radiology images.
+Answer clinician questions about
+radiology images (X-rays, and
+single slices of CTs and MRIs).
+
+14
+
+Data size
+Dev
+
+Train
+
+Test
+
+13.9M 13.6k
+
+726k
+
+262,144
+
+32,768
+
+32,768
+
+-
+
+-
+
+-
+
+-
+
+-
+
+-
+
+15,000
+
+10,000
+
+2,480
+
+18,678
+
+4,003
+
+9,069
+
+3,064
+
+-
+
+451
+
+4,919
+
+1,053
+
+1,061
+
+Table 1: Tasks, datasets, and evaluation metrics used in our biomedical vision-language processing study. The numbers
+in train, dev, and test represent numbers of image-caption pairs in cross-modal retrieval, and numbers of images in
+image classification and visual question-answering (VQA).
+
+15
+
+Figure 1: Overview of BiomedCLIP and PMC-15M. A: Statistics of image sizes and caption lengths in PMC-15M.
+B: Distribution of image types. Image types are defined according to the image taxonomy in [26]. C: BiomedCLIP
+collects 4.4 million publicly available full-text scientific articles. These articles are processed by Azure Databricks to
+obtain parallel image-text pairs. These pairs are then used to train a multimodal biomedical foundation model based
+on contrastive learning. D: BiomedCLIP excels on a variety of downstream applications such as cross-modal retrieval,
+zero-shot image classification, and visual question answering.
+
+Hand-drawnsketchesNon-clinicalphotosMathematicalformulaChemicalstructureChromatographygelGenesequenceSystemoverviewsFlowchartsScreenshotsStatisticalfiguresgraphschartsTablesandformsProgramlistingFluorescencemicroscopyTransmissionmicroscopyLightMicroscopyElectronMicroscopyElectro--myographyElectro--encephalographyElectro--cardiographyOtherorgansDemartologyskinEndoscopy3DreconstructionsCombinedmodalitiesin one imagePETAngiographyX-Ray2DradiographyComputerizedTomographyUltrasoundMagneticResonance025050075010001250150017502000Height0.00000.00050.00100.0015Fraction300400500600700800Width0.0000.0020.0040.0060.008Fraction0100200300400500Caption length0.00000.00250.00500.00750.0100FractionI1I2I3InT1T2T3TnT1I1T1I3T1InT2I1T1I1T1I2T2I1T2I2T1I2T2I2T2I3T1I3T2I3T2InT1InT2InCLIP contrastive lossText encoderImage encoderGynecol Oncol Rep. 2018 Nov; 26: 4Published online 2018 Aug 11. doi: 10.1016/j.gore.2018.08.002Intussusception as a rare cause of bowel obstruction in a woman with recurrent ovarian cancerMackenzie W. Sullivan and Susan C. Modesitt*Author informationArticle notesCopyright and License informationDownload full-text articles from PMC-OA.Extract figure-captionpairs from the articles.CT Images Suggestive of Intussusception Axial CT image of an apparent small bowel transition point in the right lower quadrant (indicated with white arrow).CaptionX-RayEndoscopyFlowchartsLight microscopyAngiographyTables and formsChemical structureSystem overviewsDermatologyTomographyMagnetic ResonanceUltrasoundInput imageCross-modal retrievalImage classificationImage encoderText encoderclass 1 promptclass 2 promptclass 3 prompt...class n prompt...0.40.20.10.3LUADCOADBenignLUSCProbabilityVisual question answeringInput image:Question:What are the hyperdensities on the periphery of the image?Answer:Ribs.CorrectAnswer:Ribs.CDABn=101n=102n=103n=104n=105n=106n=10716
+
+Figure 2: Comparison on cross-modal retrieval. A: Test results on text-to-image retrieval (left) and image-to-
+text retrieval (right). X-axis shows different evaluation metrics, including Recall@1, Recall@5, and Recall@10.
+BiomedCLIP (BERT) and BiomedCLIP (GPT) denote using PubMedBERT and GPT as the encoder respectively.
+B: Three examples comparing BiomedCLIP and general-domain CLIP on text-to-image retrieval for sample PMC
+captions (top-4 predictions). Gold box indicates the ground truth figure for the caption.
+
+Chest X-ray on admission showing a large pleural effusion on the right.CaptionPhotomicrograph showing proliferation of spindle cells with wavy nuclei in collagenous to myxoid stroma (Hema-toxylin and Eosin staining, 40×).CaptionASL image shows increased cerebral blood flow (CBF) in left fronto-parieto- temporal region.CaptionBiomedCLIPCLIPABRecall@1Recall@5Recall@10020406080Text-to-image69.6086.3090.2059.6080.4085.701.002.513.598.4816.2020.10Recall@1Recall@5Recall@10020406080Image-to-text70.1086.4090.2060.0080.1085.300.792.133.087.9115.5019.50BiomedCLIP (BERT)BiomedCLIP (GPT)PubMedCLIPCLIP17
+
+Figure 3: Comparison on image classification. A,B: Zero-shot image classification test results on five standard
+datasets. Following standard practice in prior work, we report test AUROC (%) for TCGA-TIL, and accuracy (%) for
+others. (TCGA-TIL is heavily class-imbalanced, unlike other datasets.) MedCLIP was evaluated on a sub-sample of
+RSNA in its original paper but is evaluated on the full dataset here for head-to-head comparison with other methods.
+MedCLIP, PubMedCLIP and Med-Flamingo were pretrained on image-text pairs from biomedical research papers,
+whereas PLIP was pretrained on image-text pairs extracted from Twitter data. LLaVA-Med extends BiomedCLIP by
+fine-tuning it on instruction-following data for image-language conversations. C,D: Fine-tuned (linear probing) test
+accuracy on PCam (C) and RSNA (D). GLoRIA and BioViL are state-of-the-art radiology-specific models tailored for
+radiology-specific tasks such as RSNA. Their results are taken from the respective papers.
+
+PCam45505560657075Accuracy (%)LC25000(Lung)304050607080LC25000(Colon)5060708090100RSNA4050607080TIL40506070AUROC (%)zero-shot1%-shot10%-shot100%-shot50607080Accuracy (%)PCamBiomedCLIPPubMedCLIPCLIPzero-shot1%-shot10%-shot100%-shot6570758085Accuracy (%)RSNABiomedCLIPBioViLGLoRIABiomedCLIP (BERT)BiomedCLIP (GPT)LLaVA-MedPLIPPubMedCLIPCLIPMedCLIPMed-FlamingoACBD18
+
+Figure 4: Comparison on medical visual question answering. A: Accuracy and token-level F1 on VQA-RAD and
+SLAKE under three different settings. Open: open-ended answers. Closed: multiple choice (mostly yes and no). B:
+Three examples from VQA-RAD as selected by the PubMedCLIP paper[29], where all previous VQA models failed
+to produce the correct answer (including PubMedCLIP, the prior state of the art on this task). BiomedCLIP correctly
+answers the questions in C and D. While not technically correct, its answer to B nevertheless correctly identifies liver
+as the metastatic focus (on the right side of the CT scan).
+
+ABCDoneright chestnoyesright lobe of liverribsstorage of urineintestinespinal cordribsfemaleinflammation ...treat brain diseases ...nodulefemaleOpenClosedOverallVQA-RAD556065707580Accuracy (%)67.0076.5072.7060.9081.3073.2064.7583.0975.8060.1080.0072.1059.9079.4071.3056.0077.9069.20OpenClosedOverallSLAKE7678808284868890Accuracy (%)84.3088.9086.1084.3089.9086.5087.1186.7887.0078.4082.5080.1078.6081.0079.5076.8080.6078.30BiomedCLIPBiomedGPT-BLLaVA-MedPubMedCLIPCLIPMAMLMed-PalM MVQA-RADSLAKE020406080Token-level F1 (%)73.1388.6062.0689.2819
+
+Figure 5: Privacy-preserving proprietary data analysis. A: PMC-15M dataset is used as a proxy for proprietary
+patient data so that proprietary data can be analyzed using external models without being exposed to an external
+classifier. B: Comparing the classified labels between the proprietary Providence radiology data and the most similar
+PMC-15M data in terms of Recall and F1. CheXbert is used as the external classifier to derive the labels. C: An
+example proprietary radiology image from Providence (bottom) and the top three most similar PMC-15M images
+retrieved by BiomedCLIP (top). CheXbert is applied to the caption in PMC-15M and the clinical report in Providence
+data to assess their similarity.
+
+Lung OpacityAtelectasisPleural EffusionCadiomegaly020406080Recall@1 (%)88.8095.0425.356.9979.1084.408.450.4422.7651.770.0036.24Lung OpacityAtelectasisPleural EffusionCadiomegaly010203040F1@1 (%)41.6025.2035.4012.2040.2024.4011.700.0121.7020.900.0032.40BiomedCLIPPLIPCLIPBiomedCLIPBiomedCLIPQuery patientPublic proxyModels on the cloudACBChatGPTGPT-4VX-ray of the chest. Chest x-ray showed well-defined huge opacity of most left hemithorax with a shift of mediastinum to the right ( Fig. 1 ) .CaptionChest X‐ray performed follow-ing PCNL showing pleural collection on the left side On POD 9, the left lung did not show expansion after insertion of the drainage tube A small volume of old blood was drained without improved expansion of the left lower and middle lobes CaptionChest radiograph (CXR) demonstrating a pleural effusion. It has been estimated that a pleural effusion of approximately 200 mL in volume would be visible on an PA CXR ( Figure 5 ) , whilst a smaller volume of 50 ml would be detectable on a lateral CXR [ 83 ] .CaptionIncrease in left-sided pleural effusion, with subsequent obscuration of the left heart border and adjacent compressive atelectasis. Small right-sided pleural effusion with adjacent atelectasis seen. There is calcification of the aortic arch. No radiographic evidence of pneumotho-rax. Anterior wedge compression deformities seen at at least two levels in the midthoracic spine. There is diffuse degenerative disc disease with exaggeration of the thoracic kyphosis. There is osteopenia. No acute soft tissue abnormalities.FindingsPMC datasetProvidence20
+
+Supplementary Note
+
+Details of BiomedCLIP architecture and ablation studies
+
+Review of CLIP We first give a brief review of the CLIP pretraining approach [11]. Given a batch of N (image,
+text) pairs, CLIP learns a multimodal embedding space by jointly training an image encoder and a text encoder to
+maximize the cosine similarity between the image and text embeddings of the N pairs in the batch while minimizing
+the cosine similarity of the embeddings of the other N 2 − N non-pairs. Concretely, CLIP minimizes the InfoNCE loss
+[27], i.e., a symmetric cross entropy loss over these similarity scores:
+
+L = −
+
+1
+2N
+
+N
+(cid:88)
+(
+
+i=1
+
+log
+
+ecos(Ii,Ti)/τ
+j=1 ecos(Ii,Tj )/τ
+
+(cid:80)N
+
++
+
+N
+(cid:88)
+
+i=1
+
+log
+
+ecos(Ii,Ti)/τ
+j=1 ecos(Ij ,Ti)/τ
+
+(cid:80)N
+
+),
+
+(1)
+
+where τ is a learnable temperature parameter, directly optimized during training as a log-parameterized multiplicative
+scalar; Ii and Ti are embeddings for the i-th image and text, produced by a linear projection layer on top of the image
+encoder and text encoder. Rather than initializing with pretrained weights, CLIP trains the image encoder and text
+encoder from scratch. For the image encoder, CLIP considers two different architectures, ResNet-50 [58] and Vision
+Transformer [ViT; 31]. The text encoder is effectively GPT-2 [28] based on transformer [59].
+
+Adapting CLIP to BiomedCLIP Biomedical text and images are drastically different from the web data used in
+CLIP pretraining. We find that the standard CLIP settings are suboptimal for biomedical vision-language pretraining.
+We thus conducted a systematic study of potential adaptations and identified a series of domain-specific adaptations
+for the biomedical domain. We used the optimization loss and cross-modal retrieval results on the validation set to
+guide our initial exploration and conducted detailed ablation studies.
+
+On the text side, we replace a blank-slate GPT-2 with a pretrained language model more suited for biomedicine.
+Specifically, we initialize with PubMedBERT, which shows substantial gains from domain-specific pretraining [24].
+Correspondingly, for the tokenizer, we replace Byte-Pair Encoding [BPE; 60] with WordPiece [61], which uses
+unigram-based likelihood rather than shattering all words to characters and greedily forming larger tokens based on
+frequency. The original CLIP uses a context of 77 tokens, but biomedical text is typically longer, as shown in Fig. 1A.
+We thus increase the context size to 256, which covers 90% of PMC captions. Supplementary Table 1 shows that
+both modifications bring substantial improvements over the original CLIP model on the validation set.
+
+text encoder
+
+vocab
+
+context length
+
+loss (↓)
+
+img2txt (%)
+R@1(↑)
+
+txt2img (%)
+R@1(↑)
+
+GPT
+50k general domain
+PubMedBERT 30k domain specific
+PubMedBERT 30k domain specific
+
+77
+77
+256
+
+0.6626
+0.5776
+0.4807
+
+64.53
+69.03
+73.50
+
+63.56
+67.41
+72.26
+
+Supplementary Table 1: Improvements from text-side domain-specific adaptations, as measured on the PMC-15M
+validation set. The training epochs are 8. All other hyperparameters are reported in Supplementary Table 9.
+
+On the image side, we first evaluated Vision Transformer (ViT) across different scales, ranging from ViT-Small,
+ViT-Medium, to ViT-Base. The suffix “/16” in the ViT model names refers to the patch size of 16×16 pixels i.e., the
+input images are divided into patches of this size, and fed through the transformer blocks. As shown in Supplementary
+Table 2, we found that larger ViT results in better performance, confirming the importance of model scalability on our
+new dataset PMC-15M. We used the largest one (ViT-B/16) in all subsequent experiments.
+
+Next, we compared two different ways to initialize the vision encoder. Supplementary Table 3 shows that the
+vision encoder pretrained on ImageNet [31] does not have advantages over random initialization. However, in our
+downstream tasks, ImageNet-pretrained weights offer more stable performance. Therefore, we chose to initialize
+ViT-B/16 with ImageNet-pretrained weights. Lastly, biomedical image understanding often requires fine-grained vi-
+sual features [34]. In Supplementary Table 4, we compared two choices of input image resolution: 224×224 and
+384×384. By increasing image resolution, we observe significant gains in validation results. But this also leads to a
+doubling of pretraining time. In addition, increased image resolution does not consistently enhance performance in
+downstream tasks. As Table Supplementary Table 5 shows, BiomedCLIP exhibits inferior performance in zero-shot
+
+21
+
+vision encoder
+
+trainable params
+
+hidden dim loss (↓)
+
+img2txt (%)
+R@1(↑)
+
+txt2img (%)
+R@1(↑)
+
+ViT-S/16
+ViT-M/16
+ViT-B/16
+
+22M
+39M
+86M
+
+384
+512
+768
+
+0.5342
+0.5063
+0.4807
+
+69.45
+71.85
+73.50
+
+68.02
+70.22
+72.26
+
+Supplementary Table 2: Validation performance for various ViT models (Small, Medium, Base). All experiments use
+PubMedBERT to initialize the text encoder with the maximal context length of 256. The training epochs are 8. All
+other hyperparameters are reported in Supplementary Table 9.
+
+vision encoder
+
+initialization
+
+ViT-B/16
+ViT-B/16
+
+random initialization
+pretrained on ImageNet
+
+loss (↓)
+
+0.3814
+0.3819
+
+img2txt (%)
+R@1(↑)
+
+txt2img (%)
+R@1(↑)
+
+83.15
+82.90
+
+81.75
+81.86
+
+Supplementary Table 3: Validation performance for vision encoders initialized with different weights. All experiments
+use PubMedBERT to initialize the text encoder, with the maximal context length of 256. All other hyperparameters
+are reported in Supplementary Table 9.
+
+classification across all five datasets when using larger image size of 384 compared to 224. This discrepancy is partic-
+ularly notable in PCam, where the raw image resolution (96×96) is considerably smaller than the model’s input image
+size. Upsampling images here may introduce noise, potentially contributing to the observed decrease in performance.
+Consequently, we opt for an image size of 224 in the subsequent experiments.
+
+image size
+
+training time
+
+loss (↓)
+
+img2txt (%)
+R@1(↑)
+
+txt2img (%)
+R@1(↑)
+
+224px
+384px
+
+1.00x
+1.92x
+
+0.3819
+0.3406
+
+82.90
+84.63
+
+81.86
+83.56
+
+Supplementary Table 4: Pretraining time and validation performance for vision encoders with different image sizes.
+All experiments use ViT-B/16 as the image encoder and PubMedBERT to initialize the text encoder, with a maximal
+context length of 256. All other hyperparameters are reported in Supplementary Table 9.
+
+image size
+
+PCam
+
+LC25000
+(Lung)
+
+LC25000
+(Colon)
+
+TCGA-
+TIL
+
+224px
+384px
+
+73.41
+67.15
+
+65.23
+61.80
+
+92.98
+87.42
+
+67.04
+57.00
+
+RSNA mean
+
+78.95
+78.49
+
+75.52
+70.37
+
+Supplementary Table 5: Performance in downstream zero-shot image classification for vision encoders with different
+image sizes. AUROC (%) for TCGA-TIL; accuracy (%) for others. All hyperparameters are reported in Supplemen-
+tary Table 9.
+
+batch size
+
+image-to-text retrieval (%)
+R@1(↑)
+
+text-to-image retrieval (%)
+R@1(↑)
+
+2k
+4k
+
+79.69
+82.90
+
+78.43
+81.86
+
+Supplementary Table 6: Validation performance with different batch size.
+
+Finally, we investigated the impact of batch size. In Supplementary Table 6, we show larger batch size generally
+has better validation performance. In Supplementary Table 7, we studied increasing the batch size up to 64k to
+match the choices of [11, 62]. While there was a further increase in validation performance, we found that the
+gain did not translate to the downstream evaluation after reaching the batch size of 4k (Supplementary Table 6).
+
+22
+
+batch size
+
+4k→ 4k
+4k→ 64k
+
+img2txt (%)
+R@1(↑)
+
+txt2img (%)
+R@1(↑)
+
+83.98
+87.32
+
+82.71
+86.66
+
+Supplementary Table 7: Validation performance with constant batch size of 4k for all 40 epochs vs increasing batch
+size from 4k (in the first 8 epochs) to 64k (in the remaining 32 epochs).
+
+The potential explanation for this could be that an extremely large batch size requires more training data and longer
+epochs. CLIP [11] uses 400M image-text pairs, while PMC-15M has 15M pairs. We chose the 4k batch size to train
+our BiomedCLIP.
+
+Putting it all together We pretrained a series of BiomedCLIP models on PMC-15M using the optimal batch sched-
+ule above and compared them with general-domain CLIP models [11]. As Supplementary Table 8 shows, large-scale
+pretraining or continual pretraining on PMC-15M is always helpful, and the best validation performance are generally
+attained using the biomedical pretrained language model (PubMedBERT), a larger vision transformer, and a higher
+image resolution. All hyperparameters are summarized in Supplementary Table 9.
+
+model
+
+config
+
+OpenAI CLIP ResNet-50-224-GPT/77
+OpenAI CLIP ViT-B/16-224-GPT/77
+
+data
+
+WIT-400M
+WIT-400M
+
+BiomedCLIP ResNet-50-224-GPT/77
+BiomedCLIP ViT-B/16-224-GPT/77
+BiomedCLIP ViT-B/16-224-BERT/256
+
+WIT-400M → PMC-15M
+WIT-400M → PMC-15M
+ImageNet/PubMed → PMC-15M
+
+img2txt (%)
+R@1(↑)
+
+txt2img (%)
+R@1(↑)
+
+10.31
+11.82
+
+81.17
+81.57
+82.90
+
+10.38
+11.65
+
+80.17
+80.89
+81.86
+
+Supplementary Table 8: Comparison of BiomedCLIP and general-domain CLIP models on validation performance.
+“WIT-400M → PMC-15M” indicates initialization with OpenAI CLIP weights that were pretrained on WIT-400M
+[11], followed by continual pretraining on PMC-15M. “PMB/256” denotes PubMedBERT with the maximal context
+length of 256.
+
+Hyperparameters
+
+Value
+
+AdamW [63]
+5.0e-4
+0.2
+
+optimizer
+peak learning rate
+weight decay
+optimizer momentum β1, β2 = 0.9, 0.98
+eps
+learning rate schedule
+epochs
+warmup (in steps)
+random seed
+image mean
+image std
+augmentation
+validation frequency
+
+1.0e-6
+cosine decay
+32
+2000
+0
+(0.48145466, 0.4578275, 0.40821073)
+(0.26862954, 0.26130258, 0.27577711)
+RandomResizedCrop
+every epoch
+
+Supplementary Table 9: Hyperparameters for pretraining settings.
+
+Implementation Our implementation is based on OpenCLIP [64], an open source software adapted for large-scale
+distributed training with contrastive image-text supervision. The pretraining experiments were conducted with up to
+16 NVIDIA A100 GPUs or 16 NVIDIA V100 GPUs, via PyTorch DDP [65, 66]. To reduce memory consumption, we
+enable gradient checkpointing and automatic mixed precision (AMP) with datatype of bfloat16 (whenever supported
+
+23
+
+by the hardware). In addition, we use a sharding contrastive loss [62], which achieves identical gradients to InfoNCE
+[27] and reduces memory usage by eliminating redundant computations and only computing the similarities of locally
+relevant features on each GPU.
+
+BiomedCLIP
+
+dataset
+
+PCam
+
+LC25000 (Lung)
+
+classes
+normal lymph node
+lymph node metastasis
+lung adenocarcinomas
+normal lung tissue
+lung squamous cell carcinomas
+
+templates
+this is an image of {};
+{} presented in image
+this is an image of {};
+{} presented in image
+
+TCGA-TIL
+
+LC25000 (Colon) colon adenocarcinomas
+normal colonic tissue
+none
+tumor infiltrating lymphocytes {} presented in image
+normal lung
+pneumonia
+
+a photo of {};
+{} presented in image
+a photo of {};
+
+a photo of {};
+{} presented in image
+
+RSNA
+
+Supplementary Table 10: Prompts used for zero-shot image classification.
+
+

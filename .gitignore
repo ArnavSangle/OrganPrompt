@@ -1,0 +1,25 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.pytest_cache/
+
+# Virtual environment
+.venv/
+
+# Large model files
+checkpoints/
+
+# Generated data (large)
+data/
+
+# Claude Code internal
+.claude/
+docs/superpowers/
+
+# Temp / scratch
+debug_gradcam.py
+
+# OS
+.DS_Store
+Thumbs.db

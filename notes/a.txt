@@ -1,0 +1,11 @@
+ResNet18 + Grad-CAM
+DenseNet121 + Grad-CAM
+ViT-tiny + attention rollout
+
+
+few-shot for cases with GT
+
+The core novelty is transforming structured anatomical text 
+prompts into region-level pseudo masks through CLIP-based 
+patch-text alignment, enabling interpretable and data-efficient 
+ weakly supervised medical segmentation on bone cancer.
