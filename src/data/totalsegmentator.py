@@ -73,24 +73,29 @@ class TotalSegmentatorDataset(Dataset):
 
     def __getitem__(self, idx: int):
         item = self.items[idx]
-        vol_dir = Path(item["volume_dir"])
-        slice_idx = item["slice_idx"]
         organ_class = item["organ_class"]
 
-        ct_vol = np.asarray(nib.load(vol_dir / "ct.nii.gz").dataobj)
-        ct_slice = ct_vol[:, :, slice_idx].astype(np.float32)
-
-        hu_min, hu_max = HU_WINDOW.get(organ_class, HU_WINDOW["default"])
-        ct_slice = np.clip(ct_slice, hu_min, hu_max)
-        ct_slice = (ct_slice - hu_min) / (hu_max - hu_min)
-
-        img = torch.from_numpy(ct_slice).unsqueeze(0).repeat(3, 1, 1)  # (3, H, W)
-        img = F.interpolate(
-            img.unsqueeze(0), size=(224, 224), mode="bilinear", align_corners=False
-        ).squeeze(0)
+        if "slice_path" in item:
+            # Fast path: precomputed .npy slice (float16 on disk → float32 in memory)
+            arr = np.load(item["slice_path"]).astype(np.float32)  # (224, 224)
+            img = torch.from_numpy(arr).unsqueeze(0).repeat(3, 1, 1)
+        else:
+            # Slow path: decompress full NIfTI volume (use precompute_slices.py to avoid this)
+            vol_dir = Path(item["volume_dir"])
+            slice_idx = item["slice_idx"]
+            ct_vol = np.asarray(nib.load(vol_dir / "ct.nii.gz").dataobj)
+            ct_slice = ct_vol[:, :, slice_idx].astype(np.float32)
+            hu_min, hu_max = HU_WINDOW.get(organ_class, HU_WINDOW["default"])
+            ct_slice = np.clip(ct_slice, hu_min, hu_max)
+            ct_slice = (ct_slice - hu_min) / (hu_max - hu_min)
+            img = torch.from_numpy(ct_slice).unsqueeze(0).repeat(3, 1, 1)
+            img = F.interpolate(
+                img.unsqueeze(0), size=(224, 224), mode="bilinear", align_corners=False
+            ).squeeze(0)
 
         if self.eval_mode:
-            gt = self._load_gt_mask(vol_dir, organ_class, slice_idx)
+            vol_dir = Path(item["volume_dir"])
+            gt = self._load_gt_mask(vol_dir, organ_class, item["slice_idx"])
             return img, organ_class, gt
 
         return img, organ_class
