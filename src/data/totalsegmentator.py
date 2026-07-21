@@ -50,7 +50,7 @@ def _build_index(volume_dirs: list[Path], top_k: int) -> list[dict]:
             for s in top_indices:
                 if coverage[s] > 0:
                     items.append({
-                        "volume_dir": str(vol_dir),
+                        "volume_dir": str(vol_dir.resolve()),
                         "slice_idx":  int(s),
                         "organ_class": int(class_idx),
                     })
@@ -119,11 +119,11 @@ def load_totalsegmentator(
     root: path to Totalsegmentator_dataset_v201/
     top_k: slices per organ per volume (default 5)
     seed: RNG seed for volume-level 80/10/10 split (default 42)
-    cache_path: where to save/load the slice index JSON (default: root/../totalseg_slice_index.json)
+    cache_path: where to save/load the slice index JSON (default: root/totalseg_slice_index.json)
     """
-    root = Path(root)
+    root = Path(root).resolve()
     if cache_path is None:
-        cache_path = root.parent / "totalseg_slice_index.json"
+        cache_path = root / "totalseg_slice_index.json"
     cache_path = Path(cache_path)
 
     volume_dirs = sorted([d for d in root.iterdir() if d.is_dir() and d.name.startswith("s")])
@@ -143,7 +143,7 @@ def load_totalsegmentator(
         with open(cache_path) as f:
             all_items = json.load(f)
         vol_to_split = {
-            str(d): name
+            str(d.resolve()): name
             for name, dlist in split_dirs.items()
             for d in dlist
         }
