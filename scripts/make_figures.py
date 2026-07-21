@@ -19,14 +19,24 @@ import numpy as np
 OUT_DIR = Path("figures")
 
 # ─── Methodology progression (raw untuned checkpoint peaks, unless noted) ────
+# Short, single-line labels so they don't overlap at the given figure width.
 PROGRESSION = [
-    ("Baseline\n(vanilla-gradient CAM)", 0.003),
-    ("v0\nGradCAM + SigLIP",             0.063),
-    ("v1\n+ patch-level loss",           0.307),
-    ("v3\n+ resume from v1",             0.469),
-    ("v4\n+ resume from v3",             0.574),
-    ("v4-tuned\n+ calibration",          0.633),
-    ("v5-tuned\n+ resume from v4",       0.653),
+    ("baseline",       0.003),
+    ("v0",             0.063),
+    ("v1",             0.307),
+    ("v3",             0.469),
+    ("v4",             0.574),
+    ("v4-tuned",       0.633),
+    ("v5-tuned",       0.653),
+]
+PROGRESSION_DESCRIPTIONS = [
+    "vanilla-gradient CAM",
+    "GradCAM + SigLIP fine-tuning",
+    "+ patch-level contrastive loss",
+    "+ resume from v1",
+    "+ resume from v3",
+    "+ inference calibration",
+    "+ resume from v4",
 ]
 
 CLASSES = ["bladder", "femur-left", "femur-right", "heart",
@@ -53,40 +63,44 @@ def figure_progression():
     labels = [x[0] for x in PROGRESSION]
     values = [x[1] for x in PROGRESSION]
 
-    # gradient from grey → deep blue for the methodology arc
     cmap   = plt.get_cmap("viridis")
     colors = [cmap(i / (len(labels) - 1)) for i in range(len(labels))]
-    colors[-2] = "#c1272d"  # highlight the calibration step in red
-    colors[-1] = "#8a1b21"  # v5-tuned in darker red (final model)
+    colors[-2] = "#c1272d"
+    colors[-1] = "#8a1b21"
 
     bars = ax.bar(range(len(labels)), values, color=colors,
                   edgecolor="black", linewidth=0.7)
 
+    # Version labels on the tick axis (short, no overlap)
     ax.set_xticks(range(len(labels)))
-    ax.set_xticklabels(labels, fontsize=10)
+    ax.set_xticklabels(labels, fontsize=11, fontweight="bold")
+    # Descriptions in italics under the ticks, angled to prevent overlap
+    for i, desc in enumerate(PROGRESSION_DESCRIPTIONS):
+        ax.text(i, -0.06, desc, ha="right", va="top", rotation=25,
+                fontsize=9, style="italic", color="#333",
+                transform=ax.get_xaxis_transform())
+
     ax.set_ylabel("mIoU on TotalSegmentator test set", fontsize=12)
-    ax.set_ylim(0, 0.75)
-    ax.set_title(
-        "OrganCAM methodology progression (baseline → final)",
-        fontsize=13,
-    )
+    ax.set_ylim(0, 0.82)  # headroom for annotations
+    ax.set_title("OrganCAM methodology progression (baseline → final)", fontsize=13)
     ax.grid(axis="y", alpha=0.3)
 
     for bar, val in zip(bars, values):
         ax.text(bar.get_x() + bar.get_width() / 2, val + 0.012,
                 f"{val:.3f}", ha="center", fontsize=11, fontweight="bold")
 
+    # Annotations placed at fixed heights above the bars — no overlap.
     ax.annotate(
         "no retrain\n+0.059 mIoU",
-        xy=(len(labels) - 2, values[-2]),
-        xytext=(len(labels) - 2.5, values[-2] + 0.09),
+        xy=(len(labels) - 2, values[-2] + 0.006),
+        xytext=(len(labels) - 3.4, 0.76),
         fontsize=9, ha="center", color="#c1272d",
         arrowprops=dict(arrowstyle="->", color="#c1272d", lw=1.2),
     )
     ax.annotate(
         "final model\n+0.020 mIoU",
-        xy=(len(labels) - 1, values[-1]),
-        xytext=(len(labels) - 0.6, values[-1] + 0.09),
+        xy=(len(labels) - 1, values[-1] + 0.006),
+        xytext=(len(labels) - 0.4, 0.76),
         fontsize=9, ha="center", color="#8a1b21",
         arrowprops=dict(arrowstyle="->", color="#8a1b21", lw=1.2),
     )
@@ -120,12 +134,13 @@ def figure_calibration_impact():
     ax.legend(loc="upper right", fontsize=11)
     ax.grid(axis="y", alpha=0.3)
 
-    # annotate improvement (or lack thereof)
+    # Delta labels above each bar, anchored at fixed height so they don't
+    # float away from small-value bars.
     for i, (u, t) in enumerate(zip(uniform, tuned)):
         delta = t - u
-        y = max(u, t) + 0.025
-        col = "#0a7a0a" if delta > 0.05 else "#555555"
-        ax.text(x[i], y, f"{'+' if delta >= 0 else ''}{delta:.2f}",
+        col   = "#0a7a0a" if delta > 0.05 else "#555555"
+        y_bar = max(u, t) + 0.015
+        ax.text(x[i], y_bar, f"{'+' if delta >= 0 else ''}{delta:.2f}",
                 ha="center", fontsize=10, color=col, fontweight="bold")
 
     fig.tight_layout()

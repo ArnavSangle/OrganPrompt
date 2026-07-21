@@ -100,43 +100,64 @@ def plot_class_grid(class_idx: int, class_name: str, entries: list, test_ds, n: 
 
 
 def plot_summary(by_class: dict, test_ds, threshold: float = 0.0):
-    """3-row × 11-col summary: original / mask heatmap / overlay."""
-    n_classes = len(CLASS_NAMES)
-    fig, axes = plt.subplots(3, n_classes, figsize=(3 * n_classes, 9))
+    """3-row × 11-col summary: original / mask heatmap / overlay.
 
+    Uses set_xticks/set_yticks([]) instead of axis('off') so row labels remain
+    visible. Includes a shared colorbar for the mask row.
+    """
+    n_classes = len(CLASS_NAMES)
+    fig       = plt.figure(figsize=(2.2 * n_classes + 1.2, 7.5))
+    # 3 rows × (n_classes cols + 1 slim colorbar column)
+    gs        = fig.add_gridspec(
+        3, n_classes + 1,
+        width_ratios=[1] * n_classes + [0.05],
+        wspace=0.08, hspace=0.15,
+    )
+    axes = np.array([[fig.add_subplot(gs[r, c]) for c in range(n_classes)]
+                     for r in range(3)])
+    cbar_ax = fig.add_subplot(gs[1, n_classes])
+
+    mask_im = None
     for class_idx in range(n_classes):
         entries    = by_class.get(class_idx, [])
         class_name = CLASS_NAMES[class_idx]
 
+        for row in range(3):
+            axes[row, class_idx].set_xticks([])
+            axes[row, class_idx].set_yticks([])
+            for spine in axes[row, class_idx].spines.values():
+                spine.set_visible(False)
+
         if not entries:
-            for row in range(3):
-                axes[row, class_idx].axis("off")
             continue
 
         entry  = entries[0]
-        image  = test_ds[entry["idx"]][0]   # (3, H, W)
+        image  = test_ds[entry["idx"]][0]
         img_np = to_display(image)
         mask   = np.load(entry["mask_path"])
-
-        mask = threshold_mask(mask, threshold)
+        mask   = threshold_mask(mask, threshold)
 
         axes[0, class_idx].imshow(img_np, cmap="gray")
-        axes[0, class_idx].set_title(class_name, fontsize=7)
-        axes[0, class_idx].axis("off")
-
         axes[1, class_idx].imshow(mask, cmap="jet", vmin=0, vmax=1)
-        axes[1, class_idx].axis("off")
-
+        mask_im = axes[1, class_idx].images[0]
         axes[2, class_idx].imshow(overlay(img_np, mask))
-        axes[2, class_idx].axis("off")
 
-    for row, label in enumerate(["Original", "Mask", "Overlay"]):
-        axes[row, 0].set_ylabel(label, fontsize=9)
+        axes[0, class_idx].set_title(class_name, fontsize=10, pad=4)
 
-    fig.suptitle("Patch Similarity Summary — All 11 Organs", fontsize=14, y=1.01)
-    fig.tight_layout()
+    for row, label in enumerate(["Input CT", "Patch\nSimilarity", "Overlay"]):
+        axes[row, 0].set_ylabel(label, fontsize=11, rotation=0,
+                                ha="right", va="center", labelpad=12,
+                                fontweight="bold")
+
+    if mask_im is not None:
+        cbar = fig.colorbar(mask_im, cax=cbar_ax)
+        cbar.set_label("Similarity (post-threshold, normalized)", fontsize=9)
+        cbar.ax.tick_params(labelsize=8)
+
+    fig.suptitle("Patch-similarity pseudo-masks across all 11 organs (v5-tuned, one representative slice per class)",
+                 fontsize=12, y=0.98)
     out = FIGURES_DIR / "totalseg_summary.png"
-    fig.savefig(out, dpi=150, bbox_inches="tight")
+    fig.savefig(out, dpi=300, bbox_inches="tight", facecolor="white")
     plt.close(fig)
     print(f"  Saved {out}")
 

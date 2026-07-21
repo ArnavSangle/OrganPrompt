@@ -218,38 +218,86 @@ def evaluate_level(cache, text_features):
 
 
 def plot_heatmap(all_results: dict, out_path: Path):
-    levels  = sorted(all_results.keys())
-    classes = sorted(CLASS_NAMES.keys())
-    matrix  = np.zeros((len(classes), len(levels)))
-    for j, l in enumerate(levels):
+    """Heatmap: classes sorted by mean IoU across non-adversarial levels
+    (L1-L4), descending. Bilateral pairs tend to end up adjacent naturally,
+    and the visual gradient guides the eye from top (strong) to bottom (hard).
+    """
+    plt.rcParams.update({
+        "font.family": "sans-serif",
+        "font.sans-serif": ["Helvetica", "Arial", "DejaVu Sans"],
+    })
+
+    levels_all = sorted(all_results.keys())
+    non_adv    = [l for l in levels_all if l != 5]
+
+    class_mean_easy = {
+        c: float(np.mean([all_results[l]["per_class"][c]["iou"] for l in non_adv]))
+        for c in CLASS_NAMES
+    }
+    classes = sorted(CLASS_NAMES.keys(), key=lambda c: -class_mean_easy[c])
+
+    matrix = np.zeros((len(classes), len(levels_all)))
+    for j, l in enumerate(levels_all):
         for i, c in enumerate(classes):
             matrix[i, j] = all_results[l]["per_class"][c]["iou"]
 
-    fig, ax = plt.subplots(figsize=(11, 8))
+    fig, ax = plt.subplots(figsize=(11, 7.5))
     im = ax.imshow(matrix, cmap="viridis", aspect="auto", vmin=0, vmax=1)
-    ax.set_xticks(range(len(levels)))
-    ax.set_xticklabels([f"L{l}\n{LEVEL_NAMES[l]}" for l in levels])
+
+    ax.set_xticks(range(len(levels_all)))
+    ax.set_xticklabels([f"L{l}\n{LEVEL_NAMES[l]}" for l in levels_all], fontsize=10)
     ax.set_yticks(range(len(classes)))
-    ax.set_yticklabels([CLASS_NAMES[c] for c in classes])
+    ax.set_yticklabels([CLASS_NAMES[c] for c in classes], fontsize=10)
+    ax.tick_params(axis="both", length=0)
+
     for i in range(len(classes)):
-        for j in range(len(levels)):
+        for j in range(len(levels_all)):
             v = matrix[i, j]
             ax.text(j, i, f"{v:.2f}", ha="center", va="center",
-                    color="white" if v < 0.5 else "black", fontsize=9)
-    ax.set_title("Caption ablation: per-class IoU vs prompt formulation level", fontsize=13)
-    plt.colorbar(im, ax=ax, label="IoU")
+                    color="white" if v < 0.5 else "black", fontsize=10)
+
+    ax.set_title(
+        "Caption ablation: per-class IoU across five prompt formulation levels\n"
+        "(rows sorted by mean IoU on non-adversarial levels — hard classes at bottom)",
+        fontsize=12, pad=10,
+    )
+
+    cbar = plt.colorbar(im, ax=ax, fraction=0.035, pad=0.02)
+    cbar.set_label("IoU", fontsize=11)
+    cbar.ax.tick_params(labelsize=9)
+
     fig.tight_layout()
-    fig.savefig(out_path, dpi=120)
+    fig.savefig(out_path, dpi=300, bbox_inches="tight", facecolor="white")
     plt.close(fig)
 
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--checkpoint", required=True)
-    parser.add_argument("--root", required=True)
+    parser.add_argument("--checkpoint", required=False)
+    parser.add_argument("--root", required=False)
     parser.add_argument("--limit", type=int, default=300)
     parser.add_argument("--device", default="cuda" if torch.cuda.is_available() else "cpu")
+    parser.add_argument("--replot-only", action="store_true",
+                        help="Skip inference — read diagnostics/caption_ablation.json "
+                             "and only regenerate the heatmap")
     args = parser.parse_args()
+
+    if args.replot_only:
+        json_path = OUT_DIR / "caption_ablation.json"
+        if not json_path.exists():
+            raise FileNotFoundError(f"{json_path} not found — run without --replot-only first")
+        with open(json_path) as f:
+            raw = json.load(f)
+        all_results = {
+            int(k): {**v, "per_class": {int(c): d for c, d in v["per_class"].items()}}
+            for k, v in raw.items()
+        }
+        plot_heatmap(all_results, OUT_DIR / "caption_ablation.png")
+        print(f"Regenerated {OUT_DIR / 'caption_ablation.png'}")
+        return
+
+    if not args.checkpoint or not args.root:
+        parser.error("--checkpoint and --root are required unless --replot-only is set")
 
     if "ANTHROPIC_API_KEY" not in os.environ:
         print("Warning: ANTHROPIC_API_KEY not set — L3 generation will fail unless cached.")

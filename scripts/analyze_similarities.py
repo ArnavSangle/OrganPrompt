@@ -97,31 +97,90 @@ def otsu_threshold(fg, bg):
 
 
 def plot_distributions(per_class, key, out_path, title):
-    """Grid of histograms — foreground (blue) vs background (red) per class."""
+    """Grid of histograms — foreground vs background per class.
+
+    Publication-style: consistent x-axis range across panels, panel labels
+    (A, B, C...), sans-serif, 300 DPI.
+    """
+    import string
+
+    plt.rcParams.update({
+        "font.family": "sans-serif",
+        "font.sans-serif": ["Helvetica", "Arial", "DejaVu Sans"],
+        "axes.spines.top":   False,
+        "axes.spines.right": False,
+    })
+
     n_classes = len(CLASS_NAMES)
-    fig, axes = plt.subplots(3, 4, figsize=(18, 12))
+
+    # Shared x-range across panels for direct visual comparison.
+    all_vals = []
+    for c in range(n_classes):
+        if per_class[c][f"fg_{key}"]:
+            all_vals.extend(per_class[c][f"fg_{key}"])
+            all_vals.extend(per_class[c][f"bg_{key}"])
+    x_lo = float(np.percentile(all_vals, 0.5))
+    x_hi = float(np.percentile(all_vals, 99.5))
+
+    fig, axes = plt.subplots(3, 4, figsize=(16, 10), sharex=True)
     axes = axes.flatten()
+
+    panel_letters = list(string.ascii_uppercase)
+
     for c in range(n_classes):
         ax = axes[c]
         fg = np.asarray(per_class[c][f"fg_{key}"])
         bg = np.asarray(per_class[c][f"bg_{key}"])
+
         if fg.size == 0 or bg.size == 0:
-            ax.set_title(f"{CLASS_NAMES[c]} (no samples)")
+            ax.set_title(f"{panel_letters[c]}  {CLASS_NAMES[c]} (no samples)",
+                         fontsize=10, loc="left", fontweight="bold")
+            ax.set_xticks([])
+            ax.set_yticks([])
             continue
-        lo = min(fg.min(), bg.min())
-        hi = max(fg.max(), bg.max())
-        bins = np.linspace(lo, hi, 50)
-        ax.hist(bg, bins=bins, alpha=0.55, color="crimson", density=True, label="background")
-        ax.hist(fg, bins=bins, alpha=0.55, color="steelblue", density=True, label="foreground")
+
+        bins = np.linspace(x_lo, x_hi, 45)
+        ax.hist(bg, bins=bins, alpha=0.55, color="#d62728",
+                density=True, label="background", edgecolor="none")
+        ax.hist(fg, bins=bins, alpha=0.55, color="#1f77b4",
+                density=True, label="foreground", edgecolor="none")
+
         thr = otsu_threshold(fg, bg)
-        ax.axvline(thr, color="black", linestyle="--", linewidth=1, label=f"Otsu={thr:.3f}")
-        ax.set_title(f"{CLASS_NAMES[c]}  gap={fg.mean() - bg.mean():+.3f}")
-        ax.legend(fontsize=7)
+        ax.axvline(thr, color="black", linestyle="--", linewidth=0.8)
+
+        gap = fg.mean() - bg.mean()
+        ax.set_title(
+            f"{panel_letters[c]}  {CLASS_NAMES[c]}",
+            fontsize=11, loc="left", fontweight="bold", pad=4,
+        )
+        ax.text(0.98, 0.95, f"gap={gap:+.3f}\nOtsu={thr:+.3f}",
+                transform=ax.transAxes, ha="right", va="top",
+                fontsize=8, bbox=dict(boxstyle="round,pad=0.25",
+                                      facecolor="white", edgecolor="lightgrey",
+                                      linewidth=0.5))
+        ax.tick_params(axis="both", labelsize=8)
+        ax.set_xlim(x_lo, x_hi)
+
+    # Hide unused subplots but retain the layout
     for c in range(n_classes, len(axes)):
         axes[c].axis("off")
-    fig.suptitle(title, fontsize=14)
-    fig.tight_layout()
-    fig.savefig(out_path, dpi=120)
+
+    # Shared axis labels
+    fig.supxlabel("Raw patch-text cosine similarity", fontsize=11, y=0.02)
+    fig.supylabel("Density", fontsize=11, x=0.005)
+
+    # Single legend at top
+    handles = [
+        plt.Rectangle((0, 0), 1, 1, color="#1f77b4", alpha=0.55, label="Foreground (organ) patches"),
+        plt.Rectangle((0, 0), 1, 1, color="#d62728", alpha=0.55, label="Background patches"),
+        plt.Line2D([], [], color="black", linestyle="--", linewidth=0.8, label="Otsu threshold"),
+    ]
+    fig.legend(handles=handles, loc="upper center", ncol=3,
+               bbox_to_anchor=(0.5, 0.965), fontsize=10, frameon=False)
+
+    fig.suptitle(title, fontsize=13, y=1.005)
+    fig.tight_layout(rect=[0.01, 0.02, 1, 0.94])
+    fig.savefig(out_path, dpi=300, bbox_inches="tight", facecolor="white")
     plt.close(fig)
     print(f"  Saved {out_path}")
 
