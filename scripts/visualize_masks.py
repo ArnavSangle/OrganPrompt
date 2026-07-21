@@ -1,9 +1,9 @@
-"""Visualise Grad-CAM pseudo-masks overlaid on OrganAMNIST images.
+"""Visualise patch-similarity pseudo-masks overlaid on TotalSegmentator images.
 
 Usage:
-    python scripts/visualize_masks.py
-    python scripts/visualize_masks.py --n_per_class 6
-    python scripts/visualize_masks.py --threshold 0.6   # zero below 60th percentile
+    python scripts/visualize_masks.py --root Totalsegmentator_dataset_v201
+    python scripts/visualize_masks.py --root Totalsegmentator_dataset_v201 --n_per_class 6
+    python scripts/visualize_masks.py --root Totalsegmentator_dataset_v201 --threshold 0.6
 """
 
 import argparse
@@ -17,29 +17,25 @@ import matplotlib.cm as cm
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from src.data.organmnist import load_organamnist
+from src.data.totalsegmentator import load_totalsegmentator
 from src.labels.templates import CLASS_NAMES
 
-
-def get_dataset():
-    """Return the test split as an indexable dataset.
-
-    Each item must be (image_tensor, label) where:
-      - image_tensor: torch.Tensor of shape (3, H, W), preprocessed with
-        BioMedCLIP's transforms from open_clip.create_model_and_transforms
-      - label: int or 1-element array-like containing the class index
-
-    ---- SWAP POINT ----
-    Replace the body of this function when moving to a new dataset.
-    """
-    _, _, test_ds = load_organamnist(size=224)
-    return test_ds
-
-MASKS_DIR   = Path("data/pseudo_masks")
-FIGURES_DIR = Path("figures/gradcam")
+MASKS_DIR   = Path("data/totalseg_masks")
+FIGURES_DIR = Path("figures/totalseg")
 
 plt.rcParams.update({"font.family": "sans-serif",
                      "axes.spines.top": False, "axes.spines.right": False})
+
+
+def get_dataset(root: str | Path = "Totalsegmentator_dataset_v201", top_k: int = 5):
+    """Return the TotalSegmentator test split.
+
+    ---- SWAP POINT ----
+    Replace body when moving to a new dataset.
+    Each item must yield (image_tensor (3, H, W), label_int, gt_mask (224, 224)).
+    """
+    _, _, test_ds = load_totalsegmentator(root, top_k=top_k)
+    return test_ds
 
 
 def threshold_mask(mask: np.ndarray, percentile: float) -> np.ndarray:
@@ -76,12 +72,12 @@ def plot_class_grid(class_idx: int, class_name: str, entries: list, test_ds, n: 
     if len(entries) == 1:
         axes = axes.reshape(2, 1)
 
-    fig.suptitle(f"Grad-CAM  ·  {class_name}", fontsize=13, y=1.01)
+    fig.suptitle(f"Patch Similarity  ·  {class_name}", fontsize=13, y=1.01)
 
     for col, entry in enumerate(entries):
-        image, _ = test_ds[entry["idx"]]
-        img_np   = to_display(image)
-        mask     = np.load(entry["mask_path"])
+        image = test_ds[entry["idx"]][0]   # (3, H, W) — ignore label and gt_mask
+        img_np = to_display(image)
+        mask   = np.load(entry["mask_path"])
 
         mask = threshold_mask(mask, threshold)
 
@@ -93,11 +89,11 @@ def plot_class_grid(class_idx: int, class_name: str, entries: list, test_ds, n: 
         axes[1, col].axis("off")
 
     axes[0, 0].set_ylabel("Original", fontsize=9)
-    axes[1, 0].set_ylabel("GradCAM", fontsize=9)
+    axes[1, 0].set_ylabel("Patch Sim", fontsize=9)
 
     fig.tight_layout()
     safe_name = class_name.replace("-", "_").replace(" ", "_").lower()
-    out = FIGURES_DIR / f"gradcam_{safe_name}.png"
+    out = FIGURES_DIR / f"totalseg_{safe_name}.png"
     fig.savefig(out, dpi=150, bbox_inches="tight")
     plt.close(fig)
     print(f"  Saved {out}")
@@ -117,10 +113,10 @@ def plot_summary(by_class: dict, test_ds, threshold: float = 0.0):
                 axes[row, class_idx].axis("off")
             continue
 
-        entry    = entries[0]
-        image, _ = test_ds[entry["idx"]]
-        img_np   = to_display(image)
-        mask     = np.load(entry["mask_path"])
+        entry  = entries[0]
+        image  = test_ds[entry["idx"]][0]   # (3, H, W)
+        img_np = to_display(image)
+        mask   = np.load(entry["mask_path"])
 
         mask = threshold_mask(mask, threshold)
 
@@ -137,9 +133,9 @@ def plot_summary(by_class: dict, test_ds, threshold: float = 0.0):
     for row, label in enumerate(["Original", "Mask", "Overlay"]):
         axes[row, 0].set_ylabel(label, fontsize=9)
 
-    fig.suptitle("Grad-CAM Summary — All 11 Organs", fontsize=14, y=1.01)
+    fig.suptitle("Patch Similarity Summary — All 11 Organs", fontsize=14, y=1.01)
     fig.tight_layout()
-    out = FIGURES_DIR / "gradcam_summary.png"
+    out = FIGURES_DIR / "totalseg_summary.png"
     fig.savefig(out, dpi=150, bbox_inches="tight")
     plt.close(fig)
     print(f"  Saved {out}")
@@ -147,6 +143,8 @@ def plot_summary(by_class: dict, test_ds, threshold: float = 0.0):
 
 def main():
     parser = argparse.ArgumentParser()
+    parser.add_argument("--root", default="Totalsegmentator_dataset_v201",
+                        help="Path to TotalSegmentator data root")
     parser.add_argument("--n_per_class", type=int, default=4,
                         help="Number of examples per class in per-class grids")
     parser.add_argument("--threshold", type=float, default=60.0,
@@ -166,7 +164,7 @@ def main():
 
     print(f"Loaded {len(metadata)} mask records.")
     print("Loading dataset...")
-    test_ds = get_dataset()
+    test_ds = get_dataset(args.root)
 
     by_class: dict[int, list] = {i: [] for i in range(len(CLASS_NAMES))}
     for entry in metadata:

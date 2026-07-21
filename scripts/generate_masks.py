@@ -1,12 +1,12 @@
-"""Generate patch-text similarity pseudo-masks for the OrganAMNIST test split.
+"""Generate patch-text similarity pseudo-masks for the TotalSegmentator test split.
 
 CAM = sim(patch_tokens, positive_prompt) - max(sim(patch_tokens, negative_prompts))
 
 Usage:
-    python scripts/generate_masks.py
-    python scripts/generate_masks.py --limit 100          # first 100 images
-    python scripts/generate_masks.py --no_negatives       # skip hard-negative suppression
-    python scripts/generate_masks.py --no_postprocess     # skip morphological cleanup
+    python scripts/generate_masks.py --root Totalsegmentator_dataset_v201 --checkpoint checkpoints/totalseg/epoch_009_val3.0132.pt
+    python scripts/generate_masks.py --root Totalsegmentator_dataset_v201 --limit 100
+    python scripts/generate_masks.py --root Totalsegmentator_dataset_v201 --no_negatives
+    python scripts/generate_masks.py --root Totalsegmentator_dataset_v201 --no_postprocess
 """
 
 import argparse
@@ -22,41 +22,42 @@ from open_clip import get_tokenizer
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from src.data.organmnist import load_organamnist
-from src.labels.templates import CLASS_NAMES, ZERO_SHOT_TEMPLATES, NEGATIVE_PROMPTS
+from src.data.totalsegmentator import load_totalsegmentator
+from src.labels.templates import CLASS_NAMES, FEW_SHOT_TEMPLATES, NEGATIVE_PROMPTS
 from src.training.freeze import UNFREEZE_PATTERNS
 from src.explainability.patch_similarity import BioMedCLIPPatchSimilarity, post_process_mask
 
+MODEL_NAME    = "hf-hub:microsoft/BiomedCLIP-PubMedBERT_256-vit_base_patch16_224"
+OUTPUT_DIR    = Path("data/totalseg_masks")
+GT_MASKS_DIR  = OUTPUT_DIR / "gt_masks"
 
-def get_dataset():
-    """Return the test split as an indexable dataset.
 
-    Each item must be (image_tensor, label) where:
-      - image_tensor: torch.Tensor of shape (3, H, W), preprocessed with
-        BioMedCLIP's transforms from open_clip.create_model_and_transforms
-      - label: int or 1-element array-like containing the class index
+def get_dataset(root: str | Path, top_k: int = 5):
+    """Return the TotalSegmentator test split.
 
     ---- SWAP POINT ----
-    Replace the body of this function when moving to a new dataset.
-    The rest of the pipeline (BioMedCLIPPatchSimilarity, mask saving) is
-    fully dataset-agnostic and requires no other changes.
+    Each item must yield (image_tensor (3, H, W), label_int, gt_mask (224, 224))
+    when eval_mode=True (which load_totalsegmentator sets automatically for the test split).
+    Image tensors must be preprocessed with BioMedCLIP's transforms.
     """
-    _, _, test_ds = load_organamnist(size=224)
+    _, _, test_ds = load_totalsegmentator(root, top_k=top_k)
     return test_ds
 
-MODEL_NAME   = "hf-hub:microsoft/BiomedCLIP-PubMedBERT_256-vit_base_patch16_224"
-DEFAULT_CKPT = "checkpoints/epoch_009_val3.0132.pt"
-OUTPUT_DIR   = Path("data/pseudo_masks")
 
-
-def load_model(checkpoint: str, device: str):
+def load_model(checkpoint: str | None, device: str):
     model, _, _ = open_clip.create_model_and_transforms(MODEL_NAME)
     model = model.to(device)
-    ckpt = torch.load(checkpoint, map_location=device, weights_only=False)
-    missing, _ = model.load_state_dict(ckpt["model_state_dict"], strict=False)
-    frozen_missing = [k for k in missing if not any(p in k for p in UNFREEZE_PATTERNS)]
-    print(f"  Loaded checkpoint (epoch {ckpt['epoch']}, val {ckpt['val_loss']:.4f})")
-    print(f"  {len(frozen_missing)} frozen keys not in checkpoint (expected)")
+    if checkpoint:
+        ckpt_path = Path(checkpoint)
+        if not ckpt_path.is_absolute():
+            ckpt_path = Path(__file__).parent.parent / ckpt_path
+        ckpt = torch.load(str(ckpt_path), map_location=device, weights_only=False)
+        missing, _ = model.load_state_dict(ckpt["model_state_dict"], strict=False)
+        frozen_missing = [k for k in missing if not any(p in k for p in UNFREEZE_PATTERNS)]
+        print(f"  Loaded checkpoint (epoch {ckpt['epoch']}, val {ckpt['val_loss']:.4f})")
+        print(f"  {len(frozen_missing)} frozen keys not in checkpoint (expected)")
+    else:
+        print("  No checkpoint supplied — using base BioMedCLIP weights")
     model.eval()
     for p in model.parameters():
         p.requires_grad_(False)
@@ -72,12 +73,16 @@ def encode_texts(model, tokenizer, texts: list, device: str) -> torch.Tensor:
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--checkpoint", default=DEFAULT_CKPT)
+    parser.add_argument("--root", required=True,
+                        help="Path to Totalsegmentator_dataset_v201/")
+    parser.add_argument("--checkpoint", default=None,
+                        help="Path to fine-tuned checkpoint (default: base weights)")
     parser.add_argument("--device", default="cuda" if torch.cuda.is_available() else "cpu")
+    parser.add_argument("--top_k", type=int, default=5)
     parser.add_argument("--limit", type=int, default=None,
-                        help="Only process first N test images (default: all 17778)")
+                        help="Only process first N test images (default: all)")
     parser.add_argument("--target_class", type=int, default=None,
-                        help="Explain this class index for every image (default: true label)")
+                        help="Explain this class for every image (default: true label)")
     parser.add_argument("--no_negatives", action="store_true",
                         help="Skip hard-negative suppression")
     parser.add_argument("--no_postprocess", action="store_true",
@@ -85,17 +90,15 @@ def main():
     args = parser.parse_args()
 
     OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
-    ckpt_path = Path(args.checkpoint)
-    if not ckpt_path.is_absolute():
-        ckpt_path = Path(__file__).parent.parent / ckpt_path
+    GT_MASKS_DIR.mkdir(parents=True, exist_ok=True)
 
     print(f"Device: {args.device}")
-    print(f"Loading model from {ckpt_path}...")
-    model = load_model(str(ckpt_path), args.device)
+    print("Loading model...")
+    model = load_model(args.checkpoint, args.device)
 
     print("Encoding text templates...")
     tokenizer     = get_tokenizer(MODEL_NAME)
-    pos_templates = [ZERO_SHOT_TEMPLATES[i] for i in range(len(CLASS_NAMES))]
+    pos_templates = [FEW_SHOT_TEMPLATES[i] for i in range(len(CLASS_NAMES))]
     text_features = encode_texts(model, tokenizer, pos_templates, args.device)  # (11, 512)
 
     neg_features = None
@@ -103,8 +106,8 @@ def main():
         print(f"Encoding {len(NEGATIVE_PROMPTS)} hard-negative prompts...")
         neg_features = encode_texts(model, tokenizer, NEGATIVE_PROMPTS, args.device)
 
-    print("Loading dataset...")
-    test_ds = get_dataset()
+    print(f"Loading TotalSegmentator test split from {args.root}...")
+    test_ds = get_dataset(args.root, top_k=args.top_k)
     n = min(len(test_ds), args.limit) if args.limit else len(test_ds)
     print(f"Generating masks for {n} images...")
 
@@ -112,8 +115,7 @@ def main():
     metadata  = []
 
     for idx in range(n):
-        image, label_arr = test_ds[idx]
-        label  = int(label_arr[0])
+        image, label, gt_mask = test_ds[idx]
         target = args.target_class if args.target_class is not None else label
 
         image_tensor = image.unsqueeze(0).to(args.device)
@@ -126,8 +128,10 @@ def main():
         if not args.no_postprocess:
             mask = post_process_mask(mask)
 
-        out_path = OUTPUT_DIR / f"{idx:06d}_class{label}_target{target}.npy"
-        np.save(out_path, mask)
+        out_path    = OUTPUT_DIR / f"{idx:06d}_class{label}_target{target}.npy"
+        gt_out_path = GT_MASKS_DIR / f"{idx:06d}_class{label}.npy"
+        np.save(out_path,    mask)
+        np.save(gt_out_path, gt_mask)
 
         metadata.append({
             "idx":          idx,
@@ -136,6 +140,7 @@ def main():
             "target_class": target,
             "target_name":  CLASS_NAMES[target],
             "mask_path":    str(out_path),
+            "gt_mask_path": str(gt_out_path),
         })
 
         if (idx + 1) % 500 == 0 or (idx + 1) == n:
