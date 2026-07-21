@@ -1,3 +1,13 @@
+NEGATIVE_PROMPTS = [
+    "CT scan showing background tissue",
+    "CT scan showing cortical bone",
+    "CT scan showing subcutaneous fat",
+    "CT scan showing skeletal muscle",
+    "CT scan showing blood vessel",
+    "CT scan showing air cavity",
+    "CT scan showing skin",
+]
+
 CLASS_NAMES = {
     0: "bladder",
     1: "femur-left",

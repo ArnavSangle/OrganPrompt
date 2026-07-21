@@ -20,6 +20,21 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 from src.data.organmnist import load_organamnist
 from src.labels.templates import CLASS_NAMES
 
+
+def get_dataset():
+    """Return the test split as an indexable dataset.
+
+    Each item must be (image_tensor, label) where:
+      - image_tensor: torch.Tensor of shape (3, H, W), preprocessed with
+        BioMedCLIP's transforms from open_clip.create_model_and_transforms
+      - label: int or 1-element array-like containing the class index
+
+    ---- SWAP POINT ----
+    Replace the body of this function when moving to a new dataset.
+    """
+    _, _, test_ds = load_organamnist(size=224)
+    return test_ds
+
 MASKS_DIR   = Path("data/pseudo_masks")
 FIGURES_DIR = Path("figures/gradcam")
 
@@ -150,8 +165,8 @@ def main():
         metadata = json.load(f)
 
     print(f"Loaded {len(metadata)} mask records.")
-    print("Loading OrganAMNIST test split...")
-    _, _, test_ds = load_organamnist(size=224)
+    print("Loading dataset...")
+    test_ds = get_dataset()
 
     by_class: dict[int, list] = {i: [] for i in range(len(CLASS_NAMES))}
     for entry in metadata:
