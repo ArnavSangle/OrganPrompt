@@ -32,3 +32,4 @@ Thumbs.db
 .claudeignore
 TrainingOutput*.txt
 *_training_output.txt
+"meta.csv" 
