@@ -20,8 +20,9 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 from src.data.totalsegmentator import load_totalsegmentator
 from src.labels.templates import CLASS_NAMES
 
-MASKS_DIR   = Path("data/totalseg_masks")
-FIGURES_DIR = Path("figures/totalseg")
+MASKS_DIR       = Path("data/totalseg_masks")
+FIGURES_DIR     = Path("figures/totalseg")
+THRESHOLDS_JSON = Path("diagnostics/tuned_thresholds.json")
 
 plt.rcParams.update({"font.family": "sans-serif",
                      "axes.spines.top": False, "axes.spines.right": False})
@@ -59,6 +60,41 @@ def overlay(image_np: np.ndarray, mask: np.ndarray, alpha: float = 0.45) -> np.n
     """Blend grayscale image with jet-coloured heatmap."""
     heatmap = cm.jet(mask)[..., :3]
     return np.clip((1 - alpha) * image_np + alpha * heatmap, 0, 1)
+
+
+def _load_tuned_thresholds() -> dict[str, float]:
+    if not THRESHOLDS_JSON.exists():
+        return {}
+    with open(THRESHOLDS_JSON) as f:
+        data = json.load(f)
+    out = {}
+    for name, v in data.items():
+        if isinstance(v, dict) and "raw" in v:
+            out[name] = v["raw"].get("iou_optimal", v["raw"].get("otsu"))
+        elif isinstance(v, (int, float)):
+            out[name] = float(v)
+    return out
+
+
+def _pick_median_iou_entry(entries: list, threshold: float) -> dict | None:
+    """Pick the entry with median IoU (typical case, not cherry-picked)."""
+    if not entries:
+        return None
+    scored = []
+    for e in entries:
+        mask = np.load(e["mask_path"])
+        gt   = np.load(e["gt_mask_path"]) > 0.5
+        if not gt.any():
+            continue
+        pred  = mask >= threshold
+        inter = (pred & gt).sum()
+        union = (pred | gt).sum()
+        iou   = float(inter) / float(union) if union > 0 else 0.0
+        scored.append((iou, e))
+    if not scored:
+        return entries[0]
+    scored.sort(key=lambda x: x[0])
+    return scored[len(scored) // 2][1]
 
 
 def plot_class_grid(class_idx: int, class_name: str, entries: list, test_ds, n: int,
@@ -117,6 +153,8 @@ def plot_summary(by_class: dict, test_ds, threshold: float = 0.0):
                      for r in range(3)])
     cbar_ax = fig.add_subplot(gs[1, n_classes])
 
+    tuned = _load_tuned_thresholds()
+
     mask_im = None
     for class_idx in range(n_classes):
         entries    = by_class.get(class_idx, [])
@@ -131,7 +169,10 @@ def plot_summary(by_class: dict, test_ds, threshold: float = 0.0):
         if not entries:
             continue
 
-        entry  = entries[0]
+        # Pick the median-IoU entry so the figure shows a typical result,
+        # not just whatever comes first in the metadata order.
+        thr    = tuned.get(class_name, 0.0)
+        entry  = _pick_median_iou_entry(entries, thr) or entries[0]
         image  = test_ds[entry["idx"]][0]
         img_np = to_display(image)
         mask   = np.load(entry["mask_path"])

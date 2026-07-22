@@ -32,6 +32,8 @@ Evaluated on the [TotalSegmentator v2.0.1](https://github.com/wasserth/TotalSegm
 
 The calibration step required no retraining: diagnostic analysis of raw patch-text similarity distributions (`scripts/analyze_similarities.py`) revealed that (a) per-image min-max normalization was destroying model-confidence information and (b) class-conditional negative subtraction was cutting foreground signal more than background. Removing both and calibrating per-class thresholds by sweeping IoU-optimal cutoffs on generated masks (`evaluate_masks.py --tune`) raised mIoU by +10% and cut HD95 in half.
 
+![Raw patch-text similarity distributions](diagnostics/raw_similarities.png)
+
 The final v5 resume-run added +0.020 mIoU and, more meaningfully, lifted the hardest classes disproportionately: pancreas +21%, kidney-right +15%, femur-right +10%. Easy classes (liver, lungs, heart, bladder) had already saturated at v4-tuned and plateaued.
 
 ![Calibration + retrain impact](figures/calibration_impact.png)
