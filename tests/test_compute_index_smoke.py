@@ -27,4 +27,6 @@ def test_compute_index_writes_json(tmp_path, monkeypatch):
     assert "index" in data and "per_organ" in data
     assert data["tumor_voxels"] > 0
     assert "organ_coverage" in data
-    assert all(v == 1.0 for v in data["organ_coverage"].values())
+    # organ mask is constant True everywhere in this fake, EXCEPT tumor voxels are
+    # excluded (bone can't be organ tissue) -> overlap must be exactly 0 for every organ.
+    assert all(o["overlap"] == 0.0 for o in data["per_organ"].values())

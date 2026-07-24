@@ -51,6 +51,11 @@ def run(root, case, checkpoint, device, alpha, beta, limit_slices, out_dir):
     organ_vol = build_organ_volume(ct, model, tf, device, organs)
     thresholds = _load_thresholds()
     organ_bools = binarize_organs(organ_vol, thresholds, organs)
+    # Spine-Mets tumor voxels are vertebral bone by construction (tumor_mask is a union
+    # of vertebra SEG masks) — bone can never legitimately BE organ tissue, so any organ
+    # classification firing on a tumor voxel is a model artifact, not signal. Exclude it
+    # before scoring so a confused prediction at the lesion can't manufacture overlap.
+    organ_bools = {oc: ob & ~tumor for oc, ob in organ_bools.items()}
     organ_coverage = {CLASS_NAMES[oc]: float(ob.mean()) for oc, ob in organ_bools.items()}
     print("[compute_index] organ mask coverage (fraction of cropped volume): "
           + ", ".join(f"{n}={v:.3f}" for n, v in organ_coverage.items()), flush=True)
