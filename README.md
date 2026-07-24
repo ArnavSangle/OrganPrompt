@@ -56,6 +56,36 @@ The final v5 resume-run added +0.020 mIoU and, more meaningfully, lifted the har
 
 Large, morphologically-distinct organs (liver, lungs, heart) reach 0.79-0.83 IoU with text supervision alone. Small, low-contrast organs (pancreas at 0.29) remain harder — competitive with published weakly-supervised methods on pancreas (typical range 0.20-0.35), but the inherent limit of the approach for structures without distinctive appearance.
 
+## Comparison to fully-supervised segmentation
+
+To contextualize these weakly-supervised results, we compare against [TotalSegmentator](https://pubs.rsna.org/doi/10.1148/ryai.230024) (Wasserthal et al., *Radiology: AI* 2023) — a fully-supervised 3D nnU-Net trained on the same dataset with dense per-voxel labels. Its published per-structure Dice (from the repo's `resources/results_all_classes_v1.json`) is the supervised reference ceiling; overall mean Dice across all 104 structures is **0.943**.
+
+**Metric caveat — do not subtract these columns.** The two numbers are *not* the same metric:
+
+- **OrganCAM** reports **2D per-slice Dice** on organ-present axial slices (top-K per volume).
+- **TotalSegmentator** reports **3D volumetric Dice** over whole volumes.
+
+2D slice Dice on organ-present slices is systematically *more forgiving* than 3D volumetric Dice (no empty or partial-boundary slices dragging the average down), so the true supervised → weakly-supervised gap is **wider** than the raw column difference suggests. Treat the TotalSegmentator column as an approximate upper bound achievable *with* full pixel supervision, not a like-for-like benchmark.
+
+| Organ | OrganCAM Dice (2D, weakly-sup.) | TotalSegmentator Dice (3D, fully-sup.) |
+|---|---:|---:|
+| Liver | 0.893 | 0.965 |
+| Spleen | 0.768 | 0.983 |
+| Kidney Left | 0.627 | 0.953 |
+| Kidney Right | 0.595 | 0.939 |
+| Pancreas | 0.419 | 0.887 |
+| Bladder | 0.796 | 0.934 |
+| Femur Left | 0.722 | 0.914 |
+| Femur Right | 0.706 | 0.942 |
+| Heart | 0.866 | 0.937–0.955 † |
+| Lung Left | 0.875 | 0.971 / 0.985 ‡ |
+| Lung Right | 0.897 | 0.944–0.988 ‡ |
+
+† TotalSegmentator v1 segments the heart as separate chambers, not a single structure. Range spans myocardium (0.937) to left ventricle (0.955). Our dataset (v2.0.1) uses a single merged heart label, so this row is not a direct 1:1 match.
+‡ TotalSegmentator segments lungs per-lobe. Left = upper/lower lobe (0.971 / 0.985); right = upper/middle/lower lobe (0.944 / 0.975 / 0.988). Our labels merge lobes into whole left/right lung, so the whole-lung supervised Dice (not separately reported) would differ slightly.
+
+**Takeaway.** On large, high-contrast organs (liver, lungs, heart) OrganCAM reaches 0.87–0.90 slice Dice with *no pixel labels* — within striking distance of supervised performance once the metric caveat is accounted for. The gap widens exactly where weak supervision is expected to struggle: small, low-contrast structures (pancreas 0.42 vs 0.89; kidneys 0.60–0.63 vs 0.94–0.95). This is the intended demonstration — text supervision recovers most of the localization signal for morphologically distinctive organs, and the residual gap quantifies the cost of removing dense annotation.
+
 ## Caption ablation
 
 To characterize how much the model actually uses the prompt text (rather than memorizing organ appearance from images alone), the fine-tuned v4 model was re-evaluated with five prompt formulation levels — text embeddings the only variable, no retraining:

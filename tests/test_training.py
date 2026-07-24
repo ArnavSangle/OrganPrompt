@@ -43,20 +43,37 @@ def test_logit_scale_unfrozen():
     if model.logit_bias is not None:
         assert model.logit_bias.requires_grad
 
-import json
-from torch.utils.data import DataLoader
+from torch.utils.data import DataLoader, Dataset
+from open_clip import get_tokenizer
 from src.training.trainer import Trainer
-from src.data.organmnist import load_organamnist
-from src.labels.templates import ZERO_SHOT_TEMPLATES
+from src.labels.templates import FEW_SHOT_TEMPLATES
 from src.data.dataset import ImageTextDataset
 
+
+class _SyntheticSlices(Dataset):
+    """Tiny in-memory stand-in for the TotalSegmentator dataset: random
+    224x224 3-channel images with labels and zero masks. Enough to smoke-test
+    the training loop without any real dataset on disk."""
+
+    def __init__(self, n: int = 8):
+        self.n = n
+
+    def __len__(self):
+        return self.n
+
+    def __getitem__(self, idx):
+        img = torch.rand(3, 224, 224)
+        label = idx % 11
+        gt_mask = torch.zeros(224, 224, dtype=torch.float32)
+        return img, label, gt_mask
+
+
 def _make_tiny_loader():
-    """8-image loader for fast smoke tests."""
-    train, _, _ = load_organamnist(size=224)
-    captions = {i: [ZERO_SHOT_TEMPLATES[i]] for i in range(11)}
-    ds = ImageTextDataset(train, captions)
-    subset = torch.utils.data.Subset(ds, list(range(8)))
-    return DataLoader(subset, batch_size=4, shuffle=False)
+    """8-image synthetic loader for fast training smoke tests."""
+    tokenizer = get_tokenizer(MODEL_NAME)
+    captions = {i: [tokenizer([FEW_SHOT_TEMPLATES[i]])[0]] for i in range(11)}
+    ds = ImageTextDataset(_SyntheticSlices(8), captions)
+    return DataLoader(ds, batch_size=4, shuffle=False)
 
 def test_one_train_step_runs():
     model = _load_model()
