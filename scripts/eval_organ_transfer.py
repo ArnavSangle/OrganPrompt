@@ -34,6 +34,10 @@ def main():
     a = ap.parse_args()
     print(f"[eval_organ_transfer] loading {a.vol} ...", flush=True)
     ct, lab, _ = load_ctorg_case(a.vol, a.labels)
+    print(f"[eval_organ_transfer] full volume: {ct.shape[0]} slices", flush=True)
+    for lbl in sorted(set(CTORG_TO_ORGANCAM) | {0}):
+        print(f"[eval_organ_transfer]   GT label {lbl}: {int((lab == lbl).sum())} voxels "
+              f"across {int((lab == lbl).any(axis=(1, 2)).sum())} slices", flush=True)
     ct, lab = ct[::a.stride], lab[::a.stride]
     print(f"[eval_organ_transfer] evaluating {ct.shape[0]} slices (stride={a.stride})", flush=True)
     model, tf = load_organcam(a.checkpoint, a.device)
@@ -48,7 +52,9 @@ def main():
             pred |= ob[oc]
         name = "+".join(CLASS_NAMES[o] for o in oc_list)
         results[name] = iou(pred, gt)
-        print(f"[eval_organ_transfer] {name}: IoU={results[name]:.4f}", flush=True)
+        print(f"[eval_organ_transfer] {name}: IoU={results[name]:.4f} "
+              f"(gt_voxels={int(gt.sum())}, pred_voxels={int(pred.sum())}, "
+              f"overlap_voxels={int((gt & pred).sum())})", flush=True)
     print(json.dumps(results, indent=2))
 
 
