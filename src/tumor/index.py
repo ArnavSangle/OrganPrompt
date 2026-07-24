@@ -60,6 +60,31 @@ def denoise_organ_mask(mask, min_size=500):
     return out
 
 
+def select_peak_component(sim, percentile=99.9):
+    """Binarize at a strict per-organ percentile, keep only the 3D-connected
+    component containing the single highest-similarity voxel.
+
+    Absolute per-organ thresholds (tuned on TotalSegmentator's single-organ-per-image
+    classification) are far too permissive when scanning every organ across every
+    slice of a much larger volume: dense, low-level false-positive coverage lets
+    small blobs land immediately adjacent to a large tumor by pure chance, regardless
+    of true anatomical distance. Empirically, the single global-max-similarity voxel
+    per organ is reliably near the true organ location; a strict percentile cut
+    breaks the raw similarity map into disconnected pieces, and keeping only the
+    piece containing that peak discards everything else as noise.
+    """
+    thr = np.percentile(sim, percentile)
+    mask = sim >= thr
+    if mask.all():
+        return np.zeros_like(mask, dtype=bool)   # flat/uniform input, no real signal
+    peak = np.unravel_index(np.argmax(sim), sim.shape)
+    labeled, n = ndimage.label(mask)
+    seed_label = labeled[peak]
+    if seed_label == 0:
+        return np.zeros_like(mask, dtype=bool)
+    return labeled == seed_label
+
+
 def patient_index(tumor, organ_bools, spacing, alpha=0.5, beta=0.5):
     """Blend overlap+proximity per organ; index = max score (nearest/most-involved organ)."""
     per_organ = {}

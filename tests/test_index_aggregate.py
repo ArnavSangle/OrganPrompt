@@ -1,5 +1,5 @@
 import numpy as np
-from src.tumor.index import binarize_organs, denoise_organ_mask, patient_index
+from src.tumor.index import binarize_organs, denoise_organ_mask, patient_index, select_peak_component
 
 
 def test_binarize_applies_per_organ_threshold():
@@ -36,4 +36,22 @@ def test_denoise_removes_small_components_keeps_large():
 def test_denoise_empty_slice_is_noop():
     mask = np.zeros((3, 10, 10), bool)
     out = denoise_organ_mask(mask, min_size=50)
+    assert not out.any()
+
+
+def test_select_peak_component_discards_disconnected_blob():
+    sim = np.zeros((10, 10, 10), np.float32)
+    sim[0:3, 0:3, 0:3] = 0.5    # blob A: 27 voxels
+    sim[0, 0, 0] = 0.9          # global peak, inside blob A
+    sim[8:10, 8:10, 8:10] = 0.6  # blob B: 8 voxels, disconnected, also above threshold
+    out = select_peak_component(sim, percentile=97)
+    assert out[0, 0, 0]         # peak itself kept
+    assert out[1, 1, 1]         # rest of blob A kept
+    assert not out[8, 8, 8]     # blob B discarded even though its raw values are higher
+    assert out.sum() == 27
+
+
+def test_select_peak_component_all_zero_is_empty():
+    sim = np.zeros((4, 4, 4), np.float32)
+    out = select_peak_component(sim, percentile=99.9)
     assert not out.any()
