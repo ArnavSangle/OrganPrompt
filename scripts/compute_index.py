@@ -11,7 +11,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 from src.data.spine_mets_labels import load_lesion_labels
 from src.data.spine_mets import load_patient
 from src.tumor.organ_volume import load_organcam, build_organ_volume
-from src.tumor.index import binarize_organs, patient_index
+from src.tumor.index import binarize_organs, denoise_organ_mask, patient_index
 from src.labels.templates import CLASS_NAMES
 
 DEFAULT_CKPT = "checkpoints/totalseg_patch_v5/epoch_011_val3.4584.pt"
@@ -51,6 +51,10 @@ def run(root, case, checkpoint, device, alpha, beta, limit_slices, out_dir):
     organ_vol = build_organ_volume(ct, model, tf, device, organs)
     thresholds = _load_thresholds()
     organ_bools = binarize_organs(organ_vol, thresholds, organs)
+    # Per-slice classification carries speckle false positives; over a large tumor's
+    # surface a handful of scattered voxels are "adjacent" by pure chance, which makes
+    # proximity ~1 regardless of true anatomy. Drop small components first.
+    organ_bools = {oc: denoise_organ_mask(ob) for oc, ob in organ_bools.items()}
     # Spine-Mets tumor voxels are vertebral bone by construction (tumor_mask is a union
     # of vertebra SEG masks) — bone can never legitimately BE organ tissue, so any organ
     # classification firing on a tumor voxel is a model artifact, not signal. Exclude it

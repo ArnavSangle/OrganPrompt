@@ -1,5 +1,5 @@
 import numpy as np
-from src.tumor.index import binarize_organs, patient_index
+from src.tumor.index import binarize_organs, denoise_organ_mask, patient_index
 
 
 def test_binarize_applies_per_organ_threshold():
@@ -19,3 +19,21 @@ def test_patient_index_reports_max_and_per_organ():
     assert "liver" in res["per_organ"] and "kidney-left" in res["per_organ"]
     assert res["index"] == max(o["score"] for o in res["per_organ"].values())
     assert res["per_organ"]["liver"]["score"] > res["per_organ"]["kidney-left"]["score"]
+
+
+def test_denoise_removes_small_components_keeps_large():
+    mask = np.zeros((2, 20, 20), bool)
+    mask[0, 0:10, 0:10] = True   # 100-voxel blob, should survive
+    mask[0, 15, 15] = True        # isolated speckle, should be removed
+    mask[1, 5, 5] = True          # speckle in a different slice, should be removed
+    out = denoise_organ_mask(mask, min_size=50)
+    assert out[0, 5, 5]
+    assert not out[0, 15, 15]
+    assert not out[1, 5, 5]
+    assert out.sum() == 100
+
+
+def test_denoise_empty_slice_is_noop():
+    mask = np.zeros((3, 10, 10), bool)
+    out = denoise_organ_mask(mask, min_size=50)
+    assert not out.any()

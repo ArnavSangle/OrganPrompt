@@ -1,5 +1,6 @@
 """Bone-metastasis-to-organ index: overlap, physical-distance proximity, blend."""
 import numpy as np
+from scipy import ndimage
 from scipy.ndimage import distance_transform_edt
 
 from src.labels.templates import CLASS_NAMES
@@ -32,6 +33,30 @@ def binarize_organs(organ_vol, thresholds, organs):
     for oi, oc in enumerate(organs):
         thr = thresholds.get(oc, 0.0)
         out[oc] = organ_vol[oi] >= thr
+    return out
+
+
+def denoise_organ_mask(mask, min_size=500):
+    """Drop connected components smaller than min_size, per axial slice.
+
+    Per-slice organ classification carries speckle false positives (a handful of
+    scattered voxels here and there). Over a large tumor's surface these are enough
+    to sit "adjacent" purely by chance, making proximity ~1 regardless of true
+    anatomical distance. Small components are almost always this noise, not organ
+    tissue, so drop them before any distance/overlap computation.
+    """
+    out = np.zeros_like(mask, dtype=bool)
+    for zi in range(mask.shape[0]):
+        sl = mask[zi]
+        if not sl.any():
+            continue
+        labeled, n = ndimage.label(sl)
+        sizes = ndimage.sum(sl, labeled, range(1, n + 1))
+        keep = np.zeros_like(sl, dtype=bool)
+        for i, sz in enumerate(sizes):
+            if sz >= min_size:
+                keep |= labeled == (i + 1)
+        out[zi] = keep
     return out
 
 
