@@ -207,6 +207,43 @@ Produces per-class foreground vs background histograms in `diagnostics/`. Used t
 python scripts/visualize_masks.py
 ```
 
+## Bone-metastasis organ index (Phase 1)
+
+Applies the same OrganCAM patch-similarity model to a second question: given a bone
+metastasis, which organ is it closest to invading? This phase uses **ground-truth**
+tumor localization (no weakly-supervised tumor detection yet — that's Phase 2) so the
+index itself can be validated before adding a second layer of learned uncertainty.
+
+**Datasets:**
+- [Spine-Mets-CT-SEG](https://www.cancerimagingarchive.net/collection/spine-mets-ct-seg/) — primary anchor. 55 patients, 3D DICOM CT with per-vertebra SEG masks; lesion type (lytic/blastic/mixed) per vertebral level comes from the collection's clinical spreadsheet (`Spine-Mets-CT-SEG_Clinical.xlsx`), not the SEG file itself. Tumor mask = union of vertebra masks for levels the spreadsheet marks as involved.
+- CT-ORG — organ-only NIfTI ground truth (liver, kidneys, lungs, bladder), used purely to sanity-check that OrganCAM's organ maps transfer to a CT protocol it wasn't trained on, before trusting the index.
+
+**Index:** for each (tumor, organ) pair, `overlap = |T∩O|/|T|` and `proximity = 1/(1+d_mm)`
+where `d_mm` is the minimum physical surface distance (`scipy.ndimage.distance_transform_edt`
+with mm spacing, not voxel counts). The two are blended (`alpha*overlap + beta*proximity`,
+default 0.5/0.5) per organ, and a patient's index is the max blended score across organs —
+the nearest/most-involved organ drives the score. OrganCAM runs per-axial-slice (as in the
+main pipeline above); 2D organ maps are stacked into a 3D organ-probability volume aligned
+to the CT grid so distance can be computed in 3D against the 3D tumor mask.
+
+**Scripts:**
+```bash
+# one patient -> results/bone_index/<case>.json
+python scripts/compute_index.py --case 10355 --device cuda
+
+# every labelled patient -> results/bone_index/summary.json (mean/median/min/max)
+python scripts/batch_index.py --device cuda
+
+# qualitative overlay: tumor + top-scoring organ map on the peak tumor slice
+python scripts/visualize_index.py --case 10355 --device cuda
+
+# organ-transfer sanity check on CT-ORG before trusting the index
+python scripts/eval_organ_transfer.py --vol <ctorg volume> --labels <ctorg labels> --device cuda
+```
+
+α/β weighting, per-patient aggregation (currently max-over-organs), and organ thresholds
+are open parameters — to be tuned once real per-patient scores exist across the full cohort.
+
 ## Project structure
 
 ```
