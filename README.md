@@ -95,8 +95,8 @@ To characterize how much the model actually uses the prompt text (rather than me
 | **L1** | Class name only | `"liver"` |
 | **L2** | Generic clinical caption | `"Axial CT scan of the liver."` |
 | **L3** | Position-only (organ name removed, position kept) | `"The liver occupies the left portion of the image extending toward the center in the top half."` |
-| **L4** | Full anatomical description (used during training) | Multi-sentence description with morphology, position, adjacent structures |
-| **L5** | Adversarial (L4 with left/right and top/bottom swapped) | L4 with `LEFT ↔ RIGHT` and `top ↔ bottom` |
+| **L4** | Full anatomical description (used during training) | Multi-sentence description with morphology, position, adjacent structures<br>`"Axial CT scan of the upper abdomen showing the liver. Dominates the LEFT portion of the image from the left edge toward and past the center, in the top half. The right lobe is largest and sits furthest left in the image. The left lobe tapers toward image center. Intrahepatic vessels (portal and hepatic veins) branch throughout as tubular structures. The gallbladder may appear as a small oval hypodense structure at the bottom of the liver mass."` |
+| **L5** | Adversarial (L4 with left/right and top/bottom swapped) | L4 with `LEFT ↔ RIGHT` and `top ↔ bottom`<br>`"Axial CT scan of the lower abdomen showing the liver. Dominates the RIGHT portion of the image from the right edge toward and past the center, in the bottom half. The left lobe is largest and sits furthest right in the image. The right lobe tapers toward image center. Intrahepatic vessels (portal and hepatic veins) branch throughout as tubular structures. The gallbladder may appear as a small oval hypodense structure at the top of the liver mass."` |
 
 ### Overall results
 
