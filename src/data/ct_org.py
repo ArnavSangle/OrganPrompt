@@ -16,7 +16,10 @@ def load_ctorg_case(vol_path, label_path):
     """
     v = nib.load(vol_path)
     ct = np.asarray(v.dataobj).astype(np.float32)
-    lab = np.asarray(nib.load(label_path).dataobj).astype(np.int16)
+    # CT-ORG label NIfTIs store integers as float32 just under the true value
+    # (e.g. 2.9999999993, not 3.0) — .astype(int) truncates toward zero and
+    # silently shifts every label down by one. Round first.
+    lab = np.round(np.asarray(nib.load(label_path).dataobj)).astype(np.int16)
     zoom = v.header.get_zooms()
     spacing = (float(zoom[2]), float(zoom[0]), float(zoom[1]))  # z,x,y
     ct = np.transpose(ct, (2, 0, 1))
