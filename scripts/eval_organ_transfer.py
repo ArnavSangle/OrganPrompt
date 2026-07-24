@@ -32,8 +32,10 @@ def main():
     ap.add_argument("--device", default="cuda")
     ap.add_argument("--stride", type=int, default=4)  # subsample slices for speed
     a = ap.parse_args()
+    print(f"[eval_organ_transfer] loading {a.vol} ...", flush=True)
     ct, lab, _ = load_ctorg_case(a.vol, a.labels)
     ct, lab = ct[::a.stride], lab[::a.stride]
+    print(f"[eval_organ_transfer] evaluating {ct.shape[0]} slices (stride={a.stride})", flush=True)
     model, tf = load_organcam(a.checkpoint, a.device)
     organs = sorted({o for lst in CTORG_TO_ORGANCAM.values() for o in lst})
     vol = build_organ_volume(ct, model, tf, a.device, organs)
@@ -44,7 +46,9 @@ def main():
         pred = np.zeros_like(gt)
         for oc in oc_list:
             pred |= ob[oc]
-        results["+".join(CLASS_NAMES[o] for o in oc_list)] = iou(pred, gt)
+        name = "+".join(CLASS_NAMES[o] for o in oc_list)
+        results[name] = iou(pred, gt)
+        print(f"[eval_organ_transfer] {name}: IoU={results[name]:.4f}", flush=True)
     print(json.dumps(results, indent=2))
 
 

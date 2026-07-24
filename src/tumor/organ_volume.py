@@ -36,8 +36,10 @@ def preprocess_slice(hu_slice, organ_class):
 
 def load_organcam(checkpoint, device):
     """Load base BioMedCLIP + fine-tuned checkpoint, encode the 11 organ prompts."""
+    print(f"[organ_volume] loading base model {MODEL_NAME} ...", flush=True)
     model, _, _ = open_clip.create_model_and_transforms(MODEL_NAME)
     model = model.to(device)
+    print(f"[organ_volume] loading checkpoint {checkpoint} ...", flush=True)
     ckpt = torch.load(checkpoint, map_location=device, weights_only=False)
     model.load_state_dict(ckpt["model_state_dict"], strict=False)
     model.eval()
@@ -47,6 +49,7 @@ def load_organcam(checkpoint, device):
     prompts = [FEW_SHOT_TEMPLATES[i] for i in range(len(CLASS_NAMES))]
     with torch.no_grad():
         text_features = F.normalize(model.encode_text(tokenizer(prompts).to(device)), dim=-1)
+    print("[organ_volume] model ready, text prompts encoded", flush=True)
     return model, text_features
 
 
@@ -55,6 +58,7 @@ def build_organ_volume(ct, model, text_features, device, organs=None):
     if organs is None:
         organs = list(range(len(CLASS_NAMES)))
     D, H, W = ct.shape
+    print(f"[organ_volume] running {len(organs)} organs x {D} slices ...", flush=True)
     out = np.zeros((len(organs), D, H, W), dtype=np.float32)
     explainer = BioMedCLIPPatchSimilarity(model, device=device)
     for zi in range(D):
@@ -64,5 +68,7 @@ def build_organ_volume(ct, model, text_features, device, organs=None):
             t = torch.from_numpy(m).unsqueeze(0).unsqueeze(0)
             t = F.interpolate(t, size=(H, W), mode="bilinear", align_corners=False)
             out[oi, zi] = t.squeeze().numpy()
+        if (zi + 1) % 20 == 0 or zi + 1 == D:
+            print(f"[organ_volume] slice {zi + 1}/{D} done", flush=True)
     explainer.remove_hooks()
     return out

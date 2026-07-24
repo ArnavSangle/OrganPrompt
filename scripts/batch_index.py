@@ -29,10 +29,11 @@ def main():
     a = ap.parse_args()
     labels = load_lesion_labels(str(Path(a.root) / "Spine-Mets-CT-SEG_Clinical.xlsx"))
     cases_dir = Path(a.root) / "spine_mets_ct_seg"
+    todo = [c for c in sorted(cases_dir.iterdir()) if c.is_dir() and labels.get(c.name)]
+    print(f"[batch_index] {len(todo)} labelled patients to process", flush=True)
     per_case = {}
-    for c in sorted(cases_dir.iterdir()):
-        if not (c.is_dir() and labels.get(c.name)):
-            continue
+    for i, c in enumerate(todo):
+        print(f"[batch_index] ({i + 1}/{len(todo)}) {c.name} ...", flush=True)
         try:
             out = ci.run(a.root, c.name, a.checkpoint, a.device, a.alpha, a.beta,
                          a.limit_slices, a.out_dir)

@@ -31,28 +31,38 @@ def _load_thresholds():
 
 
 def run(root, case, checkpoint, device, alpha, beta, limit_slices, out_dir):
+    print(f"[compute_index] loading clinical labels from {root} ...", flush=True)
     labels = load_lesion_labels(str(Path(root) / "Spine-Mets-CT-SEG_Clinical.xlsx"))
     if case is None:
         cases_dir = Path(root) / "spine_mets_ct_seg"
         case = next(c.name for c in sorted(cases_dir.iterdir())
                     if c.is_dir() and labels.get(c.name))
+    print(f"[compute_index] loading patient {case} (CT + SEG + lesion labels) ...", flush=True)
     p = load_patient(root, case, labels)
     # crop to tumor-bearing slice range for speed
     zs = np.where(p.tumor_mask.any(axis=(1, 2)))[0]
     z0, z1 = max(0, zs.min() - limit_slices), min(p.ct.shape[0], zs.max() + limit_slices + 1)
     ct = p.ct[z0:z1]
     tumor = p.tumor_mask[z0:z1]
+    print(f"[compute_index] cropped to slices [{z0}:{z1}] ({z1 - z0} of {p.ct.shape[0]}); "
+          f"tumor voxels = {int(tumor.sum())}", flush=True)
     organs = list(range(len(CLASS_NAMES)))
     model, tf = load_organcam(checkpoint, device)
     organ_vol = build_organ_volume(ct, model, tf, device, organs)
-    organ_bools = binarize_organs(organ_vol, _load_thresholds(), organs)
+    thresholds = _load_thresholds()
+    organ_bools = binarize_organs(organ_vol, thresholds, organs)
+    organ_coverage = {CLASS_NAMES[oc]: float(ob.mean()) for oc, ob in organ_bools.items()}
+    print("[compute_index] organ mask coverage (fraction of cropped volume): "
+          + ", ".join(f"{n}={v:.3f}" for n, v in organ_coverage.items()), flush=True)
     res = patient_index(tumor, organ_bools, p.spacing, alpha, beta)
     res.update(case=case, spacing=list(p.spacing), tumor_voxels=int(tumor.sum()),
-               alpha=alpha, beta=beta, slice_range=[int(z0), int(z1)])
+               alpha=alpha, beta=beta, slice_range=[int(z0), int(z1)],
+               organ_coverage=organ_coverage)
     out_dir = Path(out_dir)
     out_dir.mkdir(parents=True, exist_ok=True)
     out_path = out_dir / f"{case}.json"
     out_path.write_text(json.dumps(res, indent=2))
+    print(f"[compute_index] index = {res['index']:.4f}", flush=True)
     return str(out_path)
 
 

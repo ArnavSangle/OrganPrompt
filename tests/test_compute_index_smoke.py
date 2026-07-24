@@ -26,3 +26,5 @@ def test_compute_index_writes_json(tmp_path, monkeypatch):
     data = json.loads(Path(out).read_text())
     assert "index" in data and "per_organ" in data
     assert data["tumor_voxels"] > 0
+    assert "organ_coverage" in data
+    assert all(v == 1.0 for v in data["organ_coverage"].values())

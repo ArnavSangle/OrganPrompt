@@ -24,13 +24,16 @@ def main():
     ap.add_argument("--checkpoint", default=DEFAULT_CKPT)
     ap.add_argument("--device", default="cuda")
     a = ap.parse_args()
+    print(f"[visualize_index] loading patient {a.case} ...", flush=True)
     labels = load_lesion_labels(str(Path(a.root) / "Spine-Mets-CT-SEG_Clinical.xlsx"))
     p = load_patient(a.root, a.case, labels)
     z = int(np.argmax(p.tumor_mask.sum(axis=(1, 2))))     # peak tumor slice
+    print(f"[visualize_index] peak tumor slice = {z}", flush=True)
     model, tf = load_organcam(a.checkpoint, a.device)
     vol = build_organ_volume(p.ct[z:z+1], model, tf, a.device)  # (11,1,H,W)
     top = int(np.argmax([vol[o, 0][p.tumor_mask[z]].mean() if p.tumor_mask[z].any()
                          else vol[o, 0].mean() for o in range(11)]))
+    print(f"[visualize_index] top-scoring organ: {CLASS_NAMES[top]}", flush=True)
     ct = np.clip(p.ct[z], -150, 250)
     ct = (ct + 150) / 400
     fig, ax = plt.subplots(1, 2, figsize=(10, 5))
