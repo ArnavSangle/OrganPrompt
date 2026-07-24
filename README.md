@@ -145,6 +145,7 @@ python -m venv .venv
 .venv\Scripts\activate        # Windows
 pip install torch torchvision --index-url https://download.pytorch.org/whl/cu128
 pip install open_clip_torch nibabel scipy matplotlib pytest
+pip install pydicom openpyxl   # bone-metastasis index (Phase 1): DICOM + clinical xlsx
 ```
 
 Download the [TotalSegmentator dataset v2.0.1](https://zenodo.org/records/10047292) and unzip to `Totalsegmentator_dataset_v201/` in the project root.
