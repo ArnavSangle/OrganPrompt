@@ -44,6 +44,24 @@ def blended_score(tumor, organ, spacing, alpha=0.5, beta=0.5):
     return alpha * overlap(tumor, organ) + beta * proximity(tumor, organ, spacing)
 
 
+def score_organ(tumor, organ, spacing, alpha=0.5, beta=0.5, tumor_coords=None):
+    """Per-organ score record. Reports d_mm directly rather than only its
+    reciprocal, so an implausible result is legible without inverting by hand.
+
+    tumor_coords may be passed in to avoid recomputing np.argwhere(tumor) once
+    per organ on a full-resolution volume.
+    """
+    if tumor_coords is None:
+        tumor_coords = np.argwhere(tumor)
+    t = int(tumor.sum())
+    ov = float((tumor & organ).sum()) / float(t) if t else 0.0
+    d = min_distance_mm(tumor_coords, np.argwhere(organ), spacing)
+    px = 1.0 / (1.0 + d) if np.isfinite(d) else 0.0
+    return {"overlap": ov, "proximity": px, "score": alpha * ov + beta * px,
+            "distance_mm": d if np.isfinite(d) else None,
+            "voxels": int(organ.sum())}
+
+
 def binarize_organs(organ_vol, thresholds, organs):
     """Apply a per-organ threshold to a [organs,D,H,W] similarity volume."""
     out = {}

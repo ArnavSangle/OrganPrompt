@@ -50,10 +50,21 @@ def single_level_cases(labels):
             if len(lv) == 1 and next(iter(lv)) in EXPECTED}
 
 
+def detected(per_organ):
+    """Organs the pipeline actually found, ranked nearest-first.
+
+    Competitive assignment can return an organ empty, which surfaces as
+    proximity 0. Those are 'not present in this scan', not 'present but far', so
+    they are excluded from the ranking entirely -- otherwise a miss would be
+    silently scored as a weak detection at the bottom of the list.
+    """
+    found = [n for n, v in per_organ.items() if v["proximity"] > 0]
+    return sorted(found, key=lambda n: per_organ[n]["proximity"], reverse=True)
+
+
 def rank_of_expected(per_organ, expected):
-    """1-based rank of the best-placed expected organ, by descending proximity."""
-    order = sorted(per_organ, key=lambda n: per_organ[n]["proximity"], reverse=True)
-    for i, name in enumerate(order, 1):
+    """1-based rank of the best-placed expected organ among detected organs."""
+    for i, name in enumerate(detected(per_organ), 1):
         if name in expected:
             return i
     return None
@@ -93,6 +104,9 @@ def main():
     ap.add_argument("--device", default="cuda")
     ap.add_argument("--out_dir", default="results/anatomy_validation")
     ap.add_argument("--max_cases", type=int, default=0, help="0 = all")
+    ap.add_argument("--assign", choices=["competitive", "independent"],
+                     default="competitive")
+    ap.add_argument("--floor", type=float, default=0.6)
     ap.add_argument("--stride", type=int, default=2,
                      help="use every Nth axial slice; full volumes x 11 organs are slow "
                           "and organs span many slices, so a stride of 2 barely moves "
@@ -122,18 +136,18 @@ def main():
             if a.force or not cached.exists():
                 # limit_slices=-1 -> full volume, no crop
                 ci.run(a.root, case, a.checkpoint, a.device, 0.5, 0.5, -1, str(out_dir),
-                       stride=a.stride)
+                       stride=a.stride, assign=a.assign, floor=a.floor)
             data = json.loads(cached.read_text())
         except Exception as e:
             print(f"[validate_anatomy] {case}: SKIP ({e})", flush=True)
             continue
         r = rank_of_expected(data["per_organ"], expected)
-        order = sorted(data["per_organ"],
-                       key=lambda n: data["per_organ"][n]["proximity"], reverse=True)
+        order = detected(data["per_organ"])
         dmm = distances_mm(data["per_organ"])
         per_case[case] = {"level": level, "expected": sorted(expected),
                           "rank": r, "ranking": order,
                           "distances_mm": {n: round(dmm[n], 1) for n in order},
+                          "absent": data.get("absent", []),
                           "z_extent_mm": data.get("z_extent_mm"),
                           "peak_sim": data.get("peak_sim")}
         print(f"[validate_anatomy] {case}: best expected organ at rank {r} "

@@ -11,14 +11,15 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 from src.data.spine_mets_labels import load_lesion_labels
 from src.data.spine_mets import load_patient
 from src.tumor.organ_volume import load_organcam, iter_organ_similarity
-from src.tumor.index import select_peak_component, patient_index
+from src.tumor.index import select_peak_component, score_organ
+from src.tumor.assign import CompetitiveAssigner
 from src.labels.templates import CLASS_NAMES
 
 DEFAULT_CKPT = "checkpoints/totalseg_patch_v5/epoch_011_val3.4584.pt"
 
 
 def run(root, case, checkpoint, device, alpha, beta, limit_slices, out_dir, percentile=99.9,
-        stride=1):
+        stride=1, assign="competitive", floor=0.6):
     print(f"[compute_index] loading clinical labels from {root} ...", flush=True)
     labels = load_lesion_labels(str(Path(root) / "Spine-Mets-CT-SEG_Clinical.xlsx"))
     if case is None:
@@ -71,27 +72,56 @@ def run(root, case, checkpoint, device, alpha, beta, limit_slices, out_dir, perc
     # any organ classification firing on a tumor voxel is a model artifact, not
     # signal. Exclude it so a confused prediction at the lesion can't fake overlap.
     #
-    # select_peak_component takes a global argmax, so it returns a component for EVERY
-    # organ -- including organs entirely outside the scan's field of view. Those
-    # phantom components are pure noise, and noise concentrates on high-contrast bone,
-    # i.e. right next to the spinal tumor. Record each organ's peak similarity so an
-    # absence gate can be calibrated on real data instead of guessed at.
-    organ_bools = {}
+    # select_peak_component (assign="independent") takes a global argmax per organ, so
+    # it returns a component for EVERY organ -- including organs entirely outside the
+    # scan's field of view. assign="competitive" instead makes the organs compete for
+    # each voxel, letting an organ come back empty; see src/tumor/assign.py.
     peak_sim = {}
-    for oc, sim in iter_organ_similarity(ct, model, tf, device, organs):
-        peak_sim[CLASS_NAMES[oc]] = float(sim.max())
-        organ_bools[oc] = select_peak_component(sim, percentile) & ~tumor
-        del sim
+    tumor_coords = np.argwhere(tumor)
+    per_organ, organ_sizes, absent = {}, {}, []
+
+    def _record(oc, mask):
+        """Reduce one organ mask to scalars immediately, then drop it.
+
+        Holding all 11 dense masks is ~1GB on a full-resolution scan, on top of
+        whatever the assigner is already holding.
+        """
+        mask &= ~tumor
+        name = CLASS_NAMES[oc]
+        per_organ[name] = score_organ(tumor, mask, spacing, alpha, beta, tumor_coords)
+        organ_sizes[name] = per_organ[name]["voxels"]
+        if organ_sizes[name] == 0:
+            absent.append(name)
+
+    if assign == "competitive":
+        assigner = CompetitiveAssigner(ct.shape)
+        for oc, sim in iter_organ_similarity(ct, model, tf, device, organs):
+            peak_sim[CLASS_NAMES[oc]] = float(sim.max())
+            assigner.update(oc, sim)
+            del sim
+        stolen = {CLASS_NAMES[oc] for oc in assigner.absent()}
+        for oc, mask in assigner.finalize(floor=floor):
+            _record(oc, mask)
+            del mask
+        print(f"[compute_index] organs judged absent (peak claimed by a stronger "
+              f"organ): {sorted(stolen) or 'none'}", flush=True)
+    else:
+        for oc, sim in iter_organ_similarity(ct, model, tf, device, organs):
+            peak_sim[CLASS_NAMES[oc]] = float(sim.max())
+            _record(oc, select_peak_component(sim, percentile))
+            del sim
+
     print("[compute_index] peak similarity: "
           + ", ".join(f"{n}={v:.4f}" for n, v in peak_sim.items()), flush=True)
     # Report component SIZE, not coverage fraction: coverage is pinned at (100-pct)/100
     # by construction, so it says nothing about whether a component is plausible.
-    organ_sizes = {CLASS_NAMES[oc]: int(ob.sum()) for oc, ob in organ_bools.items()}
-    print("[compute_index] peak-component size (voxels): "
+    print("[compute_index] component size (voxels): "
           + ", ".join(f"{n}={v}" for n, v in organ_sizes.items()), flush=True)
-    res = patient_index(tumor, organ_bools, spacing, alpha, beta)
+    res = {"per_organ": per_organ,
+           "index": max((o["score"] for o in per_organ.values()), default=0.0)}
     res.update(case=case, spacing=list(spacing), tumor_voxels=int(tumor.sum()),
                alpha=alpha, beta=beta, percentile=percentile, stride=stride,
+               assign=assign, floor=floor, absent=sorted(absent),
                slice_range=[int(z0), int(z1)], organ_sizes=organ_sizes,
                peak_sim=peak_sim, z_extent_mm=float(ct.shape[0] * spacing[0]))
     out_dir = Path(out_dir)
@@ -116,9 +146,16 @@ def main():
                      help="per-organ binarization percentile (see select_peak_component)")
     ap.add_argument("--stride", type=int, default=1,
                      help="use every Nth axial slice (z-spacing scales to match)")
+    ap.add_argument("--assign", choices=["competitive", "independent"],
+                     default="competitive",
+                     help="competitive: one voxel one organ, absent organs come back "
+                          "empty. independent: per-organ percentile (the old behaviour)")
+    ap.add_argument("--floor", type=float, default=0.6,
+                     help="competitive only: minimum response as a fraction of the "
+                          "organ's typical peak")
     a = ap.parse_args()
     out = run(a.root, a.case, a.checkpoint, a.device, a.alpha, a.beta,
-              a.limit_slices, a.out_dir, a.percentile, a.stride)
+              a.limit_slices, a.out_dir, a.percentile, a.stride, a.assign, a.floor)
     print(f"wrote {out}")
 
 

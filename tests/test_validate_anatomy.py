@@ -34,6 +34,18 @@ def test_rank_of_expected_missing_organ_is_none():
     assert va.rank_of_expected({"liver": {"proximity": 0.1}}, {"bladder"}) is None
 
 
+def test_absent_organs_are_excluded_from_the_ranking():
+    per_organ = {
+        "spleen": {"proximity": 0.9},
+        "bladder": {"proximity": 0.0},    # judged absent by competitive assignment
+        "kidney-left": {"proximity": 0.4},
+    }
+    assert va.detected(per_organ) == ["spleen", "kidney-left"]
+    # bladder must not be rankable at all -- "not found" is a miss, not last place
+    assert va.rank_of_expected(per_organ, {"bladder"}) is None
+    assert va.rank_of_expected(per_organ, {"kidney-left"}) == 2
+
+
 def test_summarize_reports_topk_hit_rates():
     per_case = {"a": {"rank": 1}, "b": {"rank": 3}, "c": {"rank": 7}, "d": {"rank": None}}
     s = va.summarize(per_case)
