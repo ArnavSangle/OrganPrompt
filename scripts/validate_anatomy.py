@@ -78,6 +78,10 @@ def main():
     ap.add_argument("--device", default="cuda")
     ap.add_argument("--out_dir", default="results/anatomy_validation")
     ap.add_argument("--max_cases", type=int, default=0, help="0 = all")
+    ap.add_argument("--stride", type=int, default=2,
+                     help="use every Nth axial slice; full volumes x 11 organs are slow "
+                          "and organs span many slices, so a stride of 2 barely moves "
+                          "the peak locations")
     ap.add_argument("--force", action="store_true")
     a = ap.parse_args()
 
@@ -102,7 +106,8 @@ def main():
         try:
             if a.force or not cached.exists():
                 # limit_slices=-1 -> full volume, no crop
-                ci.run(a.root, case, a.checkpoint, a.device, 0.5, 0.5, -1, str(out_dir))
+                ci.run(a.root, case, a.checkpoint, a.device, 0.5, 0.5, -1, str(out_dir),
+                       stride=a.stride)
             data = json.loads(cached.read_text())
         except Exception as e:
             print(f"[validate_anatomy] {case}: SKIP ({e})", flush=True)

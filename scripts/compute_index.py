@@ -17,7 +17,8 @@ from src.labels.templates import CLASS_NAMES
 DEFAULT_CKPT = "checkpoints/totalseg_patch_v5/epoch_011_val3.4584.pt"
 
 
-def run(root, case, checkpoint, device, alpha, beta, limit_slices, out_dir, percentile=99.9):
+def run(root, case, checkpoint, device, alpha, beta, limit_slices, out_dir, percentile=99.9,
+        stride=1):
     print(f"[compute_index] loading clinical labels from {root} ...", flush=True)
     labels = load_lesion_labels(str(Path(root) / "Spine-Mets-CT-SEG_Clinical.xlsx"))
     if case is None:
@@ -37,8 +38,21 @@ def run(root, case, checkpoint, device, alpha, beta, limit_slices, out_dir, perc
         z0, z1 = 0, p.ct.shape[0]
     ct = p.ct[z0:z1]
     tumor = p.tumor_mask[z0:z1]
-    print(f"[compute_index] cropped to slices [{z0}:{z1}] ({z1 - z0} of {p.ct.shape[0]}); "
-          f"tumor voxels = {int(tumor.sum())}", flush=True)
+    spacing = p.spacing
+    if stride > 1:
+        # Sparse subsampling through the full available range, NOT a range crop: real
+        # organs span many consecutive slices, so skipping some still very likely keeps
+        # a slice near an organ's true peak. Only used to make outlier huge-crop
+        # patients tractable; z-spacing must scale with the stride for correct 3D
+        # distances downstream.
+        ct = ct[::stride]
+        tumor = tumor[::stride]
+        spacing = (spacing[0] * stride, spacing[1], spacing[2])
+    print(f"[compute_index] cropped to slices [{z0}:{z1}] ({z1 - z0} of {p.ct.shape[0]}), "
+          f"stride={stride} -> {ct.shape[0]} slices used; "
+          f"tumor voxels = {int(tumor.sum())}, spacing = {spacing}", flush=True)
+    if not tumor.any():
+        raise ValueError(f"stride={stride} skipped every tumor slice for case {case}")
     organs = list(range(len(CLASS_NAMES)))
     model, tf = load_organcam(checkpoint, device)
     organ_vol = build_organ_volume(ct, model, tf, device, organs)
@@ -59,9 +73,9 @@ def run(root, case, checkpoint, device, alpha, beta, limit_slices, out_dir, perc
     organ_coverage = {CLASS_NAMES[oc]: float(ob.mean()) for oc, ob in organ_bools.items()}
     print("[compute_index] organ mask coverage (fraction of cropped volume): "
           + ", ".join(f"{n}={v:.3f}" for n, v in organ_coverage.items()), flush=True)
-    res = patient_index(tumor, organ_bools, p.spacing, alpha, beta)
-    res.update(case=case, spacing=list(p.spacing), tumor_voxels=int(tumor.sum()),
-               alpha=alpha, beta=beta, percentile=percentile,
+    res = patient_index(tumor, organ_bools, spacing, alpha, beta)
+    res.update(case=case, spacing=list(spacing), tumor_voxels=int(tumor.sum()),
+               alpha=alpha, beta=beta, percentile=percentile, stride=stride,
                slice_range=[int(z0), int(z1)], organ_coverage=organ_coverage)
     out_dir = Path(out_dir)
     out_dir.mkdir(parents=True, exist_ok=True)
@@ -83,9 +97,11 @@ def main():
     ap.add_argument("--out_dir", default="results/bone_index")
     ap.add_argument("--percentile", type=float, default=99.9,
                      help="per-organ binarization percentile (see select_peak_component)")
+    ap.add_argument("--stride", type=int, default=1,
+                     help="use every Nth axial slice (z-spacing scales to match)")
     a = ap.parse_args()
     out = run(a.root, a.case, a.checkpoint, a.device, a.alpha, a.beta,
-              a.limit_slices, a.out_dir, a.percentile)
+              a.limit_slices, a.out_dir, a.percentile, a.stride)
     print(f"wrote {out}")
 
 
