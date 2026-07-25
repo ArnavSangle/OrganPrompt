@@ -14,7 +14,7 @@ by z-position.
 import glob
 import os
 from collections import Counter
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 import numpy as np
 import pydicom
@@ -94,6 +94,25 @@ def load_vertebra_masks(seg_path, ct_paths):
 _TYPE_CODE = {"lytic": 1, "blastic": 2, "mixed": 3}
 
 
+def stride_coords(coords, stride):
+    """Map full-volume voxel coordinates onto a z-subsampled volume.
+
+    ct[::stride] keeps slices 0, stride, 2*stride..., so a lesion's coordinates
+    have to be filtered to those slices and then renumbered to the new index
+    space. Skipping the renumber leaves every lesion at its original z and
+    silently multiplies its distance to everything by the stride.
+
+    A thin lesion can survive on none of the retained slices and come back empty;
+    the caller has to notice rather than score an empty lesion.
+    """
+    coords = np.asarray(coords)
+    if stride <= 1 or len(coords) == 0:
+        return coords
+    kept = coords[coords[:, 0] % stride == 0].copy()
+    kept[:, 0] //= stride
+    return kept
+
+
 @dataclass
 class SpineMetsPatient:
     case: str
@@ -101,6 +120,11 @@ class SpineMetsPatient:
     spacing: tuple               # (dz, dy, dx) mm
     tumor_mask: np.ndarray       # [D,H,W] bool
     lesion_type: np.ndarray      # [D,H,W] int8 (0 none,1 lytic,2 blastic,3 mixed)
+    # {level: [N,3] voxel coords}, one entry per LABELLED level. Coordinates, not
+    # masks: a patient can carry 17 labelled levels and 17 volume-sized boolean
+    # masks is over a gigabyte, while the coordinates are a few megabytes. Their
+    # union is exactly tumor_mask.
+    lesion_coords: dict = field(default_factory=dict)
 
 
 def load_patient(root, case, labels):
@@ -111,10 +135,12 @@ def load_patient(root, case, labels):
     vmasks = load_vertebra_masks(seg_path, ct_paths)
     tumor = np.zeros(ct.shape, dtype=bool)
     ltype = np.zeros(ct.shape, dtype=np.int8)
+    lesions = {}
     for level, kind in labels.get(case, {}).items():
         m = vmasks.get(level)
         if m is None:
             continue
         tumor |= m
         ltype[m] = _TYPE_CODE[kind]
-    return SpineMetsPatient(case, ct, spacing, tumor, ltype)
+        lesions[level] = np.argwhere(m)
+    return SpineMetsPatient(case, ct, spacing, tumor, ltype, lesions)

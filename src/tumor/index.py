@@ -62,6 +62,41 @@ def score_organ(tumor, organ, spacing, alpha=0.5, beta=0.5, tumor_coords=None):
             "voxels": int(organ.sum())}
 
 
+def score_organ_against_lesions(lesion_coords, organ, spacing, alpha=0.5, beta=0.5):
+    """{level: score record} for ONE organ mask against MANY lesions.
+
+    Per-lesion evaluation scores each labelled vertebra separately, but the organ
+    masks are what cost a full inference pass and a volume-sized allocation to
+    produce. So the loop is inverted relative to score_organ: an organ is scored
+    against every lesion in the patient while it is resident, then discarded.
+
+    The organ KD-tree is built once and queried per lesion, which is where the
+    saving is -- the tree is over the organ (large), and each query set is one
+    vertebra (small). Overlap is read straight off the organ mask at the lesion's
+    own coordinates, so the lesion mask itself is never needed, only its coords.
+    """
+    out = {}
+    organ_coords = np.argwhere(organ)
+    n_organ = int(len(organ_coords))
+    sp = np.asarray(spacing, dtype=np.float64)
+    tree = cKDTree(organ_coords.astype(np.float64) * sp) if n_organ else None
+    for level, coords in lesion_coords.items():
+        coords = np.asarray(coords)
+        n = int(len(coords))
+        if n == 0 or tree is None:
+            out[level] = {"overlap": 0.0, "proximity": 0.0, "score": 0.0,
+                          "distance_mm": None, "voxels": n_organ}
+            continue
+        inside = int(organ[coords[:, 0], coords[:, 1], coords[:, 2]].sum())
+        ov = inside / float(n)
+        d = float(tree.query(coords.astype(np.float64) * sp, k=1)[0].min())
+        px = 1.0 / (1.0 + d)
+        out[level] = {"overlap": ov, "proximity": px,
+                      "score": alpha * ov + beta * px,
+                      "distance_mm": d, "voxels": n_organ}
+    return out
+
+
 def binarize_organs(organ_vol, thresholds, organs):
     """Apply a per-organ threshold to a [organs,D,H,W] similarity volume."""
     out = {}
