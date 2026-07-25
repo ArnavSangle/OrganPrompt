@@ -68,8 +68,11 @@ def test_competitive_reports_absent_organs_independent_does_not(tmp_path, monkey
                                   assign="competitive")).read_text())
     indep = json.loads(Path(ci.run(**kw, out_dir=str(tmp_path / "i"),
                                    assign="independent")).read_text())
-    losers = {n for n in comp["organ_sizes"] if n != "lung-left"}
+    # lung-right is exempt: it is lung-left's anatomical pair, and a pair is
+    # present or absent as a unit, so a dominant left lung vouches for the right
+    losers = {n for n in comp["organ_sizes"] if n not in ("lung-left", "lung-right")}
     # competition strips every organ that lost its peak to lung-left ...
     assert losers <= set(comp["absent"]), comp["absent"]
+    assert "lung-right" not in comp["absent"], "a pair must not be split"
     # ... while independent thresholding hands each of them a mask regardless
     assert not (losers & set(indep["absent"])), indep["absent"]

@@ -23,11 +23,42 @@ produce.
 
 Assignment streams one organ at a time, holding only a running best-value and
 best-label array, so memory stays bounded regardless of organ count.
+
+BILATERAL PAIRS COMPETE AS ONE UNIT. Letting kidney-left and kidney-right bid
+against each other reproduced the very bug this module exists to fix, one level
+down: the two prompts differ by a single word ("LEFT side"/"RIGHT side"), the
+text encoder separates them poorly, so both peak in nearly the same place and the
+stronger one declared the weaker ABSENT. Measured over the 20 single-level
+patients, 37% of pairs were split that way -- femur-right came back absent 9/20
+against femur-left's 3/20, and one lumbar scan dropped lung-right while keeping
+lung-left. A scan contains both sides of a pair or neither, so presence is
+decided for the pair and the won territory is then divided by POSITION, which the
+templates state explicitly and consistently: a patient-left organ "appears on the
+RIGHT side of the image".
 """
 import numpy as np
 from scipy import ndimage
 
 from src.labels.templates import CLASS_NAMES
+
+# group key -> (image-left member, image-right member). Standard radiological
+# orientation: the patient's LEFT organ appears on the image's RIGHT half, so
+# "-left" organs sit at HIGH x. Verified against all three pairs of templates.
+BILATERAL = {
+    "femur": ("femur-right", "femur-left"),
+    "kidney": ("kidney-right", "kidney-left"),
+    "lung": ("lung-right", "lung-left"),
+}
+
+# organ name -> group key, and -> which image half it occupies (-1 low x, +1 high x)
+GROUP_OF, SIDE = {}, {}
+for _g, (_lo, _hi) in BILATERAL.items():
+    GROUP_OF[_lo], SIDE[_lo] = _g, -1
+    GROUP_OF[_hi], SIDE[_hi] = _g, +1
+for _n in CLASS_NAMES.values():
+    GROUP_OF.setdefault(_n, _n)          # unpaired organs are their own group
+
+_GROUP_ID = {g: i for i, g in enumerate(sorted(set(GROUP_OF.values())))}
 
 # Typical per-organ peak similarity: the mean of each organ's per-patient maximum
 # over the 20 single-level Spine-Mets patients (regenerate with
@@ -70,7 +101,9 @@ class CompetitiveAssigner:
         self.peaks = dict(TYPICAL_PEAK if peaks is None else peaks)
         self.unassigned = unassigned
         self.best_val = np.full(self.shape, -np.inf, dtype=np.float32)
-        self.best_lbl = np.full(self.shape, unassigned, dtype=np.int8)
+        # the winner is recorded as a GROUP, not an organ: bilateral pairs share
+        # an id and therefore never take territory from each other
+        self.best_grp = np.full(self.shape, unassigned, dtype=np.int8)
         self._peak = {}          # organ_class -> (calibrated value, coord)
 
     def _calibrate(self, organ_class, sim):
@@ -79,6 +112,16 @@ class CompetitiveAssigner:
         if not scale:
             raise KeyError(f"no typical peak for organ {name!r}")
         return sim.astype(np.float32) / float(scale)
+
+    def _gid(self, organ_class):
+        return _GROUP_ID[GROUP_OF[CLASS_NAMES[organ_class]]]
+
+    def _members(self):
+        """group id -> [organ_class, ...], for the organs actually streamed."""
+        out = {}
+        for oc in self._peak:
+            out.setdefault(self._gid(oc), []).append(oc)
+        return out
 
     def update(self, organ_class, sim):
         """Fold one organ's similarity volume into the running argmax."""
@@ -92,33 +135,71 @@ class CompetitiveAssigner:
         # streamed holds the voxel, and finalize's exclusivity check still holds
         win = cal > self.best_val
         self.best_val[win] = cal[win]
-        self.best_lbl[win] = organ_class
+        self.best_grp[win] = self._gid(organ_class)
         del cal, win
 
     def absent(self):
-        """Organs whose own peak voxel was claimed by a stronger organ."""
-        return {oc for oc, (_, coord) in self._peak.items()
-                if self.best_lbl[coord] != oc}
+        """Organs in a group whose every member lost its own peak voxel.
+
+        Decided per GROUP: one confident side vouches for its pair, because a
+        scan that contains a left kidney contains a right one too.
+        """
+        out = set()
+        for gid, members in self._members().items():
+            if not any(self.best_grp[self._peak[oc][1]] == gid for oc in members):
+                out.update(members)
+        return out
+
+    def _half(self, territory, organ_class):
+        """The image half this organ occupies, per the templates' own convention."""
+        mid = self.shape[-1] // 2
+        out = np.zeros_like(territory)
+        if SIDE[CLASS_NAMES[organ_class]] > 0:
+            out[..., mid:] = territory[..., mid:]
+        else:
+            out[..., :mid] = territory[..., :mid]
+        return out
+
+    def _component(self, cand, coord):
+        """The connected component of `cand` holding `coord`, else the largest.
+
+        The fallback matters for bilateral organs: a member's own peak routinely
+        lands in its pair's half (that poor left/right discrimination is the whole
+        problem), so seeding from it would return nothing.
+        """
+        if not cand.any():
+            return np.zeros(self.shape, dtype=bool)
+        labeled, n = ndimage.label(cand)
+        seed = int(labeled[coord]) if cand[coord] else 0
+        if seed == 0:
+            sizes = ndimage.sum(cand, labeled, range(1, n + 1))
+            seed = int(np.argmax(sizes)) + 1
+        return labeled == seed
 
     def finalize(self, floor=0.6):
         """Yield (organ_class, boolean mask), one organ at a time.
 
-        A mask is the connected component of the organ's won territory that
-        contains the organ's own peak voxel. `floor` is expressed as a fraction of
-        the organ's typical peak: winning a voxel is not enough, the organ must
-        also answer near the level it answers at when it really is present, or
-        every voxel in the body would end up assigned to something.
+        A mask is the connected component of the group's won territory that
+        contains the organ's own peak voxel; for a bilateral pair the territory is
+        first cut on the image midline so each side gets its own half. `floor` is
+        expressed as a fraction of the organ's typical peak: winning a voxel is not
+        enough, the organ must also answer near the level it answers at when it
+        really is present, or every voxel in the body would end up assigned to
+        something.
         """
-        for oc, (_, coord) in self._peak.items():
-            if self.best_lbl[coord] != oc:
-                yield oc, np.zeros(self.shape, dtype=bool)   # absent
+        gone = self.absent()
+        for gid, members in self._members().items():
+            if set(members) <= gone:
+                for oc in members:
+                    yield oc, np.zeros(self.shape, dtype=bool)
                 continue
-            cand = (self.best_lbl == oc) & (self.best_val >= floor)
-            if not cand[coord]:
-                yield oc, np.zeros(self.shape, dtype=bool)   # peak below floor
-                continue
-            labeled, _ = ndimage.label(cand)
-            seed = labeled[coord]
-            mask = labeled == seed if seed else np.zeros(self.shape, dtype=bool)
-            del cand, labeled
-            yield oc, mask
+            territory = (self.best_grp == gid) & (self.best_val >= floor)
+            # only split when both sides were actually streamed; a lone member
+            # of a pair has nobody to share with and keeps the whole territory
+            split = len(members) > 1
+            for oc in members:
+                cand = self._half(territory, oc) if split else territory
+                yield oc, self._component(cand, self._peak[oc][1])
+                if split:
+                    del cand
+            del territory

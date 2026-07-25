@@ -6,6 +6,8 @@ from src.labels.templates import CLASS_NAMES
 
 _IDX = {v: k for k, v in CLASS_NAMES.items()}
 BLADDER, LUNG_L, FEMUR_L = _IDX["bladder"], _IDX["lung-left"], _IDX["femur-left"]
+KID_L, KID_R, LIVER = _IDX["kidney-left"], _IDX["kidney-right"], _IDX["liver"]
+_ALL1 = {n: 1.0 for n in CLASS_NAMES.values()}   # neutral calibration
 
 
 def _run(shape, sims, peaks=None, floor=0.0):
@@ -115,6 +117,92 @@ def test_ties_do_not_double_assign():
     same = np.full(shape, 0.8, np.float32)
     masks, _ = _run(shape, {BLADDER: same.copy(), LUNG_L: same.copy()}, peaks, floor=0.5)
     assert not (masks[BLADDER] & masks[LUNG_L]).any()
+
+
+def test_bilateral_pair_is_present_or_absent_together():
+    """A scan contains both kidneys or neither -- never exactly one.
+
+    Regression test for the failure that per-organ competition produced: the
+    left/right prompts differ only by one word ("LEFT side"/"RIGHT side"), the
+    model discriminates them poorly, so both peak in nearly the same place. The
+    stronger one took the voxel and the weaker was declared ABSENT for a reason
+    that has nothing to do with anatomy. Measured on the 20 single-level
+    patients, 37% of bilateral pairs were split this way -- femur-right came back
+    absent 9/20 against femur-left's 3/20.
+    """
+    shape = (4, 8, 8)
+    blob = (slice(None), slice(2, 6), slice(None))   # spans the full x range
+    kl = np.full(shape, 0.1, np.float32)
+    kl[blob] = 0.9
+    kr = np.full(shape, 0.1, np.float32)
+    kr[blob] = 0.8          # same territory, uniformly weaker -> peak is stolen
+    masks, a = _run(shape, {KID_L: kl, KID_R: kr}, _ALL1, floor=0.5)
+    assert masks[KID_L].any(), "stronger side must survive"
+    assert masks[KID_R].any(), "weaker side must NOT be cannibalised by its pair"
+    assert not a.absent()
+
+
+def test_bilateral_territory_splits_on_the_image_midline():
+    """Laterality comes from position, not from the prompt.
+
+    Every template states it explicitly and consistently: a patient-LEFT organ
+    "appears on the RIGHT side of the image". So the split is a fact about the x
+    axis, and reading it off geometry is strictly more reliable than trusting the
+    text encoder to separate two prompts that differ by one word.
+    """
+    shape = (4, 8, 8)
+    blob = (slice(None), slice(2, 6), slice(None))
+    kl = np.full(shape, 0.1, np.float32)
+    kl[blob] = 0.9
+    kr = np.full(shape, 0.1, np.float32)
+    kr[blob] = 0.8
+    masks, _ = _run(shape, {KID_L: kl, KID_R: kr}, _ALL1, floor=0.5)
+    # x >= 4 is the image's right half -> the patient's LEFT kidney
+    assert masks[KID_L][:, 2:6, 4:].all()
+    assert not masks[KID_L][:, :, :4].any()
+    assert masks[KID_R][:, 2:6, :4].all()
+    assert not masks[KID_R][:, :, 4:].any()
+    assert not (masks[KID_L] & masks[KID_R]).any()      # still one voxel, one owner
+
+
+def test_bilateral_group_absent_together_when_outcompeted():
+    """Grouping must not make a pair unkillable -- a chest CT has no kidneys."""
+    shape = (4, 8, 8)
+    liver = np.full(shape, 0.95, np.float32)      # dominates everywhere
+    kl = np.full(shape, 0.3, np.float32)
+    kr = np.full(shape, 0.2, np.float32)
+    masks, a = _run(shape, {LIVER: liver, KID_L: kl, KID_R: kr}, _ALL1, floor=0.5)
+    assert masks[LIVER].any()
+    assert not masks[KID_L].any() and not masks[KID_R].any()
+    assert a.absent() == {KID_L, KID_R}, "a pair goes absent as a unit"
+
+
+def test_bilateral_group_competes_with_its_strongest_member():
+    """Presence is decided for the pair, so one confident side vouches for both.
+
+    Here the right kidney answers strongly enough to beat the liver but the left
+    does not. Anatomically that means the kidneys ARE in the scan, so both sides
+    must be reported -- the pair competes as one unit, not two.
+    """
+    shape = (4, 8, 8)
+    liver = np.full(shape, 0.5, np.float32)
+    kl = np.full(shape, 0.4, np.float32)          # alone, would lose to liver
+    kr = np.full(shape, 0.4, np.float32)
+    kr[:, 2:6, 0:4] = 0.9                          # strong, image-left half
+    masks, a = _run(shape, {LIVER: liver, KID_L: kl, KID_R: kr}, _ALL1, floor=0.5)
+    assert masks[KID_R].any()
+    assert not a.absent()
+
+
+def test_non_bilateral_organs_are_unaffected_by_grouping():
+    """Grouping is only for true anatomical pairs; liver and spleen still fight."""
+    shape = (4, 8, 8)
+    liver = np.full(shape, 0.9, np.float32)
+    spleen = np.full(shape, 0.4, np.float32)
+    masks, a = _run(shape, {LIVER: liver, _IDX["spleen"]: spleen}, _ALL1, floor=0.5)
+    assert masks[LIVER].any()
+    assert not masks[_IDX["spleen"]].any()
+    assert a.absent() == {_IDX["spleen"]}
 
 
 def test_default_typical_peaks_cover_every_class():

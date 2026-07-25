@@ -13,6 +13,35 @@ import numpy as np
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 from scripts.validate_anatomy import EXPECTED
+from src.tumor.assign import BILATERAL
+
+
+def pair_splits(per_case):
+    """How often exactly one side of a bilateral pair was reported absent.
+
+    Anatomically this can never be right -- a scan contains both kidneys or
+    neither -- so any nonzero count is assignment error, not a finding. Read this
+    BEFORE mean rank: the first competitive run scored 2.05 (versus 2.00 for the
+    old code) while splitting 37% of pairs, so rank alone said "no change" when
+    the assignment underneath was plainly broken.
+    """
+    out = {"split": 0, "both_absent": 0, "both_present": 0, "n_pairs": 0,
+           "by_pair": {}}
+    for pair in BILATERAL.values():
+        out["by_pair"][pair] = 0
+    for v in per_case.values():
+        absent = set(v.get("absent", []))
+        for pair in BILATERAL.values():
+            n = len(absent & set(pair))
+            out["n_pairs"] += 1
+            if n == 1:
+                out["split"] += 1
+                out["by_pair"][pair] += 1
+            elif n == 2:
+                out["both_absent"] += 1
+            else:
+                out["both_present"] += 1
+    return out
 
 
 def chance_rank(k, n_organs=11):
@@ -111,6 +140,16 @@ def main():
             print(f"  {c} ({v['level']}): {top} at {d:.0f}mm -- not expected at this level")
             bad += 1
     print(f"  {bad}/{len(per_case)} patients top-ranked an unexpected organ at <50mm\n")
+
+    ps = pair_splits(per_case)
+    print("[analyze] bilateral pair integrity (a scan has both sides or neither):")
+    print(f"  split (exactly one side absent) = {ps['split']}/{ps['n_pairs']} "
+          f"({ps['split'] / ps['n_pairs']:.0%})   <- must be 0")
+    print(f"  both absent = {ps['both_absent']}   both present = {ps['both_present']}")
+    for pair, n in ps["by_pair"].items():
+        if n:
+            print(f"    {pair[0]}/{pair[1]}: {n} split")
+    print()
 
     names, zmap, mu, sd = zscore_peaks(per_case)
     print("[analyze] peak similarity by organ (mean +- sd across patients):")
