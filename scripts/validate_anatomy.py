@@ -59,6 +59,21 @@ def rank_of_expected(per_organ, expected):
     return None
 
 
+def distances_mm(per_organ):
+    """Invert proximity back to millimetres: prox = 1/(1+d) -> d = 1/prox - 1.
+
+    Rank alone cannot detect a broken ranking. An organ that is not in the scan at
+    all still gets a phantom component, and phantom components sit near the spine,
+    so an impossible result (kidneys 31mm from a T2 vertebra) can still land in the
+    top 3 and be scored a hit. Absolute distance is what exposes that.
+    """
+    out = {}
+    for name, v in per_organ.items():
+        p = v["proximity"]
+        out[name] = (1.0 / p - 1.0) if p > 0 else float("inf")
+    return out
+
+
 def summarize(per_case):
     ranks = [v["rank"] for v in per_case.values() if v["rank"] is not None]
     n = len(per_case)
@@ -115,10 +130,16 @@ def main():
         r = rank_of_expected(data["per_organ"], expected)
         order = sorted(data["per_organ"],
                        key=lambda n: data["per_organ"][n]["proximity"], reverse=True)
+        dmm = distances_mm(data["per_organ"])
         per_case[case] = {"level": level, "expected": sorted(expected),
-                          "rank": r, "ranking": order}
+                          "rank": r, "ranking": order,
+                          "distances_mm": {n: round(dmm[n], 1) for n in order},
+                          "z_extent_mm": data.get("z_extent_mm"),
+                          "peak_sim": data.get("peak_sim")}
         print(f"[validate_anatomy] {case}: best expected organ at rank {r} "
-              f"| top3 = {order[:3]}", flush=True)
+              f"| scan z-extent {data.get('z_extent_mm', float('nan')):.0f}mm", flush=True)
+        print("[validate_anatomy]   " + ", ".join(f"{n}={dmm[n]:.0f}mm" for n in order[:5]),
+              flush=True)
 
     summary = {"per_case": per_case, **summarize(per_case)}
     (out_dir / "summary.json").write_text(json.dumps(summary, indent=2))

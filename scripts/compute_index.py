@@ -70,10 +70,20 @@ def run(root, case, checkpoint, device, alpha, beta, limit_slices, out_dir, perc
     # union of vertebra SEG masks) — bone can never legitimately BE organ tissue, so
     # any organ classification firing on a tumor voxel is a model artifact, not
     # signal. Exclude it so a confused prediction at the lesion can't fake overlap.
+    #
+    # select_peak_component takes a global argmax, so it returns a component for EVERY
+    # organ -- including organs entirely outside the scan's field of view. Those
+    # phantom components are pure noise, and noise concentrates on high-contrast bone,
+    # i.e. right next to the spinal tumor. Record each organ's peak similarity so an
+    # absence gate can be calibrated on real data instead of guessed at.
     organ_bools = {}
+    peak_sim = {}
     for oc, sim in iter_organ_similarity(ct, model, tf, device, organs):
+        peak_sim[CLASS_NAMES[oc]] = float(sim.max())
         organ_bools[oc] = select_peak_component(sim, percentile) & ~tumor
         del sim
+    print("[compute_index] peak similarity: "
+          + ", ".join(f"{n}={v:.4f}" for n, v in peak_sim.items()), flush=True)
     # Report component SIZE, not coverage fraction: coverage is pinned at (100-pct)/100
     # by construction, so it says nothing about whether a component is plausible.
     organ_sizes = {CLASS_NAMES[oc]: int(ob.sum()) for oc, ob in organ_bools.items()}
@@ -82,7 +92,8 @@ def run(root, case, checkpoint, device, alpha, beta, limit_slices, out_dir, perc
     res = patient_index(tumor, organ_bools, spacing, alpha, beta)
     res.update(case=case, spacing=list(spacing), tumor_voxels=int(tumor.sum()),
                alpha=alpha, beta=beta, percentile=percentile, stride=stride,
-               slice_range=[int(z0), int(z1)], organ_sizes=organ_sizes)
+               slice_range=[int(z0), int(z1)], organ_sizes=organ_sizes,
+               peak_sim=peak_sim, z_extent_mm=float(ct.shape[0] * spacing[0]))
     out_dir = Path(out_dir)
     out_dir.mkdir(parents=True, exist_ok=True)
     out_path = out_dir / f"{case}.json"
