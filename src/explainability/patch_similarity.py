@@ -62,7 +62,10 @@ class BioMedCLIPPatchSimilarity:
             image_size: spatial size of the returned mask
 
         Returns:
-            mask: (image_size, image_size) float32 array in [0, 1]
+            mask: (image_size, image_size) float32 array of RAW cosine
+                similarities. Bounded by [-1, 1] (both operands are L2-normalised),
+                or [-2, 2] when neg_text_features subtracts a second similarity.
+                NOT normalised to [0, 1] -- see the class docstring.
         """
         self._layer_features.clear()
         self.model.encode_image(image)  # triggers 4 hooks → fills _layer_features
