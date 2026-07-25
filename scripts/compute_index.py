@@ -27,8 +27,14 @@ def run(root, case, checkpoint, device, alpha, beta, limit_slices, out_dir, perc
     print(f"[compute_index] loading patient {case} (CT + SEG + lesion labels) ...", flush=True)
     p = load_patient(root, case, labels)
     # crop to tumor-bearing slice range for speed
-    zs = np.where(p.tumor_mask.any(axis=(1, 2)))[0]
-    z0, z1 = max(0, zs.min() - limit_slices), min(p.ct.shape[0], zs.max() + limit_slices + 1)
+    # limit_slices < 0 means "no crop". A tight crop is a real hazard here: it can
+    # exclude an organ's true global-peak slice, forcing select_peak_component to
+    # latch onto a spurious local peak that happens to sit near the tumor.
+    if limit_slices is not None and limit_slices >= 0:
+        zs = np.where(p.tumor_mask.any(axis=(1, 2)))[0]
+        z0, z1 = max(0, zs.min() - limit_slices), min(p.ct.shape[0], zs.max() + limit_slices + 1)
+    else:
+        z0, z1 = 0, p.ct.shape[0]
     ct = p.ct[z0:z1]
     tumor = p.tumor_mask[z0:z1]
     print(f"[compute_index] cropped to slices [{z0}:{z1}] ({z1 - z0} of {p.ct.shape[0]}); "
