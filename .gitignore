@@ -33,3 +33,10 @@ Thumbs.db
 TrainingOutput*.txt
 *_training_output.txt
 meta.csv
+
+# Cached intermediate volumes (regenerable, GB-scale)
+*.npz
+results/bone_index/
+
+# Scratch overlays from debugging runs
+figures/debug/
