@@ -10,7 +10,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from src.data.spine_mets_labels import load_lesion_labels
 from src.data.spine_mets import load_patient
-from src.tumor.organ_volume import load_organcam, build_organ_volume
+from src.tumor.organ_volume import load_organcam, iter_organ_similarity
 from src.tumor.index import select_peak_component, patient_index
 from src.labels.templates import CLASS_NAMES
 
@@ -55,7 +55,9 @@ def run(root, case, checkpoint, device, alpha, beta, limit_slices, out_dir, perc
         raise ValueError(f"stride={stride} skipped every tumor slice for case {case}")
     organs = list(range(len(CLASS_NAMES)))
     model, tf = load_organcam(checkpoint, device)
-    organ_vol = build_organ_volume(ct, model, tf, device, organs)
+    # Stream one organ at a time: the stacked [11,D,H,W] float32 volume is several GB
+    # on an uncropped scan, and only the reduced boolean mask is ever needed.
+    #
     # Fixed absolute thresholds (tuned on TotalSegmentator's single-organ-per-image
     # task) are far too permissive when scanning every organ across a huge cropped
     # volume: low-level false-positive coverage lands adjacent to the tumor almost
@@ -63,20 +65,24 @@ def run(root, case, checkpoint, device, alpha, beta, limit_slices, out_dir, perc
     # reliably near the true organ location (verified empirically on this dataset), so
     # binarize per organ at a strict percentile and keep only the connected component
     # containing that peak — discard every other disconnected blob as noise.
-    organ_bools = {oc: select_peak_component(organ_vol[oi], percentile)
-                   for oi, oc in enumerate(organs)}
-    # Spine-Mets tumor voxels are vertebral bone by construction (tumor_mask is a union
-    # of vertebra SEG masks) — bone can never legitimately BE organ tissue, so any organ
-    # classification firing on a tumor voxel is a model artifact, not signal. Exclude it
-    # before scoring so a confused prediction at the lesion can't manufacture overlap.
-    organ_bools = {oc: ob & ~tumor for oc, ob in organ_bools.items()}
-    organ_coverage = {CLASS_NAMES[oc]: float(ob.mean()) for oc, ob in organ_bools.items()}
-    print("[compute_index] organ mask coverage (fraction of cropped volume): "
-          + ", ".join(f"{n}={v:.3f}" for n, v in organ_coverage.items()), flush=True)
+    #
+    # Spine-Mets tumor voxels are vertebral bone by construction (tumor_mask is a
+    # union of vertebra SEG masks) — bone can never legitimately BE organ tissue, so
+    # any organ classification firing on a tumor voxel is a model artifact, not
+    # signal. Exclude it so a confused prediction at the lesion can't fake overlap.
+    organ_bools = {}
+    for oc, sim in iter_organ_similarity(ct, model, tf, device, organs):
+        organ_bools[oc] = select_peak_component(sim, percentile) & ~tumor
+        del sim
+    # Report component SIZE, not coverage fraction: coverage is pinned at (100-pct)/100
+    # by construction, so it says nothing about whether a component is plausible.
+    organ_sizes = {CLASS_NAMES[oc]: int(ob.sum()) for oc, ob in organ_bools.items()}
+    print("[compute_index] peak-component size (voxels): "
+          + ", ".join(f"{n}={v}" for n, v in organ_sizes.items()), flush=True)
     res = patient_index(tumor, organ_bools, spacing, alpha, beta)
     res.update(case=case, spacing=list(spacing), tumor_voxels=int(tumor.sum()),
                alpha=alpha, beta=beta, percentile=percentile, stride=stride,
-               slice_range=[int(z0), int(z1)], organ_coverage=organ_coverage)
+               slice_range=[int(z0), int(z1)], organ_sizes=organ_sizes)
     out_dir = Path(out_dir)
     out_dir.mkdir(parents=True, exist_ok=True)
     out_path = out_dir / f"{case}.json"

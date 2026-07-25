@@ -28,6 +28,10 @@ def main():
     ap.add_argument("--out_dir", default="results/bone_index")
     ap.add_argument("--force", action="store_true",
                      help="recompute even if results/bone_index/<case>.json already exists")
+    ap.add_argument("--percentile", type=float, default=99.9)
+    ap.add_argument("--stride", type=int, default=1,
+                     help="use every Nth axial slice; helps bound runtime for patients "
+                          "with very wide tumor-bearing slice ranges")
     a = ap.parse_args()
     labels = load_lesion_labels(str(Path(a.root) / "Spine-Mets-CT-SEG_Clinical.xlsx"))
     cases_dir = Path(a.root) / "spine_mets_ct_seg"
@@ -44,7 +48,7 @@ def main():
         print(f"[batch_index] ({i + 1}/{len(todo)}) {c.name} ...", flush=True)
         try:
             out = ci.run(a.root, c.name, a.checkpoint, a.device, a.alpha, a.beta,
-                         a.limit_slices, a.out_dir)
+                         a.limit_slices, a.out_dir, a.percentile, a.stride)
             per_case[c.name] = json.loads(Path(out).read_text())["index"]
             print(f"{c.name}: {per_case[c.name]:.3f}", flush=True)
         except Exception as e:

@@ -1,7 +1,7 @@
 """Bone-metastasis-to-organ index: overlap, physical-distance proximity, blend."""
 import numpy as np
 from scipy import ndimage
-from scipy.ndimage import distance_transform_edt
+from scipy.spatial import cKDTree
 
 from src.labels.templates import CLASS_NAMES
 
@@ -14,13 +14,30 @@ def overlap(tumor, organ):
     return float((tumor & organ).sum()) / float(t)
 
 
+def min_distance_mm(tumor_coords, organ_coords, spacing):
+    """Min physical distance (mm) between two voxel-coordinate sets, or inf if empty.
+
+    Deliberately NOT distance_transform_edt. The EDT allocates a float64 array over
+    the *whole* volume just to read a single minimum out of it -- ~600MB per organ
+    on a full-resolution scan, times 11 organs, which is enough to exhaust system
+    memory. Both point sets here are tiny (select_peak_component caps an organ at
+    the top 0.1% of voxels), so a KD-tree over the points answers the same question
+    in a few MB.
+    """
+    if len(tumor_coords) == 0 or len(organ_coords) == 0:
+        return float("inf")
+    sp = np.asarray(spacing, dtype=np.float64)
+    tree = cKDTree(np.asarray(organ_coords, dtype=np.float64) * sp)
+    d, _ = tree.query(np.asarray(tumor_coords, dtype=np.float64) * sp, k=1)
+    return float(d.min())
+
+
 def proximity(tumor, organ, spacing):
     """1/(1+d_mm), d_mm = min physical surface distance from tumor to organ."""
     if not tumor.any() or not organ.any():
         return 0.0
-    dist_mm = distance_transform_edt(~organ, sampling=spacing)
-    d = float(dist_mm[tumor].min())
-    return 1.0 / (1.0 + d)
+    d = min_distance_mm(np.argwhere(tumor), np.argwhere(organ), spacing)
+    return 1.0 / (1.0 + d) if np.isfinite(d) else 0.0
 
 
 def blended_score(tumor, organ, spacing, alpha=0.5, beta=0.5):
