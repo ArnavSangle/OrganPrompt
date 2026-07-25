@@ -60,24 +60,33 @@ for _n in CLASS_NAMES.values():
 
 _GROUP_ID = {g: i for i, g in enumerate(sorted(set(GROUP_OF.values())))}
 
-# Typical per-organ peak similarity: the mean of each organ's per-patient maximum
-# over the 20 single-level Spine-Mets patients (regenerate with
-# scripts/fit_organ_peaks.py). Peak response is dominated by class identity, not
-# by anatomy, so an UNCALIBRATED cross-organ argmax would hand nearly every voxel
-# to the lungs. Dividing by these values puts each organ on a common "fraction of
-# the response this organ ever gives" scale.
+# Typical per-organ peak similarity: the mean of each organ's per-patient maximum,
+# fitted on the 35 Spine-Mets patients that are NOT in the single-level evaluation
+# set (regenerate with scripts/fit_organ_stats.py). Peak response is dominated by
+# class identity, not by anatomy, so an UNCALIBRATED cross-organ argmax would hand
+# nearly every voxel to the lungs. Dividing by these values puts each organ on a
+# common "fraction of the response this organ ever gives" scale.
+#
+# These replace constants fitted by scripts/fit_organ_peaks.py on the evaluation
+# set itself, which made every validation number circular. The correction is
+# modest but systematic -- 10 of 11 organs rose, mean +7.0% -- and not uniform, so
+# it reorders the argmax: pancreas +21.5% (3.8 sigma) moves from 9th to 6th, liver
+# +12.1% from 4th to 3rd, bladder from 6th to 8th. A uniform shift would cancel in
+# a ratio-based argmax; this one does not.
+#
+# Trailing sd is the spread across the 35 fitting patients, not a fit error.
 TYPICAL_PEAK = {
-    "bladder": 0.1110,
-    "femur-left": 0.0751,
-    "femur-right": 0.0590,
-    "heart": 0.1439,
-    "kidney-left": 0.1103,
-    "kidney-right": 0.1003,
-    "liver": 0.1412,
-    "lung-left": 0.1778,
-    "lung-right": 0.1753,
-    "pancreas": 0.0993,
-    "spleen": 0.1281,
+    "bladder": 0.1196,       # sd 0.0327
+    "femur-left": 0.0792,    # sd 0.0288
+    "femur-right": 0.0628,   # sd 0.0239
+    "heart": 0.1421,         # sd 0.0316
+    "kidney-left": 0.1201,   # sd 0.0218
+    "kidney-right": 0.1096,  # sd 0.0251
+    "liver": 0.1584,         # sd 0.0361
+    "lung-left": 0.1801,     # sd 0.0325
+    "lung-right": 0.1810,    # sd 0.0285
+    "pancreas": 0.1207,      # sd 0.0330
+    "spleen": 0.1309,        # sd 0.0218
 }
 
 
