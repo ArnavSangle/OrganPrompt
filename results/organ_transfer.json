@@ -1,0 +1,422 @@
+{
+  "volume-0.nii": {
+    "99.9": {
+      "liver": {
+        "iou": 0.0,
+        "precision": 0.0,
+        "recall": 0.0,
+        "gt_voxels": 136580,
+        "pred_voxels": 1882,
+        "overlap_voxels": 0
+      },
+      "lung-left+lung-right": {
+        "iou": 0.06382466281310212,
+        "precision": 1.0,
+        "recall": 0.06382466281310212,
+        "gt_voxels": 95496,
+        "pred_voxels": 6095,
+        "overlap_voxels": 6095
+      },
+      "kidney-left+kidney-right": {
+        "iou": 0.0,
+        "precision": 0.0,
+        "recall": 0.0,
+        "gt_voxels": 34741,
+        "pred_voxels": 5641,
+        "overlap_voxels": 0
+      },
+      "bladder": {
+        "iou": 0.29338186631369956,
+        "precision": 0.8899819313390885,
+        "recall": 0.30442246944101087,
+        "gt_voxels": 14562,
+        "pred_voxels": 4981,
+        "overlap_voxels": 4433
+      }
+    },
+    "99.0": {
+      "liver": {
+        "iou": 0.0,
+        "precision": 0.0,
+        "recall": 0.0,
+        "gt_voxels": 136580,
+        "pred_voxels": 30657,
+        "overlap_voxels": 0
+      },
+      "lung-left+lung-right": {
+        "iou": 0.749166827333572,
+        "precision": 0.8587213891081295,
+        "recall": 0.8544860517718019,
+        "gt_voxels": 95496,
+        "pred_voxels": 95025,
+        "overlap_voxels": 81600
+      },
+      "kidney-left+kidney-right": {
+        "iou": 0.0,
+        "precision": 0.0,
+        "recall": 0.0,
+        "gt_voxels": 34741,
+        "pred_voxels": 57971,
+        "overlap_voxels": 0
+      },
+      "bladder": {
+        "iou": 0.5321017011157856,
+        "precision": 0.6142962728328581,
+        "recall": 0.7990660623540723,
+        "gt_voxels": 14562,
+        "pred_voxels": 18942,
+        "overlap_voxels": 11636
+      }
+    }
+  },
+  "volume-1.nii": {
+    "99.9": {
+      "liver": {
+        "iou": 0.0,
+        "precision": 0.0,
+        "recall": 0.0,
+        "gt_voxels": 166930,
+        "pred_voxels": 2993,
+        "overlap_voxels": 0
+      },
+      "lung-left+lung-right": {
+        "iou": 0.004993132607553806,
+        "precision": 1.0,
+        "recall": 0.004993132607553806,
+        "gt_voxels": 613042,
+        "pred_voxels": 3061,
+        "overlap_voxels": 3061
+      },
+      "kidney-left+kidney-right": {
+        "iou": 0.014143474410241271,
+        "precision": 0.16929007388371345,
+        "recall": 0.01519826964671954,
+        "gt_voxels": 34675,
+        "pred_voxels": 3113,
+        "overlap_voxels": 527
+      },
+      "bladder": {
+        "iou": 0.30280638901328555,
+        "precision": 0.998400393749231,
+        "recall": 0.302953365941082,
+        "gt_voxels": 26783,
+        "pred_voxels": 8127,
+        "overlap_voxels": 8114
+      }
+    },
+    "99.0": {
+      "liver": {
+        "iou": 0.0,
+        "precision": 0.0,
+        "recall": 0.0,
+        "gt_voxels": 166930,
+        "pred_voxels": 32221,
+        "overlap_voxels": 0
+      },
+      "lung-left+lung-right": {
+        "iou": 0.26489147080744935,
+        "precision": 0.9993170491601551,
+        "recall": 0.2649394331872857,
+        "gt_voxels": 613042,
+        "pred_voxels": 162530,
+        "overlap_voxels": 162419
+      },
+      "kidney-left+kidney-right": {
+        "iou": 0.07387352000448909,
+        "precision": 0.125755223880597,
+        "recall": 0.1518673395818313,
+        "gt_voxels": 34675,
+        "pred_voxels": 41875,
+        "overlap_voxels": 5266
+      },
+      "bladder": {
+        "iou": 0.5420063502960611,
+        "precision": 0.6985695325173278,
+        "recall": 0.707463689653885,
+        "gt_voxels": 26783,
+        "pred_voxels": 27124,
+        "overlap_voxels": 18948
+      }
+    }
+  },
+  "volume-2.nii": {
+    "99.9": {
+      "liver": {
+        "iou": 0.0,
+        "precision": 0.0,
+        "recall": 0.0,
+        "gt_voxels": 799699,
+        "pred_voxels": 5521,
+        "overlap_voxels": 0
+      },
+      "lung-left+lung-right": {
+        "iou": 0.03700657955172624,
+        "precision": 0.9988693392577311,
+        "recall": 0.037008129794498905,
+        "gt_voxels": 1360674,
+        "pred_voxels": 50413,
+        "overlap_voxels": 50356
+      },
+      "kidney-left+kidney-right": {
+        "iou": 0.0,
+        "precision": 0.0,
+        "recall": 0.0,
+        "gt_voxels": 205429,
+        "pred_voxels": 21771,
+        "overlap_voxels": 0
+      },
+      "bladder": {
+        "iou": 0.014323422614661074,
+        "precision": 1.0,
+        "recall": 0.014323422614661074,
+        "gt_voxels": 223899,
+        "pred_voxels": 3207,
+        "overlap_voxels": 3207
+      }
+    },
+    "99.0": {
+      "liver": {
+        "iou": 0.0,
+        "precision": 0.0,
+        "recall": 0.0,
+        "gt_voxels": 799699,
+        "pred_voxels": 173772,
+        "overlap_voxels": 0
+      },
+      "lung-left+lung-right": {
+        "iou": 0.49543219993306664,
+        "precision": 0.9928631599339002,
+        "recall": 0.497202856819488,
+        "gt_voxels": 1360674,
+        "pred_voxels": 681394,
+        "overlap_voxels": 676531
+      },
+      "kidney-left+kidney-right": {
+        "iou": 0.0,
+        "precision": 0.0,
+        "recall": 0.0,
+        "gt_voxels": 205429,
+        "pred_voxels": 265893,
+        "overlap_voxels": 0
+      },
+      "bladder": {
+        "iou": 0.5634397081481219,
+        "precision": 0.9847638355825182,
+        "recall": 0.5683946779574719,
+        "gt_voxels": 223899,
+        "pred_voxels": 129232,
+        "overlap_voxels": 127263
+      }
+    }
+  },
+  "volume-3.nii": {
+    "99.9": {
+      "liver": {
+        "iou": 0.0,
+        "precision": 0.0,
+        "recall": 0.0,
+        "gt_voxels": 810809,
+        "pred_voxels": 10812,
+        "overlap_voxels": 0
+      },
+      "lung-left+lung-right": {
+        "iou": 0.034605669417810264,
+        "precision": 0.99525964652179,
+        "recall": 0.03461137421788769,
+        "gt_voxels": 1474053,
+        "pred_voxels": 51262,
+        "overlap_voxels": 51019
+      },
+      "kidney-left+kidney-right": {
+        "iou": 0.0,
+        "precision": 0.0,
+        "recall": 0.0,
+        "gt_voxels": 238655,
+        "pred_voxels": 10902,
+        "overlap_voxels": 0
+      },
+      "bladder": {
+        "iou": 0.24173364899580477,
+        "precision": 1.0,
+        "recall": 0.24173364899580477,
+        "gt_voxels": 138967,
+        "pred_voxels": 33593,
+        "overlap_voxels": 33593
+      }
+    },
+    "99.0": {
+      "liver": {
+        "iou": 0.0,
+        "precision": 0.0,
+        "recall": 0.0,
+        "gt_voxels": 810809,
+        "pred_voxels": 195764,
+        "overlap_voxels": 0
+      },
+      "lung-left+lung-right": {
+        "iou": 0.46091112383665855,
+        "precision": 0.9779025513052793,
+        "recall": 0.4657620858951476,
+        "gt_voxels": 1474053,
+        "pred_voxels": 702072,
+        "overlap_voxels": 686558
+      },
+      "kidney-left+kidney-right": {
+        "iou": 0.0,
+        "precision": 0.0,
+        "recall": 0.0,
+        "gt_voxels": 238655,
+        "pred_voxels": 323948,
+        "overlap_voxels": 0
+      },
+      "bladder": {
+        "iou": 0.5189560795035808,
+        "precision": 0.7039959704499664,
+        "recall": 0.6637978800722474,
+        "gt_voxels": 138967,
+        "pred_voxels": 131032,
+        "overlap_voxels": 92246
+      }
+    }
+  },
+  "volume-4.nii": {
+    "99.9": {
+      "liver": {
+        "iou": 0.022198398706239478,
+        "precision": 0.9950237670825907,
+        "recall": 0.02220086337611547,
+        "gt_voxels": 1206890,
+        "pred_voxels": 26928,
+        "overlap_voxels": 26794
+      },
+      "lung-left+lung-right": {
+        "iou": 0.026461571497097377,
+        "precision": 0.9898086971542083,
+        "recall": 0.026468783037622255,
+        "gt_voxels": 1731927,
+        "pred_voxels": 46314,
+        "overlap_voxels": 45842
+      },
+      "kidney-left+kidney-right": {
+        "iou": 0.0,
+        "precision": 0.0,
+        "recall": 0.0,
+        "gt_voxels": 147529,
+        "pred_voxels": 15477,
+        "overlap_voxels": 0
+      },
+      "bladder": {
+        "iou": 0.02494346260155792,
+        "precision": 0.7141486810551558,
+        "recall": 0.025195011759928256,
+        "gt_voxels": 59099,
+        "pred_voxels": 2085,
+        "overlap_voxels": 1489
+      }
+    },
+    "99.0": {
+      "liver": {
+        "iou": 0.15710017732876247,
+        "precision": 0.7692596157935229,
+        "recall": 0.1648692092899933,
+        "gt_voxels": 1206890,
+        "pred_voxels": 258663,
+        "overlap_voxels": 198979
+      },
+      "lung-left+lung-right": {
+        "iou": 0.57667549476038,
+        "precision": 0.9388171797878038,
+        "recall": 0.5991944233215373,
+        "gt_voxels": 1731927,
+        "pred_voxels": 1105392,
+        "overlap_voxels": 1037761
+      },
+      "kidney-left+kidney-right": {
+        "iou": 0.0,
+        "precision": 0.0,
+        "recall": 0.0,
+        "gt_voxels": 147529,
+        "pred_voxels": 260641,
+        "overlap_voxels": 0
+      },
+      "bladder": {
+        "iou": 0.3913354175971416,
+        "precision": 0.5350104565784854,
+        "recall": 0.5930387993028647,
+        "gt_voxels": 59099,
+        "pred_voxels": 65509,
+        "overlap_voxels": 35048
+      }
+    }
+  },
+  "volume-5.nii": {
+    "99.9": {
+      "liver": {
+        "iou": 0.0,
+        "precision": 0.0,
+        "recall": 0.0,
+        "gt_voxels": 477821,
+        "pred_voxels": 23791,
+        "overlap_voxels": 0
+      },
+      "lung-left+lung-right": {
+        "iou": 0.06632079610582246,
+        "precision": 0.9691653267661245,
+        "recall": 0.06646103171058508,
+        "gt_voxels": 716480,
+        "pred_voxels": 49133,
+        "overlap_voxels": 47618
+      },
+      "kidney-left+kidney-right": {
+        "iou": 0.009918539403234545,
+        "precision": 0.07038123167155426,
+        "recall": 0.011413836105768214,
+        "gt_voxels": 94622,
+        "pred_voxels": 15345,
+        "overlap_voxels": 1080
+      },
+      "bladder": {
+        "iou": 0.0,
+        "precision": 0.0,
+        "recall": 0.0,
+        "gt_voxels": 54960,
+        "pred_voxels": 16098,
+        "overlap_voxels": 0
+      }
+    },
+    "99.0": {
+      "liver": {
+        "iou": 0.0,
+        "precision": 0.0,
+        "recall": 0.0,
+        "gt_voxels": 477821,
+        "pred_voxels": 105084,
+        "overlap_voxels": 0
+      },
+      "lung-left+lung-right": {
+        "iou": 0.736421946437005,
+        "precision": 0.8657550533349031,
+        "recall": 0.8313546784278696,
+        "gt_voxels": 716480,
+        "pred_voxels": 688011,
+        "overlap_voxels": 595649
+      },
+      "kidney-left+kidney-right": {
+        "iou": 0.07514469784098665,
+        "precision": 0.1187557722856404,
+        "recall": 0.169865359007419,
+        "gt_voxels": 94622,
+        "pred_voxels": 135345,
+        "overlap_voxels": 16073
+      },
+      "bladder": {
+        "iou": 0.0,
+        "precision": 0.0,
+        "recall": 0.0,
+        "gt_voxels": 54960,
+        "pred_voxels": 83969,
+        "overlap_voxels": 0
+      }
+    }
+  }
+}
