@@ -14,7 +14,7 @@ from open_clip import get_tokenizer
 
 from src.data.totalsegmentator import HU_WINDOW
 from src.explainability.patch_similarity import BioMedCLIPPatchSimilarity
-from src.labels.templates import CLASS_NAMES, FEW_SHOT_TEMPLATES
+from src.labels.templates import CLASS_NAMES, FEW_SHOT_TEMPLATES, NEGATIVE_PROMPTS
 
 MODEL_NAME = "hf-hub:microsoft/BiomedCLIP-PubMedBERT_256-vit_base_patch16_224"
 
@@ -34,8 +34,15 @@ def preprocess_slice(hu_slice, organ_class):
     return t.squeeze(0).repeat(3, 1, 1)                        # (3,224,224)
 
 
-def load_organcam(checkpoint, device):
-    """Load base BioMedCLIP + fine-tuned checkpoint, encode the 11 organ prompts."""
+def load_organcam(checkpoint, device, with_negatives=False):
+    """Load base BioMedCLIP + fine-tuned checkpoint, encode the 11 organ prompts.
+
+    with_negatives=True additionally encodes NEGATIVE_PROMPTS (background/tissue
+    hard negatives, plus the rib/humerus/aorta missing-class negatives) and
+    returns a 3-tuple (model, text_features, neg_text_features) instead of the
+    default 2-tuple, so existing callers that unpack `model, tf = load_organcam(...)`
+    are unaffected.
+    """
     print(f"[organ_volume] loading base model {MODEL_NAME} ...", flush=True)
     model, _, _ = open_clip.create_model_and_transforms(MODEL_NAME)
     model = model.to(device)
@@ -49,17 +56,26 @@ def load_organcam(checkpoint, device):
     prompts = [FEW_SHOT_TEMPLATES[i] for i in range(len(CLASS_NAMES))]
     with torch.no_grad():
         text_features = F.normalize(model.encode_text(tokenizer(prompts).to(device)), dim=-1)
-    print("[organ_volume] model ready, text prompts encoded", flush=True)
-    return model, text_features
+    if not with_negatives:
+        print("[organ_volume] model ready, text prompts encoded", flush=True)
+        return model, text_features
+    with torch.no_grad():
+        neg_text_features = F.normalize(
+            model.encode_text(tokenizer(list(NEGATIVE_PROMPTS)).to(device)), dim=-1)
+    print(f"[organ_volume] model ready, text prompts encoded "
+          f"({len(NEGATIVE_PROMPTS)} negatives)", flush=True)
+    return model, text_features, neg_text_features
 
 
-def _organ_similarity(ct, explainer, text_features, organ_class, device, label=""):
+def _organ_similarity(ct, explainer, text_features, organ_class, device, label="",
+                      neg_text_features=None):
     """Similarity volume [D,H,W] for ONE organ across every axial slice."""
     D, H, W = ct.shape
     out = np.zeros((D, H, W), dtype=np.float32)
     for zi in range(D):
         img = preprocess_slice(ct[zi], organ_class).unsqueeze(0).to(device)
-        m = explainer.generate(img, text_features, target_class=organ_class, image_size=224)
+        m = explainer.generate(img, text_features, target_class=organ_class,
+                               image_size=224, neg_text_features=neg_text_features)
         t = torch.from_numpy(m).unsqueeze(0).unsqueeze(0)
         t = F.interpolate(t, size=(H, W), mode="bilinear", align_corners=False)
         out[zi] = t.squeeze().numpy()
@@ -68,13 +84,17 @@ def _organ_similarity(ct, explainer, text_features, organ_class, device, label="
     return out
 
 
-def iter_organ_similarity(ct, model, text_features, device, organs=None):
+def iter_organ_similarity(ct, model, text_features, device, organs=None,
+                          neg_text_features=None):
     """Yield (organ_class, [D,H,W] similarity) one organ at a time.
 
     Streaming matters on full uncropped volumes: the stacked [organs,D,H,W] float32
     array is several GB on its own, and callers only ever need one organ resident at
     a time to reduce it to a mask. Use this instead of build_organ_volume whenever
     the volume is not tightly cropped.
+
+    neg_text_features, if given, is passed through to BioMedCLIPPatchSimilarity.generate
+    for every slice: CAM = sim(patch, organ) - max(sim(patch, negatives)).
     """
     if organs is None:
         organs = list(range(len(CLASS_NAMES)))
@@ -85,12 +105,14 @@ def iter_organ_similarity(ct, model, text_features, device, organs=None):
         for oi, oc in enumerate(organs):
             label = f"({oi + 1}/{len(organs)}) {CLASS_NAMES[oc]}"
             print(f"[organ_volume] {label} ...", flush=True)
-            yield oc, _organ_similarity(ct, explainer, text_features, oc, device, label)
+            yield oc, _organ_similarity(ct, explainer, text_features, oc, device, label,
+                                        neg_text_features=neg_text_features)
     finally:
         explainer.remove_hooks()
 
 
-def build_organ_volume(ct, model, text_features, device, organs=None):
+def build_organ_volume(ct, model, text_features, device, organs=None,
+                       neg_text_features=None):
     """Run OrganCAM per axial slice, stack into a [organs,D,H,W] similarity volume.
 
     Materializes every organ at once -- only safe on cropped volumes. Prefer
@@ -100,6 +122,7 @@ def build_organ_volume(ct, model, text_features, device, organs=None):
         organs = list(range(len(CLASS_NAMES)))
     out = np.zeros((len(organs), *ct.shape), dtype=np.float32)
     for oi, (_, sim) in enumerate(
-            iter_organ_similarity(ct, model, text_features, device, organs)):
+            iter_organ_similarity(ct, model, text_features, device, organs,
+                                  neg_text_features=neg_text_features)):
         out[oi] = sim
     return out

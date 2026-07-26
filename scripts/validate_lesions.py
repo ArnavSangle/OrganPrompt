@@ -54,16 +54,21 @@ def testable_lesions(labels, on_disk):
 
 
 def score_patient(ct, lesion_coords, spacing, model, text_features, device,
-                  floor=0.6, alpha=0.5, beta=0.5):
+                  floor=0.6, alpha=0.5, beta=0.5, neg_text_features=None):
     """{level: {organ: record}} for one patient, from a single inference pass.
 
     Organ masks are streamed one at a time and each is scored against EVERY
     lesion before being discarded, so peak memory is one organ mask no matter how
     many lesions the patient carries.
+
+    neg_text_features, if given, is forwarded to iter_organ_similarity so the
+    per-organ similarity subtracts the strongest hard negative at each patch
+    (see src/labels/templates.py NEGATIVE_PROMPTS).
     """
     organs = list(range(len(CLASS_NAMES)))
     assigner = CompetitiveAssigner(ct.shape)
-    for oc, sim in iter_organ_similarity(ct, model, text_features, device, organs):
+    for oc, sim in iter_organ_similarity(ct, model, text_features, device, organs,
+                                         neg_text_features=neg_text_features):
         assigner.update(oc, sim)
         del sim
     # Lesion voxels are vertebral bone by construction, so an organ predicted
@@ -121,7 +126,7 @@ def main():
 
     out_dir = Path(a.out_dir)
     out_dir.mkdir(parents=True, exist_ok=True)
-    model, tf = load_organcam(a.checkpoint, a.device)
+    model, tf, neg_tf = load_organcam(a.checkpoint, a.device, with_negatives=True)
 
     per_lesion, skipped = {}, []
     for i, (case, levels) in enumerate(todo.items()):
@@ -145,7 +150,8 @@ def main():
             if not coords:
                 continue
             scored = score_patient(ct, coords, spacing, model, tf, a.device,
-                                   a.floor, a.alpha, a.beta)
+                                   a.floor, a.alpha, a.beta,
+                                   neg_text_features=neg_tf)
             del p, ct
         except Exception as e:
             print(f"[validate_lesions] {case}: SKIP ({e})", flush=True)

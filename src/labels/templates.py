@@ -6,6 +6,28 @@ NEGATIVE_PROMPTS = [
     "CT scan showing blood vessel",
     "CT scan showing air cavity",
     "CT scan showing skin",
+    # Pre-registered vision-side test of the missing-class hypothesis
+    # (scripts/prompt_confusion.py): the femur prompt's appearance clause embeds
+    # nearly identically to humerus (cos ~1.000, beats femur's own best
+    # classmate 0.952) and the bladder prompt's appearance clause is closest to
+    # aorta (z +7.5, beats bladder's own classmate 0.916). Rib is included as
+    # the same cortical-ring confusion at thoracic levels generally, not just at
+    # the shoulder. Wording lifted verbatim in style from
+    # scripts/prompt_confusion.py's DISTRACTOR_TEMPLATES.
+    "Axial CT scan of the chest showing a rib in transverse cross-section. "
+    "Appears as a small bright hyperdense cortical ring enclosing lower-density "
+    "cancellous bone, positioned along the curve of the chest wall at the outer "
+    "edge of the image. Intercostal muscle borders it on either side along the "
+    "chest wall; pleura and aerated lung lie toward the image center.",
+    "Axial CT scan of the shoulder showing the humerus in transverse cross-section. "
+    "Appears as a bright hyperdense cortical ring surrounding lower-density "
+    "cancellous bone with a central medullary canal, positioned at the far left or "
+    "right edge of the image lateral to the chest wall. Deltoid muscle wraps around "
+    "it laterally; the scapula and glenoid lie toward the image center.",
+    "Axial CT scan of the abdomen showing the abdominal aorta in cross-section. "
+    "Appears as a round soft tissue structure just in front of and slightly left "
+    "of the vertebral body, at the bottom center of the image. Smooth circular "
+    "margin, sometimes with a calcified rim.",
 ]
 
 CLASS_NAMES = {
