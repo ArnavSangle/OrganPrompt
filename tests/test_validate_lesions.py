@@ -125,3 +125,55 @@ def test_score_patient_excludes_tumor_voxels_from_organ_masks(monkeypatch):
     # every organ won everything, but the lesion's own voxels are carved out, so
     # no organ can report overlap with the lesion it is being scored against
     assert all(r["overlap"] == 0.0 for r in per["T2"].values())
+
+
+def test_score_patient_defaults_to_scale_calibration(monkeypatch):
+    """Not passing calibration must behave exactly as before this change."""
+    shape = (3, 6, 6)
+    captured = {}
+
+    class SpyAssigner(vl.CompetitiveAssigner):
+        def __init__(self, *a, **kw):
+            captured["calibration"] = kw.get("calibration", "scale")
+            super().__init__(*a, **kw)
+
+    def fake_iter(ct, model, tf, device, organs=None):
+        organs = list(range(len(CLASS_NAMES))) if organs is None else organs
+        for oc in organs:
+            yield oc, np.full(ct.shape, 0.1, dtype=np.float32)
+
+    monkeypatch.setattr(vl, "iter_organ_similarity", fake_iter)
+    monkeypatch.setattr(vl, "CompetitiveAssigner", SpyAssigner)
+    coords = {"T2": np.argwhere(_row(shape, 3))}
+    vl.score_patient(np.zeros(shape, np.float32), coords, (1.0, 1.0, 1.0),
+                     object(), None, "cpu")
+    assert captured["calibration"] == "scale"
+
+
+def test_score_patient_passes_zscore_calibration_through(monkeypatch):
+    shape = (3, 6, 6)
+    captured = {}
+
+    class SpyAssigner(vl.CompetitiveAssigner):
+        def __init__(self, *a, **kw):
+            captured["calibration"] = kw.get("calibration", "scale")
+            super().__init__(*a, **kw)
+
+    def fake_iter(ct, model, tf, device, organs=None):
+        organs = list(range(len(CLASS_NAMES))) if organs is None else organs
+        for oc in organs:
+            yield oc, np.full(ct.shape, 0.1, dtype=np.float32)
+
+    monkeypatch.setattr(vl, "iter_organ_similarity", fake_iter)
+    monkeypatch.setattr(vl, "CompetitiveAssigner", SpyAssigner)
+    coords = {"T2": np.argwhere(_row(shape, 3))}
+    vl.score_patient(np.zeros(shape, np.float32), coords, (1.0, 1.0, 1.0),
+                     object(), None, "cpu", floor=2.0, calibration="zscore")
+    assert captured["calibration"] == "zscore"
+
+
+def test_main_default_floor_depends_on_calibration_mode():
+    """--calibration zscore without an explicit --floor must use 2.0, not 0.6 --
+    the scale-mode floor makes no sense on a z-score scale."""
+    assert vl.default_floor("scale") == 0.6
+    assert vl.default_floor("zscore") == 2.0

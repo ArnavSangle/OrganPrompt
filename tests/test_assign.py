@@ -1,7 +1,7 @@
 import numpy as np
 import pytest
 
-from src.tumor.assign import TYPICAL_PEAK, CompetitiveAssigner
+from src.tumor.assign import TYPICAL_PEAK, ORGAN_MEAN, ORGAN_SD, CompetitiveAssigner
 from src.labels.templates import CLASS_NAMES
 
 _IDX = {v: k for k, v in CLASS_NAMES.items()}
@@ -214,3 +214,90 @@ def test_update_rejects_shape_mismatch():
     a = CompetitiveAssigner((2, 4, 4))
     with pytest.raises(ValueError):
         a.update(BLADDER, np.zeros((2, 4, 5), np.float32))
+
+
+# ---------------------------------------------------------------------------
+# z-score calibration mode
+# ---------------------------------------------------------------------------
+
+def test_default_organ_mean_and_sd_cover_every_class():
+    """The z-score path needs its own per-organ constants, from the same
+    35-patient held-out fit that produced TYPICAL_PEAK (fit_organ_stats.py)."""
+    assert set(ORGAN_MEAN) == set(CLASS_NAMES.values())
+    assert set(ORGAN_SD) == set(CLASS_NAMES.values())
+    assert all(v > 0 for v in ORGAN_SD.values())
+
+
+def test_scale_mode_is_the_default_and_unchanged():
+    """Not passing --calibration must reproduce exactly today's ratio behaviour."""
+    shape = (2, 4, 4)
+    femur = np.full(shape, 0.05, np.float32)
+    lung = np.full(shape, 0.10, np.float32)
+    a_default = CompetitiveAssigner(shape, peaks={"femur-left": 0.059, "lung-left": 0.175})
+    a_explicit = CompetitiveAssigner(shape, peaks={"femur-left": 0.059, "lung-left": 0.175},
+                                      calibration="scale")
+    for a in (a_default, a_explicit):
+        a.update(FEMUR_L, femur)
+        a.update(LUNG_L, lung)
+    assert np.array_equal(a_default.best_val, a_explicit.best_val)
+    assert a_default.best_val[0, 0, 0] == pytest.approx(0.05 / 0.059)
+
+
+def test_zscore_mode_floor_at_exactly_mean_plus_2sd_barely_passes():
+    """A voxel answering exactly mean + 2*sd should just clear a floor of 2.0."""
+    shape = (2, 4, 4)
+    mean, sd = 0.10, 0.02
+    stats = {"bladder": (mean, sd)}
+    sim = np.full(shape, mean + 2 * sd, np.float32)
+    a = CompetitiveAssigner(shape, stats=stats, calibration="zscore")
+    a.update(BLADDER, sim)
+    masks = dict(a.finalize(floor=2.0))
+    assert masks[BLADDER].all()
+
+
+def test_zscore_mode_floor_at_1sd_does_not_pass_a_2sd_floor():
+    """One organ's own value at mean + 1*sd must NOT clear a floor of 2.0."""
+    shape = (2, 4, 4)
+    mean, sd = 0.10, 0.02
+    stats = {"bladder": (mean, sd)}
+    sim = np.full(shape, mean + 1 * sd, np.float32)
+    a = CompetitiveAssigner(shape, stats=stats, calibration="zscore")
+    a.update(BLADDER, sim)
+    masks = dict(a.finalize(floor=2.0))
+    assert not masks[BLADDER].any()
+
+
+def test_zscore_mode_argmax_compares_zscores_not_ratios():
+    """Competitive argmax in zscore mode must compare (sim-mean)/sd across organs,
+    not the raw ratio scheme -- an organ that is unremarkable relative to its own
+    spread should lose to one that is very unusual relative to its own spread,
+    even if the raw-value winner would have gone the other way under scale mode."""
+    shape = (2, 4, 4)
+    # femur: high raw similarity but unremarkable for femur (tight spread)
+    femur_mean, femur_sd = 0.09, 0.05
+    femur = np.full(shape, 0.10, np.float32)     # z = (0.10-0.09)/0.05 = 0.2
+    # bladder: lower raw similarity but a huge outlier for bladder's own spread
+    bladder_mean, bladder_sd = 0.02, 0.01
+    bladder = np.full(shape, 0.08, np.float32)   # z = (0.08-0.02)/0.01 = 6.0
+    stats = {"femur-left": (femur_mean, femur_sd), "bladder": (bladder_mean, bladder_sd)}
+    a = CompetitiveAssigner(shape, stats=stats, calibration="zscore")
+    a.update(FEMUR_L, femur)
+    a.update(BLADDER, bladder)
+    masks = dict(a.finalize(floor=2.0))
+    assert masks[BLADDER].all()
+    assert not masks[FEMUR_L].any()
+
+
+def test_zscore_mode_uses_default_organ_mean_and_sd_when_stats_not_given():
+    shape = (2, 4, 4)
+    name = "bladder"
+    sim = np.full(shape, ORGAN_MEAN[name] + 2 * ORGAN_SD[name], np.float32)
+    a = CompetitiveAssigner(shape, calibration="zscore")
+    a.update(BLADDER, sim)
+    masks = dict(a.finalize(floor=2.0))
+    assert masks[BLADDER].all()
+
+
+def test_unknown_calibration_mode_rejected():
+    with pytest.raises(ValueError):
+        CompetitiveAssigner((2, 4, 4), calibration="bogus")
