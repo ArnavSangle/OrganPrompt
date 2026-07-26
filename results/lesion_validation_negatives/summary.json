@@ -1,0 +1,6453 @@
+{
+  "per_lesion": {
+    "10250:T2": {
+      "case": "10250",
+      "level": "T2",
+      "expected": [
+        "lung-left",
+        "lung-right"
+      ],
+      "rank": 2,
+      "ranking": [
+        "pancreas",
+        "lung-right",
+        "kidney-right",
+        "lung-left",
+        "femur-right",
+        "femur-left",
+        "heart",
+        "kidney-left",
+        "liver"
+      ],
+      "distances_mm": {
+        "pancreas": 18.3,
+        "lung-right": 73.4,
+        "kidney-right": 87.7,
+        "lung-left": 109.3,
+        "femur-right": 124.6,
+        "femur-left": 131.0,
+        "heart": 136.8,
+        "kidney-left": 208.2,
+        "liver": 223.9
+      },
+      "absent": [
+        "bladder",
+        "spleen"
+      ]
+    },
+    "10355:L1": {
+      "case": "10355",
+      "level": "L1",
+      "expected": [
+        "kidney-left",
+        "kidney-right",
+        "liver",
+        "pancreas",
+        "spleen"
+      ],
+      "rank": 1,
+      "ranking": [
+        "pancreas",
+        "kidney-right",
+        "bladder",
+        "femur-right",
+        "liver",
+        "heart",
+        "lung-left",
+        "lung-right",
+        "kidney-left",
+        "femur-left"
+      ],
+      "distances_mm": {
+        "pancreas": 63.6,
+        "kidney-right": 67.9,
+        "bladder": 99.8,
+        "femur-right": 106.8,
+        "liver": 107.1,
+        "heart": 107.8,
+        "lung-left": 121.6,
+        "lung-right": 123.2,
+        "kidney-left": 178.0,
+        "femur-left": 232.0
+      },
+      "absent": [
+        "spleen"
+      ]
+    },
+    "10355:L2": {
+      "case": "10355",
+      "level": "L2",
+      "expected": [
+        "kidney-left",
+        "kidney-right",
+        "pancreas"
+      ],
+      "rank": 1,
+      "ranking": [
+        "pancreas",
+        "kidney-right",
+        "bladder",
+        "liver",
+        "femur-right",
+        "heart",
+        "lung-right",
+        "lung-left",
+        "kidney-left",
+        "femur-left"
+      ],
+      "distances_mm": {
+        "pancreas": 33.0,
+        "kidney-right": 41.1,
+        "bladder": 68.5,
+        "liver": 115.1,
+        "femur-right": 122.7,
+        "heart": 127.7,
+        "lung-right": 149.5,
+        "lung-left": 151.4,
+        "kidney-left": 158.3,
+        "femur-left": 204.6
+      },
+      "absent": [
+        "spleen"
+      ]
+    },
+    "10355:L3": {
+      "case": "10355",
+      "level": "L3",
+      "expected": [
+        "kidney-left",
+        "kidney-right"
+      ],
+      "rank": 2,
+      "ranking": [
+        "pancreas",
+        "kidney-right",
+        "bladder",
+        "liver",
+        "femur-right",
+        "kidney-left",
+        "heart",
+        "femur-left",
+        "lung-right",
+        "lung-left"
+      ],
+      "distances_mm": {
+        "pancreas": 7.6,
+        "kidney-right": 32.8,
+        "bladder": 42.5,
+        "liver": 125.0,
+        "femur-right": 145.6,
+        "kidney-left": 148.4,
+        "heart": 156.3,
+        "femur-left": 177.6,
+        "lung-right": 178.6,
+        "lung-left": 178.9
+      },
+      "absent": [
+        "spleen"
+      ]
+    },
+    "10355:L4": {
+      "case": "10355",
+      "level": "L4",
+      "expected": [
+        "bladder",
+        "kidney-left",
+        "kidney-right"
+      ],
+      "rank": 2,
+      "ranking": [
+        "pancreas",
+        "bladder",
+        "kidney-right",
+        "kidney-left",
+        "liver",
+        "femur-left",
+        "femur-right",
+        "heart",
+        "lung-left",
+        "lung-right"
+      ],
+      "distances_mm": {
+        "pancreas": 0.7,
+        "bladder": 12.7,
+        "kidney-right": 39.9,
+        "kidney-left": 147.2,
+        "liver": 147.7,
+        "femur-left": 149.6,
+        "femur-right": 177.5,
+        "heart": 189.4,
+        "lung-left": 202.2,
+        "lung-right": 206.9
+      },
+      "absent": [
+        "spleen"
+      ]
+    },
+    "10355:L5": {
+      "case": "10355",
+      "level": "L5",
+      "expected": [
+        "bladder",
+        "femur-left",
+        "femur-right"
+      ],
+      "rank": 1,
+      "ranking": [
+        "bladder",
+        "pancreas",
+        "kidney-right",
+        "femur-left",
+        "kidney-left",
+        "liver",
+        "femur-right",
+        "heart",
+        "lung-left",
+        "lung-right"
+      ],
+      "distances_mm": {
+        "bladder": 16.2,
+        "pancreas": 39.3,
+        "kidney-right": 69.4,
+        "femur-left": 118.1,
+        "kidney-left": 151.9,
+        "liver": 184.3,
+        "femur-right": 218.8,
+        "heart": 224.3,
+        "lung-left": 231.7,
+        "lung-right": 238.3
+      },
+      "absent": [
+        "spleen"
+      ]
+    },
+    "10355:T1": {
+      "case": "10355",
+      "level": "T1",
+      "expected": [
+        "lung-left",
+        "lung-right"
+      ],
+      "rank": 2,
+      "ranking": [
+        "heart",
+        "lung-left",
+        "lung-right",
+        "femur-right",
+        "liver",
+        "kidney-right",
+        "pancreas",
+        "bladder",
+        "kidney-left",
+        "femur-left"
+      ],
+      "distances_mm": {
+        "heart": 114.9,
+        "lung-left": 116.3,
+        "lung-right": 123.9,
+        "femur-right": 140.6,
+        "liver": 197.9,
+        "kidney-right": 295.8,
+        "pancreas": 306.5,
+        "bladder": 345.2,
+        "kidney-left": 353.1,
+        "femur-left": 480.7
+      },
+      "absent": [
+        "spleen"
+      ]
+    },
+    "10355:T10": {
+      "case": "10355",
+      "level": "T10",
+      "expected": [
+        "liver",
+        "lung-left",
+        "lung-right",
+        "spleen"
+      ],
+      "rank": 1,
+      "ranking": [
+        "lung-left",
+        "heart",
+        "lung-right",
+        "femur-right",
+        "liver",
+        "kidney-right",
+        "pancreas",
+        "bladder",
+        "kidney-left",
+        "femur-left"
+      ],
+      "distances_mm": {
+        "lung-left": 42.8,
+        "heart": 48.5,
+        "lung-right": 53.4,
+        "femur-right": 68.1,
+        "liver": 106.5,
+        "kidney-right": 128.4,
+        "pancreas": 134.0,
+        "bladder": 170.5,
+        "kidney-left": 224.1,
+        "femur-left": 307.8
+      },
+      "absent": [
+        "spleen"
+      ]
+    },
+    "10355:T11": {
+      "case": "10355",
+      "level": "T11",
+      "expected": [
+        "liver",
+        "pancreas",
+        "spleen"
+      ],
+      "rank": 5,
+      "ranking": [
+        "heart",
+        "lung-left",
+        "lung-right",
+        "femur-right",
+        "liver",
+        "kidney-right",
+        "pancreas",
+        "bladder",
+        "kidney-left",
+        "femur-left"
+      ],
+      "distances_mm": {
+        "heart": 64.2,
+        "lung-left": 65.7,
+        "lung-right": 71.6,
+        "femur-right": 78.3,
+        "liver": 105.5,
+        "kidney-right": 109.0,
+        "pancreas": 112.3,
+        "bladder": 148.9,
+        "kidney-left": 208.7,
+        "femur-left": 285.7
+      },
+      "absent": [
+        "spleen"
+      ]
+    },
+    "10355:T12": {
+      "case": "10355",
+      "level": "T12",
+      "expected": [
+        "kidney-left",
+        "kidney-right",
+        "liver",
+        "pancreas",
+        "spleen"
+      ],
+      "rank": 4,
+      "ranking": [
+        "heart",
+        "femur-right",
+        "lung-left",
+        "kidney-right",
+        "pancreas",
+        "lung-right",
+        "liver",
+        "bladder",
+        "kidney-left",
+        "femur-left"
+      ],
+      "distances_mm": {
+        "heart": 76.8,
+        "femur-right": 82.6,
+        "lung-left": 88.4,
+        "kidney-right": 90.5,
+        "pancreas": 91.0,
+        "lung-right": 95.1,
+        "liver": 104.7,
+        "bladder": 127.4,
+        "kidney-left": 197.1,
+        "femur-left": 260.6
+      },
+      "absent": [
+        "spleen"
+      ]
+    },
+    "10355:T2": {
+      "case": "10355",
+      "level": "T2",
+      "expected": [
+        "lung-left",
+        "lung-right"
+      ],
+      "rank": 1,
+      "ranking": [
+        "lung-left",
+        "heart",
+        "lung-right",
+        "femur-right",
+        "liver",
+        "kidney-right",
+        "pancreas",
+        "bladder",
+        "kidney-left",
+        "femur-left"
+      ],
+      "distances_mm": {
+        "lung-left": 92.8,
+        "heart": 98.5,
+        "lung-right": 100.9,
+        "femur-right": 126.1,
+        "liver": 185.9,
+        "kidney-right": 279.0,
+        "pancreas": 289.2,
+        "bladder": 327.7,
+        "kidney-left": 340.4,
+        "femur-left": 463.3
+      },
+      "absent": [
+        "spleen"
+      ]
+    },
+    "10355:T3": {
+      "case": "10355",
+      "level": "T3",
+      "expected": [
+        "lung-left",
+        "lung-right"
+      ],
+      "rank": 1,
+      "ranking": [
+        "lung-left",
+        "lung-right",
+        "heart",
+        "femur-right",
+        "liver",
+        "kidney-right",
+        "pancreas",
+        "bladder",
+        "kidney-left",
+        "femur-left"
+      ],
+      "distances_mm": {
+        "lung-left": 60.3,
+        "lung-right": 82.2,
+        "heart": 83.7,
+        "femur-right": 113.4,
+        "liver": 174.3,
+        "kidney-right": 262.6,
+        "pancreas": 270.0,
+        "bladder": 306.9,
+        "kidney-left": 327.9,
+        "femur-left": 441.8
+      },
+      "absent": [
+        "spleen"
+      ]
+    },
+    "10355:T4": {
+      "case": "10355",
+      "level": "T4",
+      "expected": [
+        "heart",
+        "lung-left",
+        "lung-right"
+      ],
+      "rank": 1,
+      "ranking": [
+        "lung-left",
+        "lung-right",
+        "heart",
+        "femur-right",
+        "liver",
+        "kidney-right",
+        "pancreas",
+        "bladder",
+        "kidney-left",
+        "femur-left"
+      ],
+      "distances_mm": {
+        "lung-left": 15.8,
+        "lung-right": 59.6,
+        "heart": 59.8,
+        "femur-right": 95.0,
+        "liver": 145.5,
+        "kidney-right": 211.4,
+        "pancreas": 215.3,
+        "bladder": 252.2,
+        "kidney-left": 294.0,
+        "femur-left": 387.1
+      },
+      "absent": [
+        "spleen"
+      ]
+    },
+    "10355:T5": {
+      "case": "10355",
+      "level": "T5",
+      "expected": [
+        "heart",
+        "lung-left",
+        "lung-right"
+      ],
+      "rank": 1,
+      "ranking": [
+        "lung-left",
+        "lung-right",
+        "heart",
+        "femur-right",
+        "liver",
+        "kidney-right",
+        "pancreas",
+        "bladder",
+        "kidney-left",
+        "femur-left"
+      ],
+      "distances_mm": {
+        "lung-left": 35.4,
+        "lung-right": 44.4,
+        "heart": 55.0,
+        "femur-right": 88.1,
+        "liver": 151.7,
+        "kidney-right": 226.5,
+        "pancreas": 234.9,
+        "bladder": 272.6,
+        "kidney-left": 300.6,
+        "femur-left": 409.4
+      },
+      "absent": [
+        "spleen"
+      ]
+    },
+    "10355:T6": {
+      "case": "10355",
+      "level": "T6",
+      "expected": [
+        "heart",
+        "lung-left",
+        "lung-right"
+      ],
+      "rank": 1,
+      "ranking": [
+        "lung-left",
+        "lung-right",
+        "heart",
+        "femur-right",
+        "liver",
+        "kidney-right",
+        "pancreas",
+        "bladder",
+        "kidney-left",
+        "femur-left"
+      ],
+      "distances_mm": {
+        "lung-left": 20.9,
+        "lung-right": 33.7,
+        "heart": 45.1,
+        "femur-right": 80.5,
+        "liver": 141.6,
+        "kidney-right": 211.9,
+        "pancreas": 218.3,
+        "bladder": 255.6,
+        "kidney-left": 289.6,
+        "femur-left": 389.9
+      },
+      "absent": [
+        "spleen"
+      ]
+    },
+    "10355:T7": {
+      "case": "10355",
+      "level": "T7",
+      "expected": [
+        "heart",
+        "lung-left",
+        "lung-right"
+      ],
+      "rank": 1,
+      "ranking": [
+        "lung-left",
+        "lung-right",
+        "heart",
+        "bladder",
+        "pancreas",
+        "femur-right",
+        "kidney-right",
+        "liver",
+        "femur-left",
+        "kidney-left"
+      ],
+      "distances_mm": {
+        "lung-left": 10.7,
+        "lung-right": 23.8,
+        "heart": 36.7,
+        "bladder": 45.5,
+        "pancreas": 47.6,
+        "femur-right": 72.9,
+        "kidney-right": 86.3,
+        "liver": 129.6,
+        "femur-left": 150.4,
+        "kidney-left": 183.0
+      },
+      "absent": [
+        "spleen"
+      ]
+    },
+    "10355:T8": {
+      "case": "10355",
+      "level": "T8",
+      "expected": [
+        "heart",
+        "lung-left",
+        "lung-right"
+      ],
+      "rank": 1,
+      "ranking": [
+        "lung-left",
+        "lung-right",
+        "heart",
+        "femur-right",
+        "liver",
+        "kidney-right",
+        "pancreas",
+        "bladder",
+        "kidney-left",
+        "femur-left"
+      ],
+      "distances_mm": {
+        "lung-left": 14.3,
+        "lung-right": 22.8,
+        "heart": 33.8,
+        "femur-right": 67.9,
+        "liver": 119.6,
+        "kidney-right": 172.5,
+        "pancreas": 179.8,
+        "bladder": 216.8,
+        "kidney-left": 258.4,
+        "femur-left": 350.5
+      },
+      "absent": [
+        "spleen"
+      ]
+    },
+    "10355:T9": {
+      "case": "10355",
+      "level": "T9",
+      "expected": [
+        "heart",
+        "liver",
+        "lung-left",
+        "lung-right",
+        "spleen"
+      ],
+      "rank": 1,
+      "ranking": [
+        "lung-left",
+        "lung-right",
+        "heart",
+        "femur-right",
+        "liver",
+        "kidney-right",
+        "pancreas",
+        "bladder",
+        "kidney-left",
+        "femur-left"
+      ],
+      "distances_mm": {
+        "lung-left": 25.4,
+        "lung-right": 34.8,
+        "heart": 35.3,
+        "femur-right": 65.7,
+        "liver": 110.1,
+        "kidney-right": 150.2,
+        "pancreas": 156.2,
+        "bladder": 193.1,
+        "kidney-left": 240.1,
+        "femur-left": 329.8
+      },
+      "absent": [
+        "spleen"
+      ]
+    },
+    "10456:L1": {
+      "case": "10456",
+      "level": "L1",
+      "expected": [
+        "kidney-left",
+        "kidney-right",
+        "liver",
+        "pancreas",
+        "spleen"
+      ],
+      "rank": 2,
+      "ranking": [
+        "femur-right",
+        "liver",
+        "heart",
+        "kidney-right",
+        "femur-left",
+        "kidney-left",
+        "bladder",
+        "pancreas"
+      ],
+      "distances_mm": {
+        "femur-right": 80.8,
+        "liver": 96.9,
+        "heart": 103.4,
+        "kidney-right": 118.1,
+        "femur-left": 135.8,
+        "kidney-left": 222.7,
+        "bladder": 240.5,
+        "pancreas": 247.5
+      },
+      "absent": [
+        "lung-left",
+        "lung-right",
+        "spleen"
+      ]
+    },
+    "10456:T11": {
+      "case": "10456",
+      "level": "T11",
+      "expected": [
+        "liver",
+        "pancreas",
+        "spleen"
+      ],
+      "rank": 3,
+      "ranking": [
+        "heart",
+        "femur-right",
+        "liver",
+        "kidney-right",
+        "femur-left",
+        "kidney-left",
+        "bladder",
+        "pancreas"
+      ],
+      "distances_mm": {
+        "heart": 46.2,
+        "femur-right": 61.2,
+        "liver": 112.7,
+        "kidney-right": 178.1,
+        "femur-left": 199.1,
+        "kidney-left": 258.7,
+        "bladder": 308.5,
+        "pancreas": 313.2
+      },
+      "absent": [
+        "lung-left",
+        "lung-right",
+        "spleen"
+      ]
+    },
+    "10458:L1": {
+      "case": "10458",
+      "level": "L1",
+      "expected": [
+        "kidney-left",
+        "kidney-right",
+        "liver",
+        "pancreas",
+        "spleen"
+      ],
+      "rank": 1,
+      "ranking": [
+        "liver",
+        "femur-right",
+        "lung-right",
+        "pancreas"
+      ],
+      "distances_mm": {
+        "liver": 59.7,
+        "femur-right": 121.1,
+        "lung-right": 167.2,
+        "pancreas": 374.2
+      },
+      "absent": [
+        "bladder",
+        "femur-left",
+        "heart",
+        "kidney-left",
+        "kidney-right",
+        "lung-left",
+        "spleen"
+      ]
+    },
+    "10543:L2": {
+      "case": "10543",
+      "level": "L2",
+      "expected": [
+        "kidney-left",
+        "kidney-right",
+        "pancreas"
+      ],
+      "rank": 5,
+      "ranking": [
+        "liver",
+        "heart",
+        "lung-left",
+        "bladder",
+        "kidney-right",
+        "femur-left",
+        "femur-right"
+      ],
+      "distances_mm": {
+        "liver": 70.2,
+        "heart": 114.2,
+        "lung-left": 192.2,
+        "bladder": 215.9,
+        "kidney-right": 218.7,
+        "femur-left": 251.4,
+        "femur-right": 302.7
+      },
+      "absent": [
+        "kidney-left",
+        "lung-right",
+        "pancreas",
+        "spleen"
+      ]
+    },
+    "10543:L3": {
+      "case": "10543",
+      "level": "L3",
+      "expected": [
+        "kidney-left",
+        "kidney-right"
+      ],
+      "rank": 5,
+      "ranking": [
+        "liver",
+        "heart",
+        "lung-left",
+        "bladder",
+        "kidney-right",
+        "femur-left",
+        "femur-right"
+      ],
+      "distances_mm": {
+        "liver": 64.7,
+        "heart": 146.7,
+        "lung-left": 224.9,
+        "bladder": 250.6,
+        "kidney-right": 255.1,
+        "femur-left": 289.3,
+        "femur-right": 342.2
+      },
+      "absent": [
+        "kidney-left",
+        "lung-right",
+        "pancreas",
+        "spleen"
+      ]
+    },
+    "10543:T3": {
+      "case": "10543",
+      "level": "T3",
+      "expected": [
+        "lung-left",
+        "lung-right"
+      ],
+      "rank": 5,
+      "ranking": [
+        "bladder",
+        "femur-left",
+        "kidney-right",
+        "femur-right",
+        "lung-left",
+        "heart",
+        "liver"
+      ],
+      "distances_mm": {
+        "bladder": 30.0,
+        "femur-left": 31.4,
+        "kidney-right": 46.5,
+        "femur-right": 57.9,
+        "lung-left": 85.0,
+        "heart": 135.4,
+        "liver": 300.5
+      },
+      "absent": [
+        "kidney-left",
+        "lung-right",
+        "pancreas",
+        "spleen"
+      ]
+    },
+    "10543:T4": {
+      "case": "10543",
+      "level": "T4",
+      "expected": [
+        "heart",
+        "lung-left",
+        "lung-right"
+      ],
+      "rank": 4,
+      "ranking": [
+        "bladder",
+        "femur-left",
+        "kidney-right",
+        "lung-left",
+        "femur-right",
+        "heart",
+        "liver"
+      ],
+      "distances_mm": {
+        "bladder": 16.8,
+        "femur-left": 41.5,
+        "kidney-right": 44.6,
+        "lung-left": 77.4,
+        "femur-right": 77.8,
+        "heart": 121.3,
+        "liver": 289.1
+      },
+      "absent": [
+        "kidney-left",
+        "lung-right",
+        "pancreas",
+        "spleen"
+      ]
+    },
+    "10543:T5": {
+      "case": "10543",
+      "level": "T5",
+      "expected": [
+        "heart",
+        "lung-left",
+        "lung-right"
+      ],
+      "rank": 4,
+      "ranking": [
+        "bladder",
+        "kidney-right",
+        "femur-left",
+        "lung-left",
+        "femur-right",
+        "heart",
+        "liver"
+      ],
+      "distances_mm": {
+        "bladder": 14.1,
+        "kidney-right": 40.7,
+        "femur-left": 56.7,
+        "lung-left": 67.1,
+        "femur-right": 98.3,
+        "heart": 100.7,
+        "liver": 277.3
+      },
+      "absent": [
+        "kidney-left",
+        "lung-right",
+        "pancreas",
+        "spleen"
+      ]
+    },
+    "10543:T7": {
+      "case": "10543",
+      "level": "T7",
+      "expected": [
+        "heart",
+        "lung-left",
+        "lung-right"
+      ],
+      "rank": 3,
+      "ranking": [
+        "bladder",
+        "kidney-right",
+        "heart",
+        "lung-left",
+        "femur-left",
+        "femur-right",
+        "liver"
+      ],
+      "distances_mm": {
+        "bladder": 31.5,
+        "kidney-right": 44.8,
+        "heart": 59.2,
+        "lung-left": 64.8,
+        "femur-left": 87.7,
+        "femur-right": 134.1,
+        "liver": 238.5
+      },
+      "absent": [
+        "kidney-left",
+        "lung-right",
+        "pancreas",
+        "spleen"
+      ]
+    },
+    "10543:T8": {
+      "case": "10543",
+      "level": "T8",
+      "expected": [
+        "heart",
+        "lung-left",
+        "lung-right"
+      ],
+      "rank": 1,
+      "ranking": [
+        "heart",
+        "bladder",
+        "kidney-right",
+        "lung-left",
+        "femur-left",
+        "femur-right",
+        "liver"
+      ],
+      "distances_mm": {
+        "heart": 36.6,
+        "bladder": 50.2,
+        "kidney-right": 61.3,
+        "lung-left": 65.6,
+        "femur-left": 103.7,
+        "femur-right": 151.5,
+        "liver": 218.4
+      },
+      "absent": [
+        "kidney-left",
+        "lung-right",
+        "pancreas",
+        "spleen"
+      ]
+    },
+    "11084:T11": {
+      "case": "11084",
+      "level": "T11",
+      "expected": [
+        "liver",
+        "pancreas",
+        "spleen"
+      ],
+      "rank": 2,
+      "ranking": [
+        "bladder",
+        "liver",
+        "kidney-left",
+        "heart",
+        "kidney-right",
+        "femur-right",
+        "pancreas",
+        "femur-left"
+      ],
+      "distances_mm": {
+        "bladder": 0.9,
+        "liver": 58.0,
+        "kidney-left": 60.2,
+        "heart": 67.2,
+        "kidney-right": 143.3,
+        "femur-right": 175.5,
+        "pancreas": 208.1,
+        "femur-left": 258.3
+      },
+      "absent": [
+        "lung-left",
+        "lung-right",
+        "spleen"
+      ]
+    },
+    "11084:T2": {
+      "case": "11084",
+      "level": "T2",
+      "expected": [
+        "lung-left",
+        "lung-right"
+      ],
+      "rank": null,
+      "ranking": [
+        "kidney-right",
+        "heart",
+        "femur-left",
+        "kidney-left",
+        "liver",
+        "bladder",
+        "femur-right",
+        "pancreas"
+      ],
+      "distances_mm": {
+        "kidney-right": 45.8,
+        "heart": 124.1,
+        "femur-left": 133.0,
+        "kidney-left": 166.9,
+        "liver": 189.4,
+        "bladder": 221.1,
+        "femur-right": 252.1,
+        "pancreas": 279.7
+      },
+      "absent": [
+        "lung-left",
+        "lung-right",
+        "spleen"
+      ]
+    },
+    "11084:T8": {
+      "case": "11084",
+      "level": "T8",
+      "expected": [
+        "heart",
+        "lung-left",
+        "lung-right"
+      ],
+      "rank": 1,
+      "ranking": [
+        "heart",
+        "kidney-left",
+        "kidney-right",
+        "bladder",
+        "liver",
+        "femur-right",
+        "femur-left",
+        "pancreas"
+      ],
+      "distances_mm": {
+        "heart": 0.9,
+        "kidney-left": 47.3,
+        "kidney-right": 60.0,
+        "bladder": 60.6,
+        "liver": 86.5,
+        "femur-right": 167.5,
+        "femur-left": 202.5,
+        "pancreas": 213.4
+      },
+      "absent": [
+        "lung-left",
+        "lung-right",
+        "spleen"
+      ]
+    },
+    "11084:T9": {
+      "case": "11084",
+      "level": "T9",
+      "expected": [
+        "heart",
+        "liver",
+        "lung-left",
+        "lung-right",
+        "spleen"
+      ],
+      "rank": 1,
+      "ranking": [
+        "heart",
+        "kidney-left",
+        "bladder",
+        "liver",
+        "kidney-right",
+        "femur-right",
+        "pancreas",
+        "femur-left"
+      ],
+      "distances_mm": {
+        "heart": 16.6,
+        "kidney-left": 36.7,
+        "bladder": 38.1,
+        "liver": 69.5,
+        "kidney-right": 78.0,
+        "femur-right": 166.3,
+        "pancreas": 209.6,
+        "femur-left": 218.7
+      },
+      "absent": [
+        "lung-left",
+        "lung-right",
+        "spleen"
+      ]
+    },
+    "11471:T8": {
+      "case": "11471",
+      "level": "T8",
+      "expected": [
+        "heart",
+        "lung-left",
+        "lung-right"
+      ],
+      "rank": 1,
+      "ranking": [
+        "heart",
+        "liver",
+        "kidney-right",
+        "lung-right",
+        "femur-right",
+        "femur-left",
+        "pancreas"
+      ],
+      "distances_mm": {
+        "heart": 7.8,
+        "liver": 116.9,
+        "kidney-right": 117.3,
+        "lung-right": 223.5,
+        "femur-right": 292.6,
+        "femur-left": 294.4,
+        "pancreas": 301.3
+      },
+      "absent": [
+        "bladder",
+        "kidney-left",
+        "lung-left",
+        "spleen"
+      ]
+    },
+    "12196:L3": {
+      "case": "12196",
+      "level": "L3",
+      "expected": [
+        "kidney-left",
+        "kidney-right"
+      ],
+      "rank": 1,
+      "ranking": [
+        "kidney-right",
+        "pancreas",
+        "kidney-left",
+        "bladder",
+        "femur-right",
+        "femur-left",
+        "liver",
+        "lung-right",
+        "lung-left"
+      ],
+      "distances_mm": {
+        "kidney-right": 10.0,
+        "pancreas": 20.0,
+        "kidney-left": 70.1,
+        "bladder": 117.9,
+        "femur-right": 188.0,
+        "femur-left": 212.7,
+        "liver": 231.4,
+        "lung-right": 316.1,
+        "lung-left": 354.4
+      },
+      "absent": [
+        "heart",
+        "spleen"
+      ]
+    },
+    "12855:L3": {
+      "case": "12855",
+      "level": "L3",
+      "expected": [
+        "kidney-left",
+        "kidney-right"
+      ],
+      "rank": 7,
+      "ranking": [
+        "femur-right",
+        "pancreas",
+        "liver",
+        "bladder",
+        "heart",
+        "femur-left",
+        "kidney-right",
+        "kidney-left"
+      ],
+      "distances_mm": {
+        "femur-right": 88.2,
+        "pancreas": 98.6,
+        "liver": 121.4,
+        "bladder": 151.8,
+        "heart": 192.5,
+        "femur-left": 217.4,
+        "kidney-right": 225.6,
+        "kidney-left": 253.4
+      },
+      "absent": [
+        "lung-left",
+        "lung-right",
+        "spleen"
+      ]
+    },
+    "12855:L4": {
+      "case": "12855",
+      "level": "L4",
+      "expected": [
+        "bladder",
+        "kidney-left",
+        "kidney-right"
+      ],
+      "rank": 3,
+      "ranking": [
+        "femur-right",
+        "pancreas",
+        "bladder",
+        "liver",
+        "heart",
+        "kidney-right",
+        "femur-left",
+        "kidney-left"
+      ],
+      "distances_mm": {
+        "femur-right": 56.8,
+        "pancreas": 70.2,
+        "bladder": 126.8,
+        "liver": 144.4,
+        "heart": 217.4,
+        "kidney-right": 220.9,
+        "femur-left": 243.8,
+        "kidney-left": 249.9
+      },
+      "absent": [
+        "lung-left",
+        "lung-right",
+        "spleen"
+      ]
+    },
+    "12855:T12": {
+      "case": "12855",
+      "level": "T12",
+      "expected": [
+        "kidney-left",
+        "kidney-right",
+        "liver",
+        "pancreas",
+        "spleen"
+      ],
+      "rank": 1,
+      "ranking": [
+        "liver",
+        "heart",
+        "femur-left",
+        "pancreas",
+        "femur-right",
+        "bladder",
+        "kidney-right",
+        "kidney-left"
+      ],
+      "distances_mm": {
+        "liver": 77.2,
+        "heart": 99.9,
+        "femur-left": 127.8,
+        "pancreas": 182.9,
+        "femur-right": 184.2,
+        "bladder": 247.0,
+        "kidney-right": 277.8,
+        "kidney-left": 301.0
+      },
+      "absent": [
+        "lung-left",
+        "lung-right",
+        "spleen"
+      ]
+    },
+    "13055:L1": {
+      "case": "13055",
+      "level": "L1",
+      "expected": [
+        "kidney-left",
+        "kidney-right",
+        "liver",
+        "pancreas",
+        "spleen"
+      ],
+      "rank": 1,
+      "ranking": [
+        "kidney-right",
+        "kidney-left",
+        "femur-right",
+        "heart",
+        "lung-right",
+        "bladder",
+        "pancreas",
+        "liver",
+        "femur-left",
+        "lung-left"
+      ],
+      "distances_mm": {
+        "kidney-right": 41.2,
+        "kidney-left": 51.3,
+        "femur-right": 88.8,
+        "heart": 96.3,
+        "lung-right": 124.7,
+        "bladder": 137.9,
+        "pancreas": 181.3,
+        "liver": 231.8,
+        "femur-left": 295.8,
+        "lung-left": 359.4
+      },
+      "absent": [
+        "spleen"
+      ]
+    },
+    "13055:L2": {
+      "case": "13055",
+      "level": "L2",
+      "expected": [
+        "kidney-left",
+        "kidney-right",
+        "pancreas"
+      ],
+      "rank": 1,
+      "ranking": [
+        "kidney-left",
+        "kidney-right",
+        "bladder",
+        "femur-right",
+        "heart",
+        "pancreas",
+        "lung-right",
+        "liver",
+        "femur-left",
+        "lung-left"
+      ],
+      "distances_mm": {
+        "kidney-left": 28.2,
+        "kidney-right": 29.9,
+        "bladder": 103.6,
+        "femur-right": 115.7,
+        "heart": 124.1,
+        "pancreas": 157.6,
+        "lung-right": 158.3,
+        "liver": 197.9,
+        "femur-left": 321.2,
+        "lung-left": 387.0
+      },
+      "absent": [
+        "spleen"
+      ]
+    },
+    "13055:L3": {
+      "case": "13055",
+      "level": "L3",
+      "expected": [
+        "kidney-left",
+        "kidney-right"
+      ],
+      "rank": 1,
+      "ranking": [
+        "kidney-left",
+        "kidney-right",
+        "bladder",
+        "femur-right",
+        "pancreas",
+        "heart",
+        "liver",
+        "lung-right",
+        "femur-left",
+        "lung-left"
+      ],
+      "distances_mm": {
+        "kidney-left": 19.5,
+        "kidney-right": 33.0,
+        "bladder": 67.2,
+        "femur-right": 143.9,
+        "pancreas": 149.5,
+        "heart": 154.3,
+        "liver": 162.2,
+        "lung-right": 188.9,
+        "femur-left": 344.1,
+        "lung-left": 415.5
+      },
+      "absent": [
+        "spleen"
+      ]
+    },
+    "13055:L4": {
+      "case": "13055",
+      "level": "L4",
+      "expected": [
+        "bladder",
+        "kidney-left",
+        "kidney-right"
+      ],
+      "rank": 1,
+      "ranking": [
+        "kidney-left",
+        "bladder",
+        "kidney-right",
+        "liver",
+        "pancreas",
+        "femur-right",
+        "heart",
+        "lung-right",
+        "femur-left",
+        "lung-left"
+      ],
+      "distances_mm": {
+        "kidney-left": 19.9,
+        "bladder": 40.9,
+        "kidney-right": 42.1,
+        "liver": 136.0,
+        "pancreas": 149.5,
+        "femur-right": 159.7,
+        "heart": 175.9,
+        "lung-right": 212.8,
+        "femur-left": 368.8,
+        "lung-left": 437.3
+      },
+      "absent": [
+        "spleen"
+      ]
+    },
+    "13055:L5": {
+      "case": "13055",
+      "level": "L5",
+      "expected": [
+        "bladder",
+        "femur-left",
+        "femur-right"
+      ],
+      "rank": 1,
+      "ranking": [
+        "bladder",
+        "kidney-left",
+        "kidney-right",
+        "liver",
+        "pancreas",
+        "femur-right",
+        "heart",
+        "lung-right",
+        "femur-left",
+        "lung-left"
+      ],
+      "distances_mm": {
+        "bladder": 14.0,
+        "kidney-left": 64.4,
+        "kidney-right": 87.8,
+        "liver": 110.9,
+        "pancreas": 156.5,
+        "femur-right": 206.9,
+        "heart": 213.3,
+        "lung-right": 240.6,
+        "femur-left": 409.0,
+        "lung-left": 475.6
+      },
+      "absent": [
+        "spleen"
+      ]
+    },
+    "13055:T1": {
+      "case": "13055",
+      "level": "T1",
+      "expected": [
+        "lung-left",
+        "lung-right"
+      ],
+      "rank": 2,
+      "ranking": [
+        "femur-left",
+        "lung-left",
+        "heart",
+        "lung-right",
+        "femur-right",
+        "kidney-right",
+        "kidney-left",
+        "pancreas",
+        "bladder",
+        "liver"
+      ],
+      "distances_mm": {
+        "femur-left": 97.3,
+        "lung-left": 108.8,
+        "heart": 155.3,
+        "lung-right": 162.6,
+        "femur-right": 174.5,
+        "kidney-right": 297.4,
+        "kidney-left": 315.6,
+        "pancreas": 371.4,
+        "bladder": 447.0,
+        "liver": 531.9
+      },
+      "absent": [
+        "spleen"
+      ]
+    },
+    "13055:T10": {
+      "case": "13055",
+      "level": "T10",
+      "expected": [
+        "liver",
+        "lung-left",
+        "lung-right",
+        "spleen"
+      ],
+      "rank": 2,
+      "ranking": [
+        "heart",
+        "lung-right",
+        "femur-right",
+        "kidney-right",
+        "kidney-left",
+        "pancreas",
+        "bladder",
+        "femur-left",
+        "lung-left",
+        "liver"
+      ],
+      "distances_mm": {
+        "heart": 11.9,
+        "lung-right": 41.4,
+        "femur-right": 44.0,
+        "kidney-right": 90.9,
+        "kidney-left": 109.7,
+        "pancreas": 224.6,
+        "bladder": 229.6,
+        "femur-left": 230.6,
+        "lung-left": 276.2,
+        "liver": 319.8
+      },
+      "absent": [
+        "spleen"
+      ]
+    },
+    "13055:T11": {
+      "case": "13055",
+      "level": "T11",
+      "expected": [
+        "liver",
+        "pancreas",
+        "spleen"
+      ],
+      "rank": 7,
+      "ranking": [
+        "heart",
+        "femur-right",
+        "kidney-right",
+        "lung-right",
+        "kidney-left",
+        "bladder",
+        "pancreas",
+        "femur-left",
+        "liver",
+        "lung-left"
+      ],
+      "distances_mm": {
+        "heart": 36.1,
+        "femur-right": 56.0,
+        "kidney-right": 64.2,
+        "lung-right": 65.0,
+        "kidney-left": 81.7,
+        "bladder": 199.9,
+        "pancreas": 207.3,
+        "femur-left": 249.1,
+        "liver": 289.7,
+        "lung-left": 301.3
+      },
+      "absent": [
+        "spleen"
+      ]
+    },
+    "13055:T12": {
+      "case": "13055",
+      "level": "T12",
+      "expected": [
+        "kidney-left",
+        "kidney-right",
+        "liver",
+        "pancreas",
+        "spleen"
+      ],
+      "rank": 1,
+      "ranking": [
+        "kidney-right",
+        "kidney-left",
+        "heart",
+        "femur-right",
+        "lung-right",
+        "bladder",
+        "pancreas",
+        "liver",
+        "femur-left",
+        "lung-left"
+      ],
+      "distances_mm": {
+        "kidney-right": 47.7,
+        "kidney-left": 64.7,
+        "heart": 66.1,
+        "femur-right": 77.7,
+        "lung-right": 91.6,
+        "bladder": 171.5,
+        "pancreas": 186.0,
+        "liver": 264.6,
+        "femur-left": 275.2,
+        "lung-left": 330.7
+      },
+      "absent": [
+        "spleen"
+      ]
+    },
+    "13055:T2": {
+      "case": "13055",
+      "level": "T2",
+      "expected": [
+        "lung-left",
+        "lung-right"
+      ],
+      "rank": 2,
+      "ranking": [
+        "femur-left",
+        "lung-left",
+        "lung-right",
+        "heart",
+        "femur-right",
+        "kidney-right",
+        "kidney-left",
+        "pancreas",
+        "bladder",
+        "liver"
+      ],
+      "distances_mm": {
+        "femur-left": 96.7,
+        "lung-left": 101.8,
+        "lung-right": 136.8,
+        "heart": 137.3,
+        "femur-right": 158.8,
+        "kidney-right": 280.7,
+        "kidney-left": 299.0,
+        "pancreas": 362.1,
+        "bladder": 428.8,
+        "liver": 515.0
+      },
+      "absent": [
+        "spleen"
+      ]
+    },
+    "13055:T3": {
+      "case": "13055",
+      "level": "T3",
+      "expected": [
+        "lung-left",
+        "lung-right"
+      ],
+      "rank": 2,
+      "ranking": [
+        "femur-left",
+        "lung-left",
+        "lung-right",
+        "heart",
+        "femur-right",
+        "kidney-right",
+        "kidney-left",
+        "pancreas",
+        "bladder",
+        "liver"
+      ],
+      "distances_mm": {
+        "femur-left": 98.6,
+        "lung-left": 99.1,
+        "lung-right": 113.7,
+        "heart": 116.5,
+        "femur-right": 140.2,
+        "kidney-right": 261.0,
+        "kidney-left": 279.5,
+        "pancreas": 346.9,
+        "bladder": 407.8,
+        "liver": 495.2
+      },
+      "absent": [
+        "spleen"
+      ]
+    },
+    "13055:T4": {
+      "case": "13055",
+      "level": "T4",
+      "expected": [
+        "heart",
+        "lung-left",
+        "lung-right"
+      ],
+      "rank": 1,
+      "ranking": [
+        "lung-right",
+        "heart",
+        "femur-left",
+        "femur-right",
+        "lung-left",
+        "kidney-right",
+        "kidney-left",
+        "pancreas",
+        "bladder",
+        "liver"
+      ],
+      "distances_mm": {
+        "lung-right": 80.3,
+        "heart": 90.8,
+        "femur-left": 116.0,
+        "femur-right": 121.2,
+        "lung-left": 124.9,
+        "kidney-right": 241.3,
+        "kidney-left": 258.9,
+        "pancreas": 329.2,
+        "bladder": 385.0,
+        "liver": 472.0
+      },
+      "absent": [
+        "spleen"
+      ]
+    },
+    "13055:T5": {
+      "case": "13055",
+      "level": "T5",
+      "expected": [
+        "heart",
+        "lung-left",
+        "lung-right"
+      ],
+      "rank": 1,
+      "ranking": [
+        "lung-right",
+        "heart",
+        "femur-right",
+        "femur-left",
+        "lung-left",
+        "kidney-right",
+        "kidney-left",
+        "pancreas",
+        "bladder",
+        "liver"
+      ],
+      "distances_mm": {
+        "lung-right": 50.9,
+        "heart": 59.4,
+        "femur-right": 104.4,
+        "femur-left": 130.7,
+        "lung-left": 147.1,
+        "kidney-right": 221.5,
+        "kidney-left": 239.9,
+        "pancreas": 315.5,
+        "bladder": 354.7,
+        "liver": 445.8
+      },
+      "absent": [
+        "spleen"
+      ]
+    },
+    "13055:T6": {
+      "case": "13055",
+      "level": "T6",
+      "expected": [
+        "heart",
+        "lung-left",
+        "lung-right"
+      ],
+      "rank": 1,
+      "ranking": [
+        "lung-right",
+        "heart",
+        "femur-right",
+        "femur-left",
+        "lung-left",
+        "kidney-right",
+        "kidney-left",
+        "pancreas",
+        "bladder",
+        "liver"
+      ],
+      "distances_mm": {
+        "lung-right": 37.7,
+        "heart": 42.0,
+        "femur-right": 84.5,
+        "femur-left": 149.5,
+        "lung-left": 172.5,
+        "kidney-right": 198.6,
+        "kidney-left": 216.8,
+        "pancreas": 296.6,
+        "bladder": 334.5,
+        "liver": 425.9
+      },
+      "absent": [
+        "spleen"
+      ]
+    },
+    "13055:T7": {
+      "case": "13055",
+      "level": "T7",
+      "expected": [
+        "heart",
+        "lung-left",
+        "lung-right"
+      ],
+      "rank": 1,
+      "ranking": [
+        "heart",
+        "lung-right",
+        "femur-right",
+        "femur-left",
+        "kidney-right",
+        "kidney-left",
+        "lung-left",
+        "pancreas",
+        "bladder",
+        "liver"
+      ],
+      "distances_mm": {
+        "heart": 19.5,
+        "lung-right": 20.5,
+        "femur-right": 66.9,
+        "femur-left": 166.2,
+        "kidney-right": 168.4,
+        "kidney-left": 187.5,
+        "lung-left": 196.6,
+        "pancreas": 277.6,
+        "bladder": 306.0,
+        "liver": 396.6
+      },
+      "absent": [
+        "spleen"
+      ]
+    },
+    "13055:T8": {
+      "case": "13055",
+      "level": "T8",
+      "expected": [
+        "heart",
+        "lung-left",
+        "lung-right"
+      ],
+      "rank": 1,
+      "ranking": [
+        "heart",
+        "lung-right",
+        "femur-right",
+        "kidney-right",
+        "kidney-left",
+        "femur-left",
+        "lung-left",
+        "pancreas",
+        "bladder",
+        "liver"
+      ],
+      "distances_mm": {
+        "heart": 0.7,
+        "lung-right": 3.9,
+        "femur-right": 52.2,
+        "kidney-right": 149.7,
+        "kidney-left": 168.1,
+        "femur-left": 186.4,
+        "lung-left": 223.0,
+        "pancreas": 260.0,
+        "bladder": 279.9,
+        "liver": 372.7
+      },
+      "absent": [
+        "spleen"
+      ]
+    },
+    "13055:T9": {
+      "case": "13055",
+      "level": "T9",
+      "expected": [
+        "heart",
+        "liver",
+        "lung-left",
+        "lung-right",
+        "spleen"
+      ],
+      "rank": 1,
+      "ranking": [
+        "heart",
+        "lung-right",
+        "femur-right",
+        "kidney-right",
+        "kidney-left",
+        "bladder",
+        "femur-left",
+        "pancreas",
+        "lung-left",
+        "liver"
+      ],
+      "distances_mm": {
+        "heart": 0.7,
+        "lung-right": 16.3,
+        "femur-right": 41.0,
+        "kidney-right": 109.7,
+        "kidney-left": 124.0,
+        "bladder": 204.1,
+        "femur-left": 204.1,
+        "pancreas": 241.8,
+        "lung-left": 246.5,
+        "liver": 300.0
+      },
+      "absent": [
+        "spleen"
+      ]
+    },
+    "13089:L3": {
+      "case": "13089",
+      "level": "L3",
+      "expected": [
+        "kidney-left",
+        "kidney-right"
+      ],
+      "rank": 2,
+      "ranking": [
+        "bladder",
+        "kidney-right",
+        "pancreas",
+        "kidney-left",
+        "heart",
+        "liver",
+        "femur-right",
+        "lung-right",
+        "lung-left",
+        "femur-left"
+      ],
+      "distances_mm": {
+        "bladder": 41.9,
+        "kidney-right": 64.7,
+        "pancreas": 95.9,
+        "kidney-left": 98.1,
+        "heart": 253.5,
+        "liver": 284.6,
+        "femur-right": 314.7,
+        "lung-right": 315.0,
+        "lung-left": 327.0,
+        "femur-left": 347.8
+      },
+      "absent": [
+        "spleen"
+      ]
+    },
+    "13089:T1": {
+      "case": "13089",
+      "level": "T1",
+      "expected": [
+        "lung-left",
+        "lung-right"
+      ],
+      "rank": 2,
+      "ranking": [
+        "femur-left",
+        "lung-left",
+        "femur-right",
+        "lung-right",
+        "liver",
+        "heart",
+        "kidney-left",
+        "kidney-right",
+        "pancreas",
+        "bladder"
+      ],
+      "distances_mm": {
+        "femur-left": 26.9,
+        "lung-left": 57.8,
+        "femur-right": 69.2,
+        "lung-right": 78.5,
+        "liver": 109.0,
+        "heart": 137.0,
+        "kidney-left": 266.1,
+        "kidney-right": 296.4,
+        "pancreas": 298.4,
+        "bladder": 442.8
+      },
+      "absent": [
+        "spleen"
+      ]
+    },
+    "13089:T10": {
+      "case": "13089",
+      "level": "T10",
+      "expected": [
+        "liver",
+        "lung-left",
+        "lung-right",
+        "spleen"
+      ],
+      "rank": 5,
+      "ranking": [
+        "kidney-left",
+        "kidney-right",
+        "pancreas",
+        "heart",
+        "liver",
+        "lung-right",
+        "femur-right",
+        "lung-left",
+        "femur-left",
+        "bladder"
+      ],
+      "distances_mm": {
+        "kidney-left": 78.8,
+        "kidney-right": 99.7,
+        "pancreas": 100.3,
+        "heart": 107.9,
+        "liver": 132.5,
+        "lung-right": 145.7,
+        "femur-right": 157.7,
+        "lung-left": 158.2,
+        "femur-left": 185.3,
+        "bladder": 222.6
+      },
+      "absent": [
+        "spleen"
+      ]
+    },
+    "13089:T11": {
+      "case": "13089",
+      "level": "T11",
+      "expected": [
+        "liver",
+        "pancreas",
+        "spleen"
+      ],
+      "rank": 3,
+      "ranking": [
+        "kidney-left",
+        "kidney-right",
+        "pancreas",
+        "heart",
+        "liver",
+        "lung-right",
+        "femur-right",
+        "lung-left",
+        "bladder",
+        "femur-left"
+      ],
+      "distances_mm": {
+        "kidney-left": 64.0,
+        "kidney-right": 78.4,
+        "pancreas": 79.2,
+        "heart": 129.1,
+        "liver": 155.7,
+        "lung-right": 175.8,
+        "femur-right": 182.9,
+        "lung-left": 186.2,
+        "bladder": 193.3,
+        "femur-left": 211.3
+      },
+      "absent": [
+        "spleen"
+      ]
+    },
+    "13089:T2": {
+      "case": "13089",
+      "level": "T2",
+      "expected": [
+        "lung-left",
+        "lung-right"
+      ],
+      "rank": 2,
+      "ranking": [
+        "femur-left",
+        "lung-left",
+        "femur-right",
+        "lung-right",
+        "liver",
+        "heart",
+        "kidney-left",
+        "kidney-right",
+        "pancreas",
+        "bladder"
+      ],
+      "distances_mm": {
+        "femur-left": 34.1,
+        "lung-left": 45.5,
+        "femur-right": 66.5,
+        "lung-right": 68.4,
+        "liver": 96.8,
+        "heart": 121.6,
+        "kidney-left": 246.5,
+        "kidney-right": 276.5,
+        "pancreas": 277.7,
+        "bladder": 420.8
+      },
+      "absent": [
+        "spleen"
+      ]
+    },
+    "13089:T3": {
+      "case": "13089",
+      "level": "T3",
+      "expected": [
+        "lung-left",
+        "lung-right"
+      ],
+      "rank": 1,
+      "ranking": [
+        "lung-left",
+        "femur-left",
+        "lung-right",
+        "femur-right",
+        "liver",
+        "heart",
+        "kidney-left",
+        "kidney-right",
+        "pancreas",
+        "bladder"
+      ],
+      "distances_mm": {
+        "lung-left": 43.9,
+        "femur-left": 48.7,
+        "lung-right": 62.9,
+        "femur-right": 67.5,
+        "liver": 86.9,
+        "heart": 106.3,
+        "kidney-left": 220.9,
+        "kidney-right": 250.2,
+        "pancreas": 253.7,
+        "bladder": 393.5
+      },
+      "absent": [
+        "spleen"
+      ]
+    },
+    "13089:T4": {
+      "case": "13089",
+      "level": "T4",
+      "expected": [
+        "heart",
+        "lung-left",
+        "lung-right"
+      ],
+      "rank": 1,
+      "ranking": [
+        "lung-left",
+        "lung-right",
+        "femur-left",
+        "femur-right",
+        "liver",
+        "heart",
+        "kidney-left",
+        "kidney-right",
+        "pancreas",
+        "bladder"
+      ],
+      "distances_mm": {
+        "lung-left": 45.7,
+        "lung-right": 62.1,
+        "femur-left": 68.3,
+        "femur-right": 69.3,
+        "liver": 83.2,
+        "heart": 98.8,
+        "kidney-left": 208.1,
+        "kidney-right": 237.0,
+        "pancreas": 239.3,
+        "bladder": 378.9
+      },
+      "absent": [
+        "spleen"
+      ]
+    },
+    "13089:T5": {
+      "case": "13089",
+      "level": "T5",
+      "expected": [
+        "heart",
+        "lung-left",
+        "lung-right"
+      ],
+      "rank": 1,
+      "ranking": [
+        "lung-left",
+        "lung-right",
+        "femur-right",
+        "femur-left",
+        "liver",
+        "heart",
+        "kidney-left",
+        "kidney-right",
+        "pancreas",
+        "bladder"
+      ],
+      "distances_mm": {
+        "lung-left": 54.5,
+        "lung-right": 62.0,
+        "femur-right": 70.6,
+        "femur-left": 76.7,
+        "liver": 81.6,
+        "heart": 90.2,
+        "kidney-left": 187.8,
+        "kidney-right": 216.2,
+        "pancreas": 217.1,
+        "bladder": 356.6
+      },
+      "absent": [
+        "spleen"
+      ]
+    },
+    "13089:T8": {
+      "case": "13089",
+      "level": "T8",
+      "expected": [
+        "heart",
+        "lung-left",
+        "lung-right"
+      ],
+      "rank": 1,
+      "ranking": [
+        "heart",
+        "liver",
+        "lung-right",
+        "lung-left",
+        "femur-right",
+        "kidney-left",
+        "femur-left",
+        "pancreas",
+        "kidney-right",
+        "bladder"
+      ],
+      "distances_mm": {
+        "heart": 83.0,
+        "liver": 98.0,
+        "lung-right": 104.8,
+        "lung-left": 105.8,
+        "femur-right": 113.8,
+        "kidney-left": 121.4,
+        "femur-left": 137.8,
+        "pancreas": 146.6,
+        "kidney-right": 148.0,
+        "bladder": 279.9
+      },
+      "absent": [
+        "spleen"
+      ]
+    },
+    "13089:T9": {
+      "case": "13089",
+      "level": "T9",
+      "expected": [
+        "heart",
+        "liver",
+        "lung-left",
+        "lung-right",
+        "spleen"
+      ],
+      "rank": 1,
+      "ranking": [
+        "heart",
+        "kidney-left",
+        "liver",
+        "pancreas",
+        "kidney-right",
+        "lung-right",
+        "lung-left",
+        "femur-right",
+        "femur-left",
+        "bladder"
+      ],
+      "distances_mm": {
+        "heart": 93.1,
+        "kidney-left": 98.7,
+        "liver": 115.2,
+        "pancreas": 120.5,
+        "kidney-right": 123.9,
+        "lung-right": 127.5,
+        "lung-left": 130.5,
+        "femur-right": 136.9,
+        "femur-left": 162.4,
+        "bladder": 247.7
+      },
+      "absent": [
+        "spleen"
+      ]
+    },
+    "13627:L5": {
+      "case": "13627",
+      "level": "L5",
+      "expected": [
+        "bladder",
+        "femur-left",
+        "femur-right"
+      ],
+      "rank": 3,
+      "ranking": [
+        "kidney-right",
+        "liver",
+        "bladder",
+        "pancreas",
+        "femur-left",
+        "kidney-left",
+        "lung-right",
+        "heart",
+        "femur-right"
+      ],
+      "distances_mm": {
+        "kidney-right": 29.3,
+        "liver": 54.3,
+        "bladder": 54.8,
+        "pancreas": 78.1,
+        "femur-left": 88.1,
+        "kidney-left": 191.7,
+        "lung-right": 191.9,
+        "heart": 204.6,
+        "femur-right": 332.2
+      },
+      "absent": [
+        "lung-left",
+        "spleen"
+      ]
+    },
+    "13627:T4": {
+      "case": "13627",
+      "level": "T4",
+      "expected": [
+        "heart",
+        "lung-left",
+        "lung-right"
+      ],
+      "rank": 2,
+      "ranking": [
+        "femur-right",
+        "heart",
+        "lung-right",
+        "kidney-right",
+        "kidney-left",
+        "liver",
+        "bladder",
+        "pancreas",
+        "femur-left"
+      ],
+      "distances_mm": {
+        "femur-right": 22.0,
+        "heart": 109.9,
+        "lung-right": 139.8,
+        "kidney-right": 311.1,
+        "kidney-left": 405.6,
+        "liver": 411.4,
+        "bladder": 414.1,
+        "pancreas": 436.9,
+        "femur-left": 438.0
+      },
+      "absent": [
+        "lung-left",
+        "spleen"
+      ]
+    },
+    "13627:T5": {
+      "case": "13627",
+      "level": "T5",
+      "expected": [
+        "heart",
+        "lung-left",
+        "lung-right"
+      ],
+      "rank": 2,
+      "ranking": [
+        "femur-right",
+        "heart",
+        "lung-right",
+        "kidney-right",
+        "liver",
+        "bladder",
+        "kidney-left",
+        "pancreas",
+        "femur-left"
+      ],
+      "distances_mm": {
+        "femur-right": 35.6,
+        "heart": 86.3,
+        "lung-right": 121.0,
+        "kidney-right": 294.5,
+        "liver": 393.5,
+        "bladder": 396.0,
+        "kidney-left": 396.0,
+        "pancreas": 419.4,
+        "femur-left": 421.3
+      },
+      "absent": [
+        "lung-left",
+        "spleen"
+      ]
+    },
+    "13627:T7": {
+      "case": "13627",
+      "level": "T7",
+      "expected": [
+        "heart",
+        "lung-left",
+        "lung-right"
+      ],
+      "rank": 1,
+      "ranking": [
+        "heart",
+        "femur-right",
+        "lung-right",
+        "kidney-right",
+        "liver",
+        "bladder",
+        "kidney-left",
+        "pancreas",
+        "femur-left"
+      ],
+      "distances_mm": {
+        "heart": 47.0,
+        "femur-right": 69.7,
+        "lung-right": 85.1,
+        "kidney-right": 259.5,
+        "liver": 357.5,
+        "bladder": 360.0,
+        "kidney-left": 367.4,
+        "pancreas": 382.2,
+        "femur-left": 384.7
+      },
+      "absent": [
+        "lung-left",
+        "spleen"
+      ]
+    },
+    "13641:L3": {
+      "case": "13641",
+      "level": "L3",
+      "expected": [
+        "kidney-left",
+        "kidney-right"
+      ],
+      "rank": 6,
+      "ranking": [
+        "liver",
+        "bladder",
+        "heart",
+        "femur-right",
+        "femur-left",
+        "kidney-right",
+        "kidney-left"
+      ],
+      "distances_mm": {
+        "liver": 4.3,
+        "bladder": 118.4,
+        "heart": 127.4,
+        "femur-right": 172.2,
+        "femur-left": 176.3,
+        "kidney-right": 220.4,
+        "kidney-left": 264.8
+      },
+      "absent": [
+        "lung-left",
+        "lung-right",
+        "pancreas",
+        "spleen"
+      ]
+    },
+    "13643:L3": {
+      "case": "13643",
+      "level": "L3",
+      "expected": [
+        "kidney-left",
+        "kidney-right"
+      ],
+      "rank": 2,
+      "ranking": [
+        "femur-right",
+        "kidney-right",
+        "liver",
+        "kidney-left",
+        "pancreas",
+        "heart",
+        "lung-right",
+        "lung-left",
+        "femur-left"
+      ],
+      "distances_mm": {
+        "femur-right": 81.9,
+        "kidney-right": 88.2,
+        "liver": 134.3,
+        "kidney-left": 191.6,
+        "pancreas": 204.6,
+        "heart": 205.0,
+        "lung-right": 389.2,
+        "lung-left": 403.0,
+        "femur-left": 434.2
+      },
+      "absent": [
+        "bladder",
+        "spleen"
+      ]
+    },
+    "13643:L4": {
+      "case": "13643",
+      "level": "L4",
+      "expected": [
+        "bladder",
+        "kidney-left",
+        "kidney-right"
+      ],
+      "rank": 2,
+      "ranking": [
+        "femur-right",
+        "kidney-right",
+        "liver",
+        "kidney-left",
+        "pancreas",
+        "heart",
+        "lung-right",
+        "lung-left",
+        "femur-left"
+      ],
+      "distances_mm": {
+        "femur-right": 108.5,
+        "kidney-right": 115.6,
+        "liver": 166.1,
+        "kidney-left": 182.2,
+        "pancreas": 221.2,
+        "heart": 235.1,
+        "lung-right": 418.9,
+        "lung-left": 433.4,
+        "femur-left": 462.6
+      },
+      "absent": [
+        "bladder",
+        "spleen"
+      ]
+    },
+    "13643:L5": {
+      "case": "13643",
+      "level": "L5",
+      "expected": [
+        "bladder",
+        "femur-left",
+        "femur-right"
+      ],
+      "rank": 1,
+      "ranking": [
+        "femur-right",
+        "kidney-right",
+        "kidney-left",
+        "liver",
+        "pancreas",
+        "heart",
+        "lung-right",
+        "lung-left",
+        "femur-left"
+      ],
+      "distances_mm": {
+        "femur-right": 136.0,
+        "kidney-right": 141.3,
+        "kidney-left": 183.6,
+        "liver": 195.0,
+        "pancreas": 245.5,
+        "heart": 267.5,
+        "lung-right": 447.8,
+        "lung-left": 463.8,
+        "femur-left": 492.6
+      },
+      "absent": [
+        "bladder",
+        "spleen"
+      ]
+    },
+    "13653:L1": {
+      "case": "13653",
+      "level": "L1",
+      "expected": [
+        "kidney-left",
+        "kidney-right",
+        "liver",
+        "pancreas",
+        "spleen"
+      ],
+      "rank": 4,
+      "ranking": [
+        "bladder",
+        "femur-left",
+        "femur-right",
+        "liver",
+        "pancreas",
+        "kidney-left",
+        "kidney-right",
+        "lung-left",
+        "lung-right"
+      ],
+      "distances_mm": {
+        "bladder": 0.0,
+        "femur-left": 0.0,
+        "femur-right": 0.0,
+        "liver": 0.0,
+        "pancreas": 3.4,
+        "kidney-left": 13.4,
+        "kidney-right": 22.2,
+        "lung-left": 30.9,
+        "lung-right": 46.2
+      },
+      "absent": [
+        "heart",
+        "spleen"
+      ]
+    },
+    "13653:L5": {
+      "case": "13653",
+      "level": "L5",
+      "expected": [
+        "bladder",
+        "femur-left",
+        "femur-right"
+      ],
+      "rank": 1,
+      "ranking": [
+        "bladder",
+        "femur-left",
+        "femur-right",
+        "liver",
+        "pancreas",
+        "kidney-left",
+        "kidney-right",
+        "lung-left",
+        "lung-right"
+      ],
+      "distances_mm": {
+        "bladder": 0.0,
+        "femur-left": 0.0,
+        "femur-right": 0.0,
+        "liver": 0.0,
+        "pancreas": 0.0,
+        "kidney-left": 5.5,
+        "kidney-right": 11.0,
+        "lung-left": 20.7,
+        "lung-right": 25.7
+      },
+      "absent": [
+        "heart",
+        "spleen"
+      ]
+    },
+    "13653:T12": {
+      "case": "13653",
+      "level": "T12",
+      "expected": [
+        "kidney-left",
+        "kidney-right",
+        "liver",
+        "pancreas",
+        "spleen"
+      ],
+      "rank": 4,
+      "ranking": [
+        "bladder",
+        "femur-left",
+        "femur-right",
+        "liver",
+        "pancreas",
+        "kidney-left",
+        "kidney-right",
+        "lung-left",
+        "lung-right"
+      ],
+      "distances_mm": {
+        "bladder": 0.0,
+        "femur-left": 0.0,
+        "femur-right": 0.0,
+        "liver": 0.0,
+        "pancreas": 7.0,
+        "kidney-left": 18.1,
+        "kidney-right": 25.7,
+        "lung-left": 36.6,
+        "lung-right": 56.6
+      },
+      "absent": [
+        "heart",
+        "spleen"
+      ]
+    },
+    "13662:L2": {
+      "case": "13662",
+      "level": "L2",
+      "expected": [
+        "kidney-left",
+        "kidney-right",
+        "pancreas"
+      ],
+      "rank": 1,
+      "ranking": [
+        "pancreas",
+        "spleen",
+        "liver",
+        "heart",
+        "lung-right",
+        "kidney-left",
+        "kidney-right",
+        "femur-right",
+        "femur-left"
+      ],
+      "distances_mm": {
+        "pancreas": 35.3,
+        "spleen": 109.6,
+        "liver": 123.3,
+        "heart": 132.9,
+        "lung-right": 175.7,
+        "kidney-left": 214.5,
+        "kidney-right": 240.5,
+        "femur-right": 259.5,
+        "femur-left": 311.6
+      },
+      "absent": [
+        "bladder",
+        "lung-left"
+      ]
+    },
+    "13662:L4": {
+      "case": "13662",
+      "level": "L4",
+      "expected": [
+        "bladder",
+        "kidney-left",
+        "kidney-right"
+      ],
+      "rank": 5,
+      "ranking": [
+        "pancreas",
+        "lung-right",
+        "liver",
+        "spleen",
+        "kidney-left",
+        "heart",
+        "kidney-right",
+        "femur-right",
+        "femur-left"
+      ],
+      "distances_mm": {
+        "pancreas": 93.9,
+        "lung-right": 136.9,
+        "liver": 161.3,
+        "spleen": 174.8,
+        "kidney-left": 187.0,
+        "heart": 201.8,
+        "kidney-right": 218.1,
+        "femur-right": 326.6,
+        "femur-left": 376.8
+      },
+      "absent": [
+        "bladder",
+        "lung-left"
+      ]
+    },
+    "13662:L5": {
+      "case": "13662",
+      "level": "L5",
+      "expected": [
+        "bladder",
+        "femur-left",
+        "femur-right"
+      ],
+      "rank": 8,
+      "ranking": [
+        "lung-right",
+        "pancreas",
+        "kidney-left",
+        "liver",
+        "spleen",
+        "kidney-right",
+        "heart",
+        "femur-right",
+        "femur-left"
+      ],
+      "distances_mm": {
+        "lung-right": 117.0,
+        "pancreas": 125.4,
+        "kidney-left": 188.6,
+        "liver": 193.4,
+        "spleen": 201.9,
+        "kidney-right": 220.0,
+        "heart": 226.5,
+        "femur-right": 355.3,
+        "femur-left": 405.5
+      },
+      "absent": [
+        "bladder",
+        "lung-left"
+      ]
+    },
+    "13662:T1": {
+      "case": "13662",
+      "level": "T1",
+      "expected": [
+        "lung-left",
+        "lung-right"
+      ],
+      "rank": 9,
+      "ranking": [
+        "femur-right",
+        "femur-left",
+        "heart",
+        "spleen",
+        "liver",
+        "pancreas",
+        "kidney-left",
+        "kidney-right",
+        "lung-right"
+      ],
+      "distances_mm": {
+        "femur-right": 54.2,
+        "femur-left": 87.1,
+        "heart": 135.9,
+        "spleen": 178.3,
+        "liver": 224.8,
+        "pancreas": 243.8,
+        "kidney-left": 428.9,
+        "kidney-right": 439.5,
+        "lung-right": 462.2
+      },
+      "absent": [
+        "bladder",
+        "lung-left"
+      ]
+    },
+    "13662:T10": {
+      "case": "13662",
+      "level": "T10",
+      "expected": [
+        "liver",
+        "lung-left",
+        "lung-right",
+        "spleen"
+      ],
+      "rank": 2,
+      "ranking": [
+        "heart",
+        "spleen",
+        "pancreas",
+        "liver",
+        "femur-right",
+        "femur-left",
+        "lung-right",
+        "kidney-left",
+        "kidney-right"
+      ],
+      "distances_mm": {
+        "heart": 41.6,
+        "spleen": 60.2,
+        "pancreas": 78.3,
+        "liver": 125.2,
+        "femur-right": 162.6,
+        "femur-left": 223.0,
+        "lung-right": 280.1,
+        "kidney-left": 300.7,
+        "kidney-right": 316.0
+      },
+      "absent": [
+        "bladder",
+        "lung-left"
+      ]
+    },
+    "13662:T11": {
+      "case": "13662",
+      "level": "T11",
+      "expected": [
+        "liver",
+        "pancreas",
+        "spleen"
+      ],
+      "rank": 1,
+      "ranking": [
+        "pancreas",
+        "heart",
+        "spleen",
+        "liver",
+        "femur-right",
+        "femur-left",
+        "lung-right",
+        "kidney-left",
+        "kidney-right"
+      ],
+      "distances_mm": {
+        "pancreas": 56.6,
+        "heart": 58.6,
+        "spleen": 63.5,
+        "liver": 121.3,
+        "femur-right": 184.1,
+        "femur-left": 243.1,
+        "lung-right": 254.7,
+        "kidney-left": 279.3,
+        "kidney-right": 298.9
+      },
+      "absent": [
+        "bladder",
+        "lung-left"
+      ]
+    },
+    "13662:T12": {
+      "case": "13662",
+      "level": "T12",
+      "expected": [
+        "kidney-left",
+        "kidney-right",
+        "liver",
+        "pancreas",
+        "spleen"
+      ],
+      "rank": 1,
+      "ranking": [
+        "pancreas",
+        "spleen",
+        "heart",
+        "liver",
+        "femur-right",
+        "lung-right",
+        "kidney-left",
+        "femur-left",
+        "kidney-right"
+      ],
+      "distances_mm": {
+        "pancreas": 40.7,
+        "spleen": 73.4,
+        "heart": 82.1,
+        "liver": 119.5,
+        "femur-right": 211.2,
+        "lung-right": 231.1,
+        "kidney-left": 261.1,
+        "femur-left": 267.8,
+        "kidney-right": 280.7
+      },
+      "absent": [
+        "bladder",
+        "lung-left"
+      ]
+    },
+    "13662:T7": {
+      "case": "13662",
+      "level": "T7",
+      "expected": [
+        "heart",
+        "lung-left",
+        "lung-right"
+      ],
+      "rank": 1,
+      "ranking": [
+        "heart",
+        "spleen",
+        "femur-right",
+        "pancreas",
+        "liver",
+        "femur-left",
+        "lung-right",
+        "kidney-left",
+        "kidney-right"
+      ],
+      "distances_mm": {
+        "heart": 45.8,
+        "spleen": 90.8,
+        "femur-right": 116.5,
+        "pancreas": 145.3,
+        "liver": 159.1,
+        "femur-left": 176.1,
+        "lung-right": 325.1,
+        "kidney-left": 356.5,
+        "kidney-right": 369.7
+      },
+      "absent": [
+        "bladder",
+        "lung-left"
+      ]
+    },
+    "13683:T4": {
+      "case": "13683",
+      "level": "T4",
+      "expected": [
+        "heart",
+        "lung-left",
+        "lung-right"
+      ],
+      "rank": 2,
+      "ranking": [
+        "bladder",
+        "lung-right",
+        "kidney-left",
+        "lung-left",
+        "pancreas",
+        "heart",
+        "femur-right",
+        "femur-left",
+        "liver",
+        "kidney-right"
+      ],
+      "distances_mm": {
+        "bladder": 1.0,
+        "lung-right": 44.3,
+        "kidney-left": 85.9,
+        "lung-left": 92.0,
+        "pancreas": 95.2,
+        "heart": 104.6,
+        "femur-right": 126.9,
+        "femur-left": 151.7,
+        "liver": 171.9,
+        "kidney-right": 230.1
+      },
+      "absent": [
+        "spleen"
+      ]
+    },
+    "13697:L1": {
+      "case": "13697",
+      "level": "L1",
+      "expected": [
+        "kidney-left",
+        "kidney-right",
+        "liver",
+        "pancreas",
+        "spleen"
+      ],
+      "rank": 2,
+      "ranking": [
+        "femur-right",
+        "liver",
+        "kidney-right",
+        "heart",
+        "lung-left",
+        "lung-right",
+        "pancreas",
+        "kidney-left",
+        "femur-left"
+      ],
+      "distances_mm": {
+        "femur-right": 4.0,
+        "liver": 25.8,
+        "kidney-right": 108.1,
+        "heart": 117.5,
+        "lung-left": 273.2,
+        "lung-right": 273.4,
+        "pancreas": 310.5,
+        "kidney-left": 328.1,
+        "femur-left": 356.5
+      },
+      "absent": [
+        "bladder",
+        "spleen"
+      ]
+    },
+    "13800:L1": {
+      "case": "13800",
+      "level": "L1",
+      "expected": [
+        "kidney-left",
+        "kidney-right",
+        "liver",
+        "pancreas",
+        "spleen"
+      ],
+      "rank": 3,
+      "ranking": [
+        "femur-right",
+        "femur-left",
+        "kidney-right",
+        "liver",
+        "heart",
+        "bladder",
+        "kidney-left",
+        "pancreas"
+      ],
+      "distances_mm": {
+        "femur-right": 99.8,
+        "femur-left": 103.8,
+        "kidney-right": 108.4,
+        "liver": 125.3,
+        "heart": 132.2,
+        "bladder": 162.0,
+        "kidney-left": 207.7,
+        "pancreas": 263.6
+      },
+      "absent": [
+        "lung-left",
+        "lung-right",
+        "spleen"
+      ]
+    },
+    "13800:L2": {
+      "case": "13800",
+      "level": "L2",
+      "expected": [
+        "kidney-left",
+        "kidney-right",
+        "pancreas"
+      ],
+      "rank": 3,
+      "ranking": [
+        "femur-right",
+        "femur-left",
+        "kidney-right",
+        "bladder",
+        "liver",
+        "heart",
+        "kidney-left",
+        "pancreas"
+      ],
+      "distances_mm": {
+        "femur-right": 68.0,
+        "femur-left": 73.0,
+        "kidney-right": 74.6,
+        "bladder": 133.3,
+        "liver": 144.1,
+        "heart": 168.3,
+        "kidney-left": 189.5,
+        "pancreas": 268.5
+      },
+      "absent": [
+        "lung-left",
+        "lung-right",
+        "spleen"
+      ]
+    },
+    "13800:L3": {
+      "case": "13800",
+      "level": "L3",
+      "expected": [
+        "kidney-left",
+        "kidney-right"
+      ],
+      "rank": 1,
+      "ranking": [
+        "kidney-right",
+        "femur-left",
+        "femur-right",
+        "bladder",
+        "liver",
+        "kidney-left",
+        "heart",
+        "pancreas"
+      ],
+      "distances_mm": {
+        "kidney-right": 32.2,
+        "femur-left": 42.0,
+        "femur-right": 42.0,
+        "bladder": 108.6,
+        "liver": 176.8,
+        "kidney-left": 186.5,
+        "heart": 198.0,
+        "pancreas": 286.1
+      },
+      "absent": [
+        "lung-left",
+        "lung-right",
+        "spleen"
+      ]
+    },
+    "13800:L4": {
+      "case": "13800",
+      "level": "L4",
+      "expected": [
+        "bladder",
+        "kidney-left",
+        "kidney-right"
+      ],
+      "rank": 3,
+      "ranking": [
+        "femur-left",
+        "femur-right",
+        "kidney-right",
+        "bladder",
+        "kidney-left",
+        "liver",
+        "heart",
+        "pancreas"
+      ],
+      "distances_mm": {
+        "femur-left": 0.9,
+        "femur-right": 0.9,
+        "kidney-right": 17.2,
+        "bladder": 84.0,
+        "kidney-left": 186.2,
+        "liver": 205.1,
+        "heart": 228.0,
+        "pancreas": 313.4
+      },
+      "absent": [
+        "lung-left",
+        "lung-right",
+        "spleen"
+      ]
+    },
+    "13800:L5": {
+      "case": "13800",
+      "level": "L5",
+      "expected": [
+        "bladder",
+        "femur-left",
+        "femur-right"
+      ],
+      "rank": 1,
+      "ranking": [
+        "femur-right",
+        "femur-left",
+        "kidney-right",
+        "bladder",
+        "kidney-left",
+        "liver",
+        "heart",
+        "pancreas"
+      ],
+      "distances_mm": {
+        "femur-right": 6.1,
+        "femur-left": 12.0,
+        "kidney-right": 36.8,
+        "bladder": 51.1,
+        "kidney-left": 192.7,
+        "liver": 227.0,
+        "heart": 258.0,
+        "pancreas": 330.2
+      },
+      "absent": [
+        "lung-left",
+        "lung-right",
+        "spleen"
+      ]
+    },
+    "13800:T10": {
+      "case": "13800",
+      "level": "T10",
+      "expected": [
+        "liver",
+        "lung-left",
+        "lung-right",
+        "spleen"
+      ],
+      "rank": 2,
+      "ranking": [
+        "heart",
+        "liver",
+        "kidney-right",
+        "femur-right",
+        "femur-left",
+        "bladder",
+        "kidney-left",
+        "pancreas"
+      ],
+      "distances_mm": {
+        "heart": 61.8,
+        "liver": 115.0,
+        "kidney-right": 202.3,
+        "femur-right": 203.8,
+        "femur-left": 207.7,
+        "bladder": 253.9,
+        "kidney-left": 259.2,
+        "pancreas": 264.0
+      },
+      "absent": [
+        "lung-left",
+        "lung-right",
+        "spleen"
+      ]
+    },
+    "13800:T11": {
+      "case": "13800",
+      "level": "T11",
+      "expected": [
+        "liver",
+        "pancreas",
+        "spleen"
+      ],
+      "rank": 2,
+      "ranking": [
+        "heart",
+        "liver",
+        "femur-right",
+        "femur-left",
+        "kidney-right",
+        "bladder",
+        "kidney-left",
+        "pancreas"
+      ],
+      "distances_mm": {
+        "heart": 85.0,
+        "liver": 112.3,
+        "femur-right": 170.1,
+        "femur-left": 175.9,
+        "kidney-right": 178.0,
+        "bladder": 219.7,
+        "kidney-left": 241.9,
+        "pancreas": 261.3
+      },
+      "absent": [
+        "lung-left",
+        "lung-right",
+        "spleen"
+      ]
+    },
+    "13800:T12": {
+      "case": "13800",
+      "level": "T12",
+      "expected": [
+        "kidney-left",
+        "kidney-right",
+        "liver",
+        "pancreas",
+        "spleen"
+      ],
+      "rank": 2,
+      "ranking": [
+        "heart",
+        "liver",
+        "femur-right",
+        "femur-left",
+        "kidney-right",
+        "bladder",
+        "kidney-left",
+        "pancreas"
+      ],
+      "distances_mm": {
+        "heart": 102.2,
+        "liver": 116.4,
+        "femur-right": 134.9,
+        "femur-left": 140.1,
+        "kidney-right": 143.0,
+        "bladder": 188.0,
+        "kidney-left": 225.0,
+        "pancreas": 262.0
+      },
+      "absent": [
+        "lung-left",
+        "lung-right",
+        "spleen"
+      ]
+    },
+    "13800:T3": {
+      "case": "13800",
+      "level": "T3",
+      "expected": [
+        "lung-left",
+        "lung-right"
+      ],
+      "rank": null,
+      "ranking": [
+        "heart",
+        "liver",
+        "pancreas",
+        "kidney-right",
+        "femur-right",
+        "femur-left",
+        "kidney-left",
+        "bladder"
+      ],
+      "distances_mm": {
+        "heart": 80.5,
+        "liver": 184.9,
+        "pancreas": 301.5,
+        "kidney-right": 364.8,
+        "femur-right": 370.2,
+        "femur-left": 372.0,
+        "kidney-left": 373.6,
+        "bladder": 438.2
+      },
+      "absent": [
+        "lung-left",
+        "lung-right",
+        "spleen"
+      ]
+    },
+    "13800:T4": {
+      "case": "13800",
+      "level": "T4",
+      "expected": [
+        "heart",
+        "lung-left",
+        "lung-right"
+      ],
+      "rank": 1,
+      "ranking": [
+        "heart",
+        "liver",
+        "pancreas",
+        "kidney-right",
+        "femur-right",
+        "femur-left",
+        "kidney-left",
+        "bladder"
+      ],
+      "distances_mm": {
+        "heart": 64.3,
+        "liver": 172.4,
+        "pancreas": 294.6,
+        "kidney-right": 350.9,
+        "femur-right": 356.5,
+        "femur-left": 358.6,
+        "kidney-left": 362.4,
+        "bladder": 417.3
+      },
+      "absent": [
+        "lung-left",
+        "lung-right",
+        "spleen"
+      ]
+    },
+    "13800:T5": {
+      "case": "13800",
+      "level": "T5",
+      "expected": [
+        "heart",
+        "lung-left",
+        "lung-right"
+      ],
+      "rank": 1,
+      "ranking": [
+        "heart",
+        "liver",
+        "pancreas",
+        "kidney-right",
+        "femur-right",
+        "femur-left",
+        "kidney-left",
+        "bladder"
+      ],
+      "distances_mm": {
+        "heart": 45.8,
+        "liver": 153.5,
+        "pancreas": 282.5,
+        "kidney-right": 328.7,
+        "femur-right": 332.8,
+        "femur-left": 336.6,
+        "kidney-left": 347.4,
+        "bladder": 388.0
+      },
+      "absent": [
+        "lung-left",
+        "lung-right",
+        "spleen"
+      ]
+    },
+    "13800:T6": {
+      "case": "13800",
+      "level": "T6",
+      "expected": [
+        "heart",
+        "lung-left",
+        "lung-right"
+      ],
+      "rank": 1,
+      "ranking": [
+        "heart",
+        "liver",
+        "pancreas",
+        "femur-right",
+        "kidney-right",
+        "femur-left",
+        "kidney-left",
+        "bladder"
+      ],
+      "distances_mm": {
+        "heart": 25.6,
+        "liver": 143.2,
+        "pancreas": 279.6,
+        "femur-right": 306.3,
+        "kidney-right": 306.4,
+        "femur-left": 310.7,
+        "kidney-left": 330.0,
+        "bladder": 358.7
+      },
+      "absent": [
+        "lung-left",
+        "lung-right",
+        "spleen"
+      ]
+    },
+    "13800:T7": {
+      "case": "13800",
+      "level": "T7",
+      "expected": [
+        "heart",
+        "lung-left",
+        "lung-right"
+      ],
+      "rank": 1,
+      "ranking": [
+        "heart",
+        "liver",
+        "pancreas",
+        "femur-right",
+        "kidney-right",
+        "femur-left",
+        "kidney-left",
+        "bladder"
+      ],
+      "distances_mm": {
+        "heart": 16.1,
+        "liver": 127.6,
+        "pancreas": 270.4,
+        "femur-right": 279.3,
+        "kidney-right": 280.8,
+        "femur-left": 284.6,
+        "kidney-left": 310.9,
+        "bladder": 329.6
+      },
+      "absent": [
+        "lung-left",
+        "lung-right",
+        "spleen"
+      ]
+    },
+    "13800:T8": {
+      "case": "13800",
+      "level": "T8",
+      "expected": [
+        "heart",
+        "lung-left",
+        "lung-right"
+      ],
+      "rank": 1,
+      "ranking": [
+        "heart",
+        "liver",
+        "femur-right",
+        "kidney-right",
+        "femur-left",
+        "pancreas",
+        "kidney-left",
+        "bladder"
+      ],
+      "distances_mm": {
+        "heart": 19.2,
+        "liver": 121.5,
+        "femur-right": 257.0,
+        "kidney-right": 259.4,
+        "femur-left": 262.6,
+        "pancreas": 267.7,
+        "kidney-left": 295.7,
+        "bladder": 305.7
+      },
+      "absent": [
+        "lung-left",
+        "lung-right",
+        "spleen"
+      ]
+    },
+    "13800:T9": {
+      "case": "13800",
+      "level": "T9",
+      "expected": [
+        "heart",
+        "liver",
+        "lung-left",
+        "lung-right",
+        "spleen"
+      ],
+      "rank": 1,
+      "ranking": [
+        "heart",
+        "liver",
+        "kidney-right",
+        "femur-right",
+        "femur-left",
+        "pancreas",
+        "kidney-left",
+        "bladder"
+      ],
+      "distances_mm": {
+        "heart": 35.2,
+        "liver": 118.2,
+        "kidney-right": 232.2,
+        "femur-right": 232.3,
+        "femur-left": 236.9,
+        "pancreas": 267.4,
+        "kidney-left": 275.1,
+        "bladder": 280.8
+      },
+      "absent": [
+        "lung-left",
+        "lung-right",
+        "spleen"
+      ]
+    },
+    "13819:L1": {
+      "case": "13819",
+      "level": "L1",
+      "expected": [
+        "kidney-left",
+        "kidney-right",
+        "liver",
+        "pancreas",
+        "spleen"
+      ],
+      "rank": 1,
+      "ranking": [
+        "kidney-right",
+        "kidney-left",
+        "liver",
+        "lung-right",
+        "pancreas",
+        "heart",
+        "femur-left",
+        "femur-right",
+        "bladder"
+      ],
+      "distances_mm": {
+        "kidney-right": 16.4,
+        "kidney-left": 22.1,
+        "liver": 49.7,
+        "lung-right": 70.8,
+        "pancreas": 93.3,
+        "heart": 108.6,
+        "femur-left": 114.6,
+        "femur-right": 133.4,
+        "bladder": 183.0
+      },
+      "absent": [
+        "lung-left",
+        "spleen"
+      ]
+    },
+    "13819:L2": {
+      "case": "13819",
+      "level": "L2",
+      "expected": [
+        "kidney-left",
+        "kidney-right",
+        "pancreas"
+      ],
+      "rank": 1,
+      "ranking": [
+        "kidney-left",
+        "kidney-right",
+        "pancreas",
+        "liver",
+        "femur-left",
+        "lung-right",
+        "femur-right",
+        "heart",
+        "bladder"
+      ],
+      "distances_mm": {
+        "kidney-left": 0.3,
+        "kidney-right": 31.5,
+        "pancreas": 61.1,
+        "liver": 72.2,
+        "femur-left": 81.4,
+        "lung-right": 96.8,
+        "femur-right": 102.1,
+        "heart": 133.5,
+        "bladder": 151.0
+      },
+      "absent": [
+        "lung-left",
+        "spleen"
+      ]
+    },
+    "13819:L3": {
+      "case": "13819",
+      "level": "L3",
+      "expected": [
+        "kidney-left",
+        "kidney-right"
+      ],
+      "rank": 1,
+      "ranking": [
+        "kidney-left",
+        "pancreas",
+        "femur-left",
+        "kidney-right",
+        "femur-right",
+        "liver",
+        "bladder",
+        "lung-right",
+        "heart"
+      ],
+      "distances_mm": {
+        "kidney-left": 4.0,
+        "pancreas": 29.0,
+        "femur-left": 49.4,
+        "kidney-right": 58.2,
+        "femur-right": 75.3,
+        "liver": 100.4,
+        "bladder": 121.4,
+        "lung-right": 124.4,
+        "heart": 160.0
+      },
+      "absent": [
+        "lung-left",
+        "spleen"
+      ]
+    },
+    "13819:L4": {
+      "case": "13819",
+      "level": "L4",
+      "expected": [
+        "bladder",
+        "kidney-left",
+        "kidney-right"
+      ],
+      "rank": 3,
+      "ranking": [
+        "pancreas",
+        "femur-left",
+        "kidney-left",
+        "femur-right",
+        "kidney-right",
+        "bladder",
+        "liver",
+        "lung-right",
+        "heart"
+      ],
+      "distances_mm": {
+        "pancreas": 2.2,
+        "femur-left": 23.0,
+        "kidney-left": 37.4,
+        "femur-right": 50.5,
+        "kidney-right": 83.3,
+        "bladder": 94.5,
+        "liver": 130.2,
+        "lung-right": 152.5,
+        "heart": 189.3
+      },
+      "absent": [
+        "lung-left",
+        "spleen"
+      ]
+    },
+    "13819:L5": {
+      "case": "13819",
+      "level": "L5",
+      "expected": [
+        "bladder",
+        "femur-left",
+        "femur-right"
+      ],
+      "rank": 2,
+      "ranking": [
+        "pancreas",
+        "femur-left",
+        "femur-right",
+        "kidney-left",
+        "bladder",
+        "kidney-right",
+        "liver",
+        "lung-right",
+        "heart"
+      ],
+      "distances_mm": {
+        "pancreas": 0.3,
+        "femur-left": 7.5,
+        "femur-right": 30.0,
+        "kidney-left": 64.5,
+        "bladder": 74.6,
+        "kidney-right": 108.7,
+        "liver": 157.2,
+        "lung-right": 176.6,
+        "heart": 217.0
+      },
+      "absent": [
+        "lung-left",
+        "spleen"
+      ]
+    },
+    "13819:T10": {
+      "case": "13819",
+      "level": "T10",
+      "expected": [
+        "liver",
+        "lung-left",
+        "lung-right",
+        "spleen"
+      ],
+      "rank": 1,
+      "ranking": [
+        "lung-right",
+        "liver",
+        "kidney-right",
+        "heart",
+        "kidney-left",
+        "pancreas",
+        "femur-left",
+        "femur-right",
+        "bladder"
+      ],
+      "distances_mm": {
+        "lung-right": 0.3,
+        "liver": 35.0,
+        "kidney-right": 35.1,
+        "heart": 41.6,
+        "kidney-left": 110.4,
+        "pancreas": 176.3,
+        "femur-left": 197.9,
+        "femur-right": 218.6,
+        "bladder": 265.2
+      },
+      "absent": [
+        "lung-left",
+        "spleen"
+      ]
+    },
+    "13843:L1": {
+      "case": "13843",
+      "level": "L1",
+      "expected": [
+        "kidney-left",
+        "kidney-right",
+        "liver",
+        "pancreas",
+        "spleen"
+      ],
+      "rank": 1,
+      "ranking": [
+        "kidney-left",
+        "liver",
+        "heart",
+        "femur-left",
+        "femur-right",
+        "kidney-right",
+        "lung-left",
+        "pancreas"
+      ],
+      "distances_mm": {
+        "kidney-left": 32.0,
+        "liver": 101.8,
+        "heart": 134.4,
+        "femur-left": 139.8,
+        "femur-right": 140.7,
+        "kidney-right": 197.8,
+        "lung-left": 255.9,
+        "pancreas": 298.3
+      },
+      "absent": [
+        "bladder",
+        "lung-right",
+        "spleen"
+      ]
+    },
+    "13843:L3": {
+      "case": "13843",
+      "level": "L3",
+      "expected": [
+        "kidney-left",
+        "kidney-right"
+      ],
+      "rank": 1,
+      "ranking": [
+        "kidney-left",
+        "femur-left",
+        "femur-right",
+        "liver",
+        "kidney-right",
+        "heart",
+        "pancreas",
+        "lung-left"
+      ],
+      "distances_mm": {
+        "kidney-left": 34.6,
+        "femur-left": 76.1,
+        "femur-right": 77.0,
+        "liver": 115.2,
+        "kidney-right": 144.9,
+        "heart": 192.2,
+        "pancreas": 295.6,
+        "lung-left": 315.1
+      },
+      "absent": [
+        "bladder",
+        "lung-right",
+        "spleen"
+      ]
+    },
+    "13843:T7": {
+      "case": "13843",
+      "level": "T7",
+      "expected": [
+        "heart",
+        "lung-left",
+        "lung-right"
+      ],
+      "rank": 1,
+      "ranking": [
+        "heart",
+        "lung-left",
+        "liver",
+        "kidney-left",
+        "femur-left",
+        "femur-right",
+        "pancreas",
+        "kidney-right"
+      ],
+      "distances_mm": {
+        "heart": 44.1,
+        "lung-left": 121.9,
+        "liver": 158.7,
+        "kidney-left": 161.3,
+        "femur-left": 278.6,
+        "femur-right": 278.8,
+        "pancreas": 336.3,
+        "kidney-right": 344.5
+      },
+      "absent": [
+        "bladder",
+        "lung-right",
+        "spleen"
+      ]
+    },
+    "13989:L2": {
+      "case": "13989",
+      "level": "L2",
+      "expected": [
+        "kidney-left",
+        "kidney-right",
+        "pancreas"
+      ],
+      "rank": 1,
+      "ranking": [
+        "kidney-right",
+        "liver",
+        "heart",
+        "pancreas",
+        "kidney-left",
+        "femur-right",
+        "femur-left"
+      ],
+      "distances_mm": {
+        "kidney-right": 51.5,
+        "liver": 109.1,
+        "heart": 139.9,
+        "pancreas": 150.2,
+        "kidney-left": 174.3,
+        "femur-right": 306.3,
+        "femur-left": 315.3
+      },
+      "absent": [
+        "bladder",
+        "lung-left",
+        "lung-right",
+        "spleen"
+      ]
+    },
+    "13989:L3": {
+      "case": "13989",
+      "level": "L3",
+      "expected": [
+        "kidney-left",
+        "kidney-right"
+      ],
+      "rank": 1,
+      "ranking": [
+        "kidney-right",
+        "liver",
+        "pancreas",
+        "kidney-left",
+        "heart",
+        "femur-right",
+        "femur-left"
+      ],
+      "distances_mm": {
+        "kidney-right": 51.3,
+        "liver": 122.4,
+        "pancreas": 124.0,
+        "kidney-left": 150.1,
+        "heart": 173.1,
+        "femur-right": 281.0,
+        "femur-left": 344.5
+      },
+      "absent": [
+        "bladder",
+        "lung-left",
+        "lung-right",
+        "spleen"
+      ]
+    },
+    "13989:T12": {
+      "case": "13989",
+      "level": "T12",
+      "expected": [
+        "kidney-left",
+        "kidney-right",
+        "liver",
+        "pancreas",
+        "spleen"
+      ],
+      "rank": 2,
+      "ranking": [
+        "heart",
+        "kidney-right",
+        "liver",
+        "pancreas",
+        "kidney-left",
+        "femur-left",
+        "femur-right"
+      ],
+      "distances_mm": {
+        "heart": 86.4,
+        "kidney-right": 102.9,
+        "liver": 111.7,
+        "pancreas": 208.4,
+        "kidney-left": 235.1,
+        "femur-left": 269.6,
+        "femur-right": 372.7
+      },
+      "absent": [
+        "bladder",
+        "lung-left",
+        "lung-right",
+        "spleen"
+      ]
+    },
+    "14078:L1": {
+      "case": "14078",
+      "level": "L1",
+      "expected": [
+        "kidney-left",
+        "kidney-right",
+        "liver",
+        "pancreas",
+        "spleen"
+      ],
+      "rank": 1,
+      "ranking": [
+        "liver",
+        "heart",
+        "kidney-right",
+        "lung-left",
+        "femur-right",
+        "kidney-left",
+        "femur-left",
+        "pancreas",
+        "bladder"
+      ],
+      "distances_mm": {
+        "liver": 153.9,
+        "heart": 162.0,
+        "kidney-right": 181.2,
+        "lung-left": 201.2,
+        "femur-right": 220.0,
+        "kidney-left": 255.7,
+        "femur-left": 260.3,
+        "pancreas": 278.4,
+        "bladder": 323.8
+      },
+      "absent": [
+        "lung-right",
+        "spleen"
+      ]
+    },
+    "14138:L4": {
+      "case": "14138",
+      "level": "L4",
+      "expected": [
+        "bladder",
+        "kidney-left",
+        "kidney-right"
+      ],
+      "rank": 1,
+      "ranking": [
+        "kidney-right",
+        "bladder",
+        "pancreas",
+        "femur-right",
+        "liver",
+        "femur-left",
+        "kidney-left",
+        "heart"
+      ],
+      "distances_mm": {
+        "kidney-right": 67.5,
+        "bladder": 71.1,
+        "pancreas": 86.2,
+        "femur-right": 94.4,
+        "liver": 95.3,
+        "femur-left": 100.2,
+        "kidney-left": 226.6,
+        "heart": 235.4
+      },
+      "absent": [
+        "lung-left",
+        "lung-right",
+        "spleen"
+      ]
+    },
+    "14138:T11": {
+      "case": "14138",
+      "level": "T11",
+      "expected": [
+        "liver",
+        "pancreas",
+        "spleen"
+      ],
+      "rank": 3,
+      "ranking": [
+        "kidney-right",
+        "heart",
+        "liver",
+        "bladder",
+        "pancreas",
+        "femur-right",
+        "femur-left",
+        "kidney-left"
+      ],
+      "distances_mm": {
+        "kidney-right": 77.1,
+        "heart": 84.2,
+        "liver": 92.8,
+        "bladder": 226.1,
+        "pancreas": 246.7,
+        "femur-right": 257.7,
+        "femur-left": 261.8,
+        "kidney-left": 320.4
+      },
+      "absent": [
+        "lung-left",
+        "lung-right",
+        "spleen"
+      ]
+    },
+    "14151:T8": {
+      "case": "14151",
+      "level": "T8",
+      "expected": [
+        "heart",
+        "lung-left",
+        "lung-right"
+      ],
+      "rank": 3,
+      "ranking": [
+        "femur-left",
+        "femur-right",
+        "heart",
+        "lung-left",
+        "liver",
+        "kidney-left",
+        "bladder",
+        "pancreas",
+        "kidney-right"
+      ],
+      "distances_mm": {
+        "femur-left": 31.0,
+        "femur-right": 34.4,
+        "heart": 54.6,
+        "lung-left": 74.5,
+        "liver": 99.2,
+        "kidney-left": 141.6,
+        "bladder": 163.3,
+        "pancreas": 223.7,
+        "kidney-right": 269.0
+      },
+      "absent": [
+        "lung-right",
+        "spleen"
+      ]
+    },
+    "14313:L4": {
+      "case": "14313",
+      "level": "L4",
+      "expected": [
+        "bladder",
+        "kidney-left",
+        "kidney-right"
+      ],
+      "rank": 2,
+      "ranking": [
+        "liver",
+        "kidney-right",
+        "pancreas",
+        "femur-left",
+        "kidney-left",
+        "femur-right"
+      ],
+      "distances_mm": {
+        "liver": 52.1,
+        "kidney-right": 126.4,
+        "pancreas": 182.0,
+        "femur-left": 193.9,
+        "kidney-left": 195.5,
+        "femur-right": 244.0
+      },
+      "absent": [
+        "bladder",
+        "heart",
+        "lung-left",
+        "lung-right",
+        "spleen"
+      ]
+    },
+    "14427:L3": {
+      "case": "14427",
+      "level": "L3",
+      "expected": [
+        "kidney-left",
+        "kidney-right"
+      ],
+      "rank": 3,
+      "ranking": [
+        "liver",
+        "pancreas",
+        "kidney-left",
+        "kidney-right",
+        "heart",
+        "femur-left"
+      ],
+      "distances_mm": {
+        "liver": 28.0,
+        "pancreas": 32.0,
+        "kidney-left": 42.0,
+        "kidney-right": 66.9,
+        "heart": 155.2,
+        "femur-left": 288.0
+      },
+      "absent": [
+        "bladder",
+        "femur-right",
+        "lung-left",
+        "lung-right",
+        "spleen"
+      ]
+    },
+    "14427:T11": {
+      "case": "14427",
+      "level": "T11",
+      "expected": [
+        "liver",
+        "pancreas",
+        "spleen"
+      ],
+      "rank": 1,
+      "ranking": [
+        "pancreas",
+        "kidney-left",
+        "liver",
+        "heart",
+        "kidney-right",
+        "femur-left"
+      ],
+      "distances_mm": {
+        "pancreas": 31.7,
+        "kidney-left": 34.0,
+        "liver": 66.6,
+        "heart": 66.8,
+        "kidney-right": 138.0,
+        "femur-left": 208.3
+      },
+      "absent": [
+        "bladder",
+        "femur-right",
+        "lung-left",
+        "lung-right",
+        "spleen"
+      ]
+    },
+    "14434:L5": {
+      "case": "14434",
+      "level": "L5",
+      "expected": [
+        "bladder",
+        "femur-left",
+        "femur-right"
+      ],
+      "rank": 2,
+      "ranking": [
+        "pancreas",
+        "bladder",
+        "liver",
+        "femur-right",
+        "kidney-right",
+        "kidney-left",
+        "heart",
+        "femur-left",
+        "lung-right",
+        "lung-left"
+      ],
+      "distances_mm": {
+        "pancreas": 45.0,
+        "bladder": 66.2,
+        "liver": 72.8,
+        "femur-right": 78.1,
+        "kidney-right": 116.5,
+        "kidney-left": 220.1,
+        "heart": 268.5,
+        "femur-left": 429.1,
+        "lung-right": 475.3,
+        "lung-left": 482.4
+      },
+      "absent": [
+        "spleen"
+      ]
+    },
+    "14434:T1": {
+      "case": "14434",
+      "level": "T1",
+      "expected": [
+        "lung-left",
+        "lung-right"
+      ],
+      "rank": 3,
+      "ranking": [
+        "femur-left",
+        "heart",
+        "lung-right",
+        "lung-left",
+        "kidney-right",
+        "pancreas",
+        "liver",
+        "femur-right",
+        "kidney-left",
+        "bladder"
+      ],
+      "distances_mm": {
+        "femur-left": 73.7,
+        "heart": 115.2,
+        "lung-right": 172.4,
+        "lung-left": 181.7,
+        "kidney-right": 301.3,
+        "pancreas": 371.0,
+        "liver": 375.4,
+        "femur-right": 390.4,
+        "kidney-left": 461.2,
+        "bladder": 507.6
+      },
+      "absent": [
+        "spleen"
+      ]
+    },
+    "14434:T2": {
+      "case": "14434",
+      "level": "T2",
+      "expected": [
+        "lung-left",
+        "lung-right"
+      ],
+      "rank": 3,
+      "ranking": [
+        "femur-left",
+        "heart",
+        "lung-right",
+        "lung-left",
+        "kidney-right",
+        "pancreas",
+        "liver",
+        "femur-right",
+        "kidney-left",
+        "bladder"
+      ],
+      "distances_mm": {
+        "femur-left": 81.4,
+        "heart": 90.0,
+        "lung-right": 181.7,
+        "lung-left": 188.3,
+        "kidney-right": 279.6,
+        "pancreas": 347.3,
+        "liver": 353.8,
+        "femur-right": 369.7,
+        "kidney-left": 447.2,
+        "bladder": 482.5
+      },
+      "absent": [
+        "spleen"
+      ]
+    },
+    "14439:L1": {
+      "case": "14439",
+      "level": "L1",
+      "expected": [
+        "kidney-left",
+        "kidney-right",
+        "liver",
+        "pancreas",
+        "spleen"
+      ],
+      "rank": 3,
+      "ranking": [
+        "femur-right",
+        "femur-left",
+        "kidney-right",
+        "liver",
+        "kidney-left",
+        "bladder",
+        "pancreas"
+      ],
+      "distances_mm": {
+        "femur-right": 76.6,
+        "femur-left": 78.2,
+        "kidney-right": 89.9,
+        "liver": 113.0,
+        "kidney-left": 230.7,
+        "bladder": 272.5,
+        "pancreas": 349.3
+      },
+      "absent": [
+        "heart",
+        "lung-left",
+        "lung-right",
+        "spleen"
+      ]
+    },
+    "14445:L3": {
+      "case": "14445",
+      "level": "L3",
+      "expected": [
+        "kidney-left",
+        "kidney-right"
+      ],
+      "rank": 1,
+      "ranking": [
+        "kidney-right",
+        "pancreas",
+        "liver",
+        "femur-right",
+        "bladder",
+        "lung-right",
+        "femur-left",
+        "kidney-left"
+      ],
+      "distances_mm": {
+        "kidney-right": 6.7,
+        "pancreas": 40.4,
+        "liver": 119.3,
+        "femur-right": 145.4,
+        "bladder": 153.2,
+        "lung-right": 174.7,
+        "femur-left": 177.6,
+        "kidney-left": 206.5
+      },
+      "absent": [
+        "heart",
+        "lung-left",
+        "spleen"
+      ]
+    },
+    "14445:T11": {
+      "case": "14445",
+      "level": "T11",
+      "expected": [
+        "liver",
+        "pancreas",
+        "spleen"
+      ],
+      "rank": 1,
+      "ranking": [
+        "liver",
+        "lung-right",
+        "kidney-right",
+        "pancreas",
+        "femur-right",
+        "bladder",
+        "femur-left",
+        "kidney-left"
+      ],
+      "distances_mm": {
+        "liver": 65.4,
+        "lung-right": 67.7,
+        "kidney-right": 81.5,
+        "pancreas": 182.9,
+        "femur-right": 291.2,
+        "bladder": 292.4,
+        "femur-left": 317.2,
+        "kidney-left": 323.8
+      },
+      "absent": [
+        "heart",
+        "lung-left",
+        "spleen"
+      ]
+    },
+    "14487:T10": {
+      "case": "14487",
+      "level": "T10",
+      "expected": [
+        "liver",
+        "lung-left",
+        "lung-right",
+        "spleen"
+      ],
+      "rank": 1,
+      "ranking": [
+        "lung-left",
+        "femur-right",
+        "liver",
+        "femur-left",
+        "bladder",
+        "pancreas",
+        "kidney-left",
+        "kidney-right"
+      ],
+      "distances_mm": {
+        "lung-left": 78.0,
+        "femur-right": 108.8,
+        "liver": 117.7,
+        "femur-left": 223.9,
+        "bladder": 315.2,
+        "pancreas": 317.5,
+        "kidney-left": 323.9,
+        "kidney-right": 340.6
+      },
+      "absent": [
+        "heart",
+        "lung-right",
+        "spleen"
+      ]
+    },
+    "14638:T2": {
+      "case": "14638",
+      "level": "T2",
+      "expected": [
+        "lung-left",
+        "lung-right"
+      ],
+      "rank": null,
+      "ranking": [
+        "femur-right",
+        "liver",
+        "kidney-right",
+        "kidney-left",
+        "bladder",
+        "pancreas",
+        "femur-left"
+      ],
+      "distances_mm": {
+        "femur-right": 172.4,
+        "liver": 196.5,
+        "kidney-right": 230.1,
+        "kidney-left": 322.6,
+        "bladder": 418.0,
+        "pancreas": 438.4,
+        "femur-left": 464.7
+      },
+      "absent": [
+        "heart",
+        "lung-left",
+        "lung-right",
+        "spleen"
+      ]
+    },
+    "14638:T3": {
+      "case": "14638",
+      "level": "T3",
+      "expected": [
+        "lung-left",
+        "lung-right"
+      ],
+      "rank": null,
+      "ranking": [
+        "femur-right",
+        "liver",
+        "kidney-right",
+        "kidney-left",
+        "bladder",
+        "pancreas",
+        "femur-left"
+      ],
+      "distances_mm": {
+        "femur-right": 162.7,
+        "liver": 182.1,
+        "kidney-right": 215.8,
+        "kidney-left": 308.1,
+        "bladder": 402.7,
+        "pancreas": 424.8,
+        "femur-left": 448.6
+      },
+      "absent": [
+        "heart",
+        "lung-left",
+        "lung-right",
+        "spleen"
+      ]
+    },
+    "14643:L1": {
+      "case": "14643",
+      "level": "L1",
+      "expected": [
+        "kidney-left",
+        "kidney-right",
+        "liver",
+        "pancreas",
+        "spleen"
+      ],
+      "rank": 1,
+      "ranking": [
+        "pancreas",
+        "kidney-right",
+        "kidney-left",
+        "heart",
+        "liver",
+        "femur-left",
+        "bladder",
+        "femur-right"
+      ],
+      "distances_mm": {
+        "pancreas": 102.6,
+        "kidney-right": 143.2,
+        "kidney-left": 150.3,
+        "heart": 174.1,
+        "liver": 205.2,
+        "femur-left": 367.9,
+        "bladder": 372.2,
+        "femur-right": 372.3
+      },
+      "absent": [
+        "lung-left",
+        "lung-right",
+        "spleen"
+      ]
+    },
+    "14643:L2": {
+      "case": "14643",
+      "level": "L2",
+      "expected": [
+        "kidney-left",
+        "kidney-right",
+        "pancreas"
+      ],
+      "rank": 1,
+      "ranking": [
+        "pancreas",
+        "kidney-right",
+        "kidney-left",
+        "heart",
+        "liver",
+        "femur-left",
+        "bladder",
+        "femur-right"
+      ],
+      "distances_mm": {
+        "pancreas": 98.0,
+        "kidney-right": 124.0,
+        "kidney-left": 129.2,
+        "heart": 181.4,
+        "liver": 207.2,
+        "femur-left": 381.4,
+        "bladder": 386.6,
+        "femur-right": 397.8
+      },
+      "absent": [
+        "lung-left",
+        "lung-right",
+        "spleen"
+      ]
+    },
+    "14643:L3": {
+      "case": "14643",
+      "level": "L3",
+      "expected": [
+        "kidney-left",
+        "kidney-right"
+      ],
+      "rank": 2,
+      "ranking": [
+        "pancreas",
+        "kidney-right",
+        "kidney-left",
+        "liver",
+        "heart",
+        "femur-left",
+        "bladder",
+        "femur-right"
+      ],
+      "distances_mm": {
+        "pancreas": 104.4,
+        "kidney-right": 111.5,
+        "kidney-left": 117.3,
+        "liver": 214.7,
+        "heart": 215.8,
+        "femur-left": 418.4,
+        "bladder": 423.2,
+        "femur-right": 424.5
+      },
+      "absent": [
+        "lung-left",
+        "lung-right",
+        "spleen"
+      ]
+    },
+    "14643:L4": {
+      "case": "14643",
+      "level": "L4",
+      "expected": [
+        "bladder",
+        "kidney-left",
+        "kidney-right"
+      ],
+      "rank": 1,
+      "ranking": [
+        "kidney-right",
+        "kidney-left",
+        "pancreas",
+        "liver",
+        "heart",
+        "femur-left",
+        "bladder",
+        "femur-right"
+      ],
+      "distances_mm": {
+        "kidney-right": 108.6,
+        "kidney-left": 114.5,
+        "pancreas": 123.1,
+        "liver": 237.1,
+        "heart": 247.4,
+        "femur-left": 448.3,
+        "bladder": 459.2,
+        "femur-right": 460.3
+      },
+      "absent": [
+        "lung-left",
+        "lung-right",
+        "spleen"
+      ]
+    },
+    "14643:L5": {
+      "case": "14643",
+      "level": "L5",
+      "expected": [
+        "bladder",
+        "femur-left",
+        "femur-right"
+      ],
+      "rank": 6,
+      "ranking": [
+        "kidney-right",
+        "kidney-left",
+        "pancreas",
+        "liver",
+        "heart",
+        "femur-left",
+        "bladder",
+        "femur-right"
+      ],
+      "distances_mm": {
+        "kidney-right": 120.6,
+        "kidney-left": 128.0,
+        "pancreas": 155.8,
+        "liver": 261.8,
+        "heart": 278.6,
+        "femur-left": 476.4,
+        "bladder": 490.2,
+        "femur-right": 491.1
+      },
+      "absent": [
+        "lung-left",
+        "lung-right",
+        "spleen"
+      ]
+    },
+    "14643:T11": {
+      "case": "14643",
+      "level": "T11",
+      "expected": [
+        "liver",
+        "pancreas",
+        "spleen"
+      ],
+      "rank": 1,
+      "ranking": [
+        "pancreas",
+        "heart",
+        "kidney-right",
+        "kidney-left",
+        "liver",
+        "femur-right",
+        "bladder",
+        "femur-left"
+      ],
+      "distances_mm": {
+        "pancreas": 125.1,
+        "heart": 146.3,
+        "kidney-right": 187.8,
+        "kidney-left": 192.7,
+        "liver": 198.5,
+        "femur-right": 322.7,
+        "bladder": 323.2,
+        "femur-left": 325.7
+      },
+      "absent": [
+        "lung-left",
+        "lung-right",
+        "spleen"
+      ]
+    },
+    "14643:T2": {
+      "case": "14643",
+      "level": "T2",
+      "expected": [
+        "lung-left",
+        "lung-right"
+      ],
+      "rank": null,
+      "ranking": [
+        "heart",
+        "femur-right",
+        "bladder",
+        "femur-left",
+        "liver",
+        "pancreas",
+        "kidney-right",
+        "kidney-left"
+      ],
+      "distances_mm": {
+        "heart": 166.5,
+        "femur-right": 178.8,
+        "bladder": 182.9,
+        "femur-left": 192.3,
+        "liver": 271.2,
+        "pancreas": 280.8,
+        "kidney-right": 361.8,
+        "kidney-left": 364.1
+      },
+      "absent": [
+        "lung-left",
+        "lung-right",
+        "spleen"
+      ]
+    },
+    "14643:T6": {
+      "case": "14643",
+      "level": "T6",
+      "expected": [
+        "heart",
+        "lung-left",
+        "lung-right"
+      ],
+      "rank": 1,
+      "ranking": [
+        "heart",
+        "pancreas",
+        "liver",
+        "bladder",
+        "femur-right",
+        "femur-left",
+        "kidney-right",
+        "kidney-left"
+      ],
+      "distances_mm": {
+        "heart": 142.5,
+        "pancreas": 217.4,
+        "liver": 239.1,
+        "bladder": 245.8,
+        "femur-right": 246.1,
+        "femur-left": 248.3,
+        "kidney-right": 295.3,
+        "kidney-left": 298.6
+      },
+      "absent": [
+        "lung-left",
+        "lung-right",
+        "spleen"
+      ]
+    },
+    "14643:T7": {
+      "case": "14643",
+      "level": "T7",
+      "expected": [
+        "heart",
+        "lung-left",
+        "lung-right"
+      ],
+      "rank": 1,
+      "ranking": [
+        "heart",
+        "pancreas",
+        "liver",
+        "femur-right",
+        "femur-left",
+        "bladder",
+        "kidney-right",
+        "kidney-left"
+      ],
+      "distances_mm": {
+        "heart": 141.7,
+        "pancreas": 202.7,
+        "liver": 230.6,
+        "femur-right": 263.2,
+        "femur-left": 263.8,
+        "bladder": 263.9,
+        "kidney-right": 279.1,
+        "kidney-left": 282.5
+      },
+      "absent": [
+        "lung-left",
+        "lung-right",
+        "spleen"
+      ]
+    },
+    "14650:T10": {
+      "case": "14650",
+      "level": "T10",
+      "expected": [
+        "liver",
+        "lung-left",
+        "lung-right",
+        "spleen"
+      ],
+      "rank": 7,
+      "ranking": [
+        "bladder",
+        "heart",
+        "femur-left",
+        "kidney-right",
+        "femur-right",
+        "pancreas",
+        "liver",
+        "kidney-left"
+      ],
+      "distances_mm": {
+        "bladder": 46.7,
+        "heart": 68.1,
+        "femur-left": 81.3,
+        "kidney-right": 88.6,
+        "femur-right": 139.2,
+        "pancreas": 147.7,
+        "liver": 169.7,
+        "kidney-left": 297.0
+      },
+      "absent": [
+        "lung-left",
+        "lung-right",
+        "spleen"
+      ]
+    },
+    "14655:L1": {
+      "case": "14655",
+      "level": "L1",
+      "expected": [
+        "kidney-left",
+        "kidney-right",
+        "liver",
+        "pancreas",
+        "spleen"
+      ],
+      "rank": 1,
+      "ranking": [
+        "liver",
+        "femur-right",
+        "heart",
+        "bladder",
+        "pancreas",
+        "kidney-right",
+        "femur-left",
+        "kidney-left",
+        "lung-left"
+      ],
+      "distances_mm": {
+        "liver": 46.5,
+        "femur-right": 61.0,
+        "heart": 101.8,
+        "bladder": 175.9,
+        "pancreas": 176.0,
+        "kidney-right": 185.3,
+        "femur-left": 200.7,
+        "kidney-left": 255.0,
+        "lung-left": 273.9
+      },
+      "absent": [
+        "lung-right",
+        "spleen"
+      ]
+    },
+    "14659:T2": {
+      "case": "14659",
+      "level": "T2",
+      "expected": [
+        "lung-left",
+        "lung-right"
+      ],
+      "rank": null,
+      "ranking": [
+        "femur-right",
+        "femur-left",
+        "heart",
+        "liver",
+        "pancreas",
+        "kidney-left",
+        "kidney-right"
+      ],
+      "distances_mm": {
+        "femur-right": 126.8,
+        "femur-left": 132.2,
+        "heart": 148.1,
+        "liver": 243.0,
+        "pancreas": 261.6,
+        "kidney-left": 406.1,
+        "kidney-right": 420.5
+      },
+      "absent": [
+        "bladder",
+        "lung-left",
+        "lung-right",
+        "spleen"
+      ]
+    },
+    "14659:T9": {
+      "case": "14659",
+      "level": "T9",
+      "expected": [
+        "heart",
+        "liver",
+        "lung-left",
+        "lung-right",
+        "spleen"
+      ],
+      "rank": 1,
+      "ranking": [
+        "heart",
+        "liver",
+        "femur-right",
+        "femur-left",
+        "kidney-left",
+        "kidney-right",
+        "pancreas"
+      ],
+      "distances_mm": {
+        "heart": 6.6,
+        "liver": 134.0,
+        "femur-right": 292.7,
+        "femur-left": 295.6,
+        "kidney-left": 331.7,
+        "kidney-right": 342.7,
+        "pancreas": 384.8
+      },
+      "absent": [
+        "bladder",
+        "lung-left",
+        "lung-right",
+        "spleen"
+      ]
+    },
+    "14797:T12": {
+      "case": "14797",
+      "level": "T12",
+      "expected": [
+        "kidney-left",
+        "kidney-right",
+        "liver",
+        "pancreas",
+        "spleen"
+      ],
+      "rank": 1,
+      "ranking": [
+        "pancreas",
+        "liver",
+        "heart",
+        "femur-right",
+        "lung-right",
+        "lung-left",
+        "kidney-right",
+        "femur-left",
+        "kidney-left"
+      ],
+      "distances_mm": {
+        "pancreas": 32.6,
+        "liver": 87.7,
+        "heart": 93.5,
+        "femur-right": 115.6,
+        "lung-right": 124.2,
+        "lung-left": 130.1,
+        "kidney-right": 156.7,
+        "femur-left": 168.2,
+        "kidney-left": 252.7
+      },
+      "absent": [
+        "bladder",
+        "spleen"
+      ]
+    },
+    "14826:L1": {
+      "case": "14826",
+      "level": "L1",
+      "expected": [
+        "kidney-left",
+        "kidney-right",
+        "liver",
+        "pancreas",
+        "spleen"
+      ],
+      "rank": 1,
+      "ranking": [
+        "liver",
+        "lung-right",
+        "femur-left",
+        "femur-right",
+        "heart",
+        "lung-left",
+        "pancreas",
+        "kidney-right",
+        "kidney-left"
+      ],
+      "distances_mm": {
+        "liver": 83.7,
+        "lung-right": 102.0,
+        "femur-left": 111.7,
+        "femur-right": 113.3,
+        "heart": 126.5,
+        "lung-left": 154.2,
+        "pancreas": 162.0,
+        "kidney-right": 210.8,
+        "kidney-left": 261.5
+      },
+      "absent": [
+        "bladder",
+        "spleen"
+      ]
+    },
+    "14826:T8": {
+      "case": "14826",
+      "level": "T8",
+      "expected": [
+        "heart",
+        "lung-left",
+        "lung-right"
+      ],
+      "rank": 1,
+      "ranking": [
+        "heart",
+        "lung-left",
+        "lung-right",
+        "liver",
+        "femur-left",
+        "femur-right",
+        "pancreas",
+        "kidney-right",
+        "kidney-left"
+      ],
+      "distances_mm": {
+        "heart": 26.8,
+        "lung-left": 30.7,
+        "lung-right": 46.8,
+        "liver": 120.5,
+        "femur-left": 248.1,
+        "femur-right": 250.7,
+        "pancreas": 290.2,
+        "kidney-right": 312.0,
+        "kidney-left": 369.2
+      },
+      "absent": [
+        "bladder",
+        "spleen"
+      ]
+    },
+    "14874:L1": {
+      "case": "14874",
+      "level": "L1",
+      "expected": [
+        "kidney-left",
+        "kidney-right",
+        "liver",
+        "pancreas",
+        "spleen"
+      ],
+      "rank": 1,
+      "ranking": [
+        "liver",
+        "heart",
+        "kidney-right",
+        "kidney-left",
+        "pancreas",
+        "femur-left"
+      ],
+      "distances_mm": {
+        "liver": 65.0,
+        "heart": 80.3,
+        "kidney-right": 260.1,
+        "kidney-left": 267.9,
+        "pancreas": 277.6,
+        "femur-left": 283.1
+      },
+      "absent": [
+        "bladder",
+        "femur-right",
+        "lung-left",
+        "lung-right",
+        "spleen"
+      ]
+    },
+    "14912:L1": {
+      "case": "14912",
+      "level": "L1",
+      "expected": [
+        "kidney-left",
+        "kidney-right",
+        "liver",
+        "pancreas",
+        "spleen"
+      ],
+      "rank": 2,
+      "ranking": [
+        "femur-right",
+        "liver",
+        "kidney-right",
+        "heart",
+        "kidney-left",
+        "femur-left"
+      ],
+      "distances_mm": {
+        "femur-right": 21.5,
+        "liver": 62.8,
+        "kidney-right": 100.3,
+        "heart": 130.2,
+        "kidney-left": 210.1,
+        "femur-left": 278.8
+      },
+      "absent": [
+        "bladder",
+        "lung-left",
+        "lung-right",
+        "pancreas",
+        "spleen"
+      ]
+    },
+    "15001:L3": {
+      "case": "15001",
+      "level": "L3",
+      "expected": [
+        "kidney-left",
+        "kidney-right"
+      ],
+      "rank": 2,
+      "ranking": [
+        "bladder",
+        "kidney-right",
+        "heart",
+        "pancreas",
+        "femur-right",
+        "kidney-left",
+        "femur-left",
+        "liver"
+      ],
+      "distances_mm": {
+        "bladder": 108.7,
+        "kidney-right": 109.0,
+        "heart": 166.3,
+        "pancreas": 167.8,
+        "femur-right": 181.0,
+        "kidney-left": 238.1,
+        "femur-left": 422.2,
+        "liver": 481.8
+      },
+      "absent": [
+        "lung-left",
+        "lung-right",
+        "spleen"
+      ]
+    },
+    "15001:L4": {
+      "case": "15001",
+      "level": "L4",
+      "expected": [
+        "bladder",
+        "kidney-left",
+        "kidney-right"
+      ],
+      "rank": 1,
+      "ranking": [
+        "bladder",
+        "kidney-right",
+        "pancreas",
+        "heart",
+        "femur-right",
+        "kidney-left",
+        "femur-left",
+        "liver"
+      ],
+      "distances_mm": {
+        "bladder": 69.9,
+        "kidney-right": 91.5,
+        "pancreas": 132.8,
+        "heart": 198.0,
+        "femur-right": 216.1,
+        "kidney-left": 235.2,
+        "femur-left": 454.2,
+        "liver": 515.2
+      },
+      "absent": [
+        "lung-left",
+        "lung-right",
+        "spleen"
+      ]
+    },
+    "15001:L5": {
+      "case": "15001",
+      "level": "L5",
+      "expected": [
+        "bladder",
+        "femur-left",
+        "femur-right"
+      ],
+      "rank": 1,
+      "ranking": [
+        "bladder",
+        "kidney-right",
+        "pancreas",
+        "heart",
+        "femur-right",
+        "kidney-left",
+        "femur-left",
+        "liver"
+      ],
+      "distances_mm": {
+        "bladder": 48.7,
+        "kidney-right": 73.6,
+        "pancreas": 119.5,
+        "heart": 227.1,
+        "femur-right": 240.9,
+        "kidney-left": 252.0,
+        "femur-left": 482.6,
+        "liver": 545.0
+      },
+      "absent": [
+        "lung-left",
+        "lung-right",
+        "spleen"
+      ]
+    },
+    "15001:T10": {
+      "case": "15001",
+      "level": "T10",
+      "expected": [
+        "liver",
+        "lung-left",
+        "lung-right",
+        "spleen"
+      ],
+      "rank": 7,
+      "ranking": [
+        "heart",
+        "femur-right",
+        "kidney-right",
+        "bladder",
+        "femur-left",
+        "pancreas",
+        "liver",
+        "kidney-left"
+      ],
+      "distances_mm": {
+        "heart": 37.7,
+        "femur-right": 97.8,
+        "kidney-right": 254.4,
+        "bladder": 281.0,
+        "femur-left": 297.5,
+        "pancreas": 340.5,
+        "liver": 347.0,
+        "kidney-left": 351.9
+      },
+      "absent": [
+        "lung-left",
+        "lung-right",
+        "spleen"
+      ]
+    },
+    "15001:T12": {
+      "case": "15001",
+      "level": "T12",
+      "expected": [
+        "kidney-left",
+        "kidney-right",
+        "liver",
+        "pancreas",
+        "spleen"
+      ],
+      "rank": 3,
+      "ranking": [
+        "heart",
+        "femur-right",
+        "kidney-right",
+        "bladder",
+        "pancreas",
+        "kidney-left",
+        "femur-left",
+        "liver"
+      ],
+      "distances_mm": {
+        "heart": 77.6,
+        "femur-right": 101.9,
+        "kidney-right": 189.1,
+        "bladder": 213.1,
+        "pancreas": 272.3,
+        "kidney-left": 303.4,
+        "femur-left": 337.7,
+        "liver": 390.3
+      },
+      "absent": [
+        "lung-left",
+        "lung-right",
+        "spleen"
+      ]
+    },
+    "15001:T4": {
+      "case": "15001",
+      "level": "T4",
+      "expected": [
+        "heart",
+        "lung-left",
+        "lung-right"
+      ],
+      "rank": 1,
+      "ranking": [
+        "heart",
+        "femur-right",
+        "femur-left",
+        "liver",
+        "kidney-right",
+        "bladder",
+        "kidney-left",
+        "pancreas"
+      ],
+      "distances_mm": {
+        "heart": 110.9,
+        "femur-right": 157.6,
+        "femur-left": 193.9,
+        "liver": 236.0,
+        "kidney-right": 411.6,
+        "bladder": 439.4,
+        "kidney-left": 457.8,
+        "pancreas": 490.7
+      },
+      "absent": [
+        "lung-left",
+        "lung-right",
+        "spleen"
+      ]
+    },
+    "15001:T6": {
+      "case": "15001",
+      "level": "T6",
+      "expected": [
+        "heart",
+        "lung-left",
+        "lung-right"
+      ],
+      "rank": 1,
+      "ranking": [
+        "heart",
+        "femur-right",
+        "femur-left",
+        "liver",
+        "kidney-right",
+        "bladder",
+        "kidney-left",
+        "pancreas"
+      ],
+      "distances_mm": {
+        "heart": 72.9,
+        "femur-right": 133.4,
+        "femur-left": 231.0,
+        "liver": 276.6,
+        "kidney-right": 365.8,
+        "bladder": 396.2,
+        "kidney-left": 431.7,
+        "pancreas": 450.0
+      },
+      "absent": [
+        "lung-left",
+        "lung-right",
+        "spleen"
+      ]
+    },
+    "15027:L1": {
+      "case": "15027",
+      "level": "L1",
+      "expected": [
+        "kidney-left",
+        "kidney-right",
+        "liver",
+        "pancreas",
+        "spleen"
+      ],
+      "rank": 3,
+      "ranking": [
+        "femur-right",
+        "femur-left",
+        "liver",
+        "heart",
+        "pancreas",
+        "bladder",
+        "kidney-left",
+        "kidney-right"
+      ],
+      "distances_mm": {
+        "femur-right": 42.0,
+        "femur-left": 55.3,
+        "liver": 68.8,
+        "heart": 129.1,
+        "pancreas": 174.3,
+        "bladder": 228.4,
+        "kidney-left": 235.2,
+        "kidney-right": 286.4
+      },
+      "absent": [
+        "lung-left",
+        "lung-right",
+        "spleen"
+      ]
+    },
+    "15027:L2": {
+      "case": "15027",
+      "level": "L2",
+      "expected": [
+        "kidney-left",
+        "kidney-right",
+        "pancreas"
+      ],
+      "rank": 4,
+      "ranking": [
+        "femur-right",
+        "femur-left",
+        "liver",
+        "pancreas",
+        "heart",
+        "bladder",
+        "kidney-left",
+        "kidney-right"
+      ],
+      "distances_mm": {
+        "femur-right": 24.5,
+        "femur-left": 70.2,
+        "liver": 95.2,
+        "pancreas": 141.3,
+        "heart": 161.6,
+        "bladder": 192.3,
+        "kidney-left": 216.0,
+        "kidney-right": 250.0
+      },
+      "absent": [
+        "lung-left",
+        "lung-right",
+        "spleen"
+      ]
+    },
+    "15027:L3": {
+      "case": "15027",
+      "level": "L3",
+      "expected": [
+        "kidney-left",
+        "kidney-right"
+      ],
+      "rank": 7,
+      "ranking": [
+        "femur-right",
+        "femur-left",
+        "pancreas",
+        "liver",
+        "bladder",
+        "heart",
+        "kidney-left",
+        "kidney-right"
+      ],
+      "distances_mm": {
+        "femur-right": 24.3,
+        "femur-left": 96.5,
+        "pancreas": 112.6,
+        "liver": 127.1,
+        "bladder": 161.6,
+        "heart": 194.1,
+        "kidney-left": 200.7,
+        "kidney-right": 220.3
+      },
+      "absent": [
+        "lung-left",
+        "lung-right",
+        "spleen"
+      ]
+    },
+    "15027:L4": {
+      "case": "15027",
+      "level": "L4",
+      "expected": [
+        "bladder",
+        "kidney-left",
+        "kidney-right"
+      ],
+      "rank": 4,
+      "ranking": [
+        "femur-right",
+        "pancreas",
+        "femur-left",
+        "bladder",
+        "liver",
+        "kidney-right",
+        "kidney-left",
+        "heart"
+      ],
+      "distances_mm": {
+        "femur-right": 50.5,
+        "pancreas": 82.5,
+        "femur-left": 129.7,
+        "bladder": 132.5,
+        "liver": 158.0,
+        "kidney-right": 188.6,
+        "kidney-left": 194.3,
+        "heart": 224.0
+      },
+      "absent": [
+        "lung-left",
+        "lung-right",
+        "spleen"
+      ]
+    },
+    "15027:L5": {
+      "case": "15027",
+      "level": "L5",
+      "expected": [
+        "bladder",
+        "femur-left",
+        "femur-right"
+      ],
+      "rank": 2,
+      "ranking": [
+        "pancreas",
+        "femur-right",
+        "bladder",
+        "kidney-right",
+        "femur-left",
+        "liver",
+        "kidney-left",
+        "heart"
+      ],
+      "distances_mm": {
+        "pancreas": 65.0,
+        "femur-right": 84.6,
+        "bladder": 98.3,
+        "kidney-right": 156.2,
+        "femur-left": 163.7,
+        "liver": 185.4,
+        "kidney-left": 190.7,
+        "heart": 253.5
+      },
+      "absent": [
+        "lung-left",
+        "lung-right",
+        "spleen"
+      ]
+    },
+    "15027:T1": {
+      "case": "15027",
+      "level": "T1",
+      "expected": [
+        "lung-left",
+        "lung-right"
+      ],
+      "rank": null,
+      "ranking": [
+        "heart",
+        "liver",
+        "femur-left",
+        "femur-right",
+        "kidney-left",
+        "pancreas",
+        "bladder",
+        "kidney-right"
+      ],
+      "distances_mm": {
+        "heart": 78.4,
+        "liver": 182.6,
+        "femur-left": 210.9,
+        "femur-right": 285.6,
+        "kidney-left": 429.8,
+        "pancreas": 429.9,
+        "bladder": 493.1,
+        "kidney-right": 541.4
+      },
+      "absent": [
+        "lung-left",
+        "lung-right",
+        "spleen"
+      ]
+    },
+    "15027:T10": {
+      "case": "15027",
+      "level": "T10",
+      "expected": [
+        "liver",
+        "lung-left",
+        "lung-right",
+        "spleen"
+      ],
+      "rank": 1,
+      "ranking": [
+        "liver",
+        "heart",
+        "femur-left",
+        "femur-right",
+        "pancreas",
+        "kidney-left",
+        "bladder",
+        "kidney-right"
+      ],
+      "distances_mm": {
+        "liver": 50.2,
+        "heart": 51.5,
+        "femur-left": 65.6,
+        "femur-right": 117.1,
+        "pancreas": 259.3,
+        "kidney-left": 293.4,
+        "bladder": 315.8,
+        "kidney-right": 371.0
+      },
+      "absent": [
+        "lung-left",
+        "lung-right",
+        "spleen"
+      ]
+    },
+    "15027:T11": {
+      "case": "15027",
+      "level": "T11",
+      "expected": [
+        "liver",
+        "pancreas",
+        "spleen"
+      ],
+      "rank": 1,
+      "ranking": [
+        "liver",
+        "femur-left",
+        "heart",
+        "femur-right",
+        "pancreas",
+        "kidney-left",
+        "bladder",
+        "kidney-right"
+      ],
+      "distances_mm": {
+        "liver": 49.5,
+        "femur-left": 55.6,
+        "heart": 74.5,
+        "femur-right": 94.6,
+        "pancreas": 233.8,
+        "kidney-left": 274.8,
+        "bladder": 292.5,
+        "kidney-right": 346.5
+      },
+      "absent": [
+        "lung-left",
+        "lung-right",
+        "spleen"
+      ]
+    },
+    "15027:T12": {
+      "case": "15027",
+      "level": "T12",
+      "expected": [
+        "kidney-left",
+        "kidney-right",
+        "liver",
+        "pancreas",
+        "spleen"
+      ],
+      "rank": 2,
+      "ranking": [
+        "femur-left",
+        "liver",
+        "femur-right",
+        "heart",
+        "pancreas",
+        "kidney-left",
+        "bladder",
+        "kidney-right"
+      ],
+      "distances_mm": {
+        "femur-left": 53.7,
+        "liver": 53.8,
+        "femur-right": 67.5,
+        "heart": 100.5,
+        "pancreas": 205.9,
+        "kidney-left": 253.7,
+        "bladder": 262.4,
+        "kidney-right": 316.8
+      },
+      "absent": [
+        "lung-left",
+        "lung-right",
+        "spleen"
+      ]
+    },
+    "15027:T2": {
+      "case": "15027",
+      "level": "T2",
+      "expected": [
+        "lung-left",
+        "lung-right"
+      ],
+      "rank": null,
+      "ranking": [
+        "heart",
+        "liver",
+        "femur-left",
+        "femur-right",
+        "pancreas",
+        "kidney-left",
+        "bladder",
+        "kidney-right"
+      ],
+      "distances_mm": {
+        "heart": 63.0,
+        "liver": 166.2,
+        "femur-left": 195.5,
+        "femur-right": 269.0,
+        "pancreas": 412.7,
+        "kidney-left": 416.0,
+        "bladder": 475.6,
+        "kidney-right": 524.9
+      },
+      "absent": [
+        "lung-left",
+        "lung-right",
+        "spleen"
+      ]
+    },
+    "15027:T3": {
+      "case": "15027",
+      "level": "T3",
+      "expected": [
+        "lung-left",
+        "lung-right"
+      ],
+      "rank": null,
+      "ranking": [
+        "heart",
+        "liver",
+        "femur-left",
+        "femur-right",
+        "pancreas",
+        "kidney-left",
+        "bladder",
+        "kidney-right"
+      ],
+      "distances_mm": {
+        "heart": 51.2,
+        "liver": 152.2,
+        "femur-left": 182.0,
+        "femur-right": 254.9,
+        "pancreas": 398.3,
+        "kidney-left": 404.2,
+        "bladder": 460.9,
+        "kidney-right": 510.8
+      },
+      "absent": [
+        "lung-left",
+        "lung-right",
+        "spleen"
+      ]
+    },
+    "15027:T4": {
+      "case": "15027",
+      "level": "T4",
+      "expected": [
+        "heart",
+        "lung-left",
+        "lung-right"
+      ],
+      "rank": 1,
+      "ranking": [
+        "heart",
+        "liver",
+        "femur-left",
+        "femur-right",
+        "pancreas",
+        "kidney-left",
+        "bladder",
+        "kidney-right"
+      ],
+      "distances_mm": {
+        "heart": 31.5,
+        "liver": 134.6,
+        "femur-left": 166.1,
+        "femur-right": 237.6,
+        "pancreas": 379.2,
+        "kidney-left": 390.0,
+        "bladder": 442.7,
+        "kidney-right": 493.6
+      },
+      "absent": [
+        "lung-left",
+        "lung-right",
+        "spleen"
+      ]
+    },
+    "15027:T5": {
+      "case": "15027",
+      "level": "T5",
+      "expected": [
+        "heart",
+        "lung-left",
+        "lung-right"
+      ],
+      "rank": 1,
+      "ranking": [
+        "heart",
+        "liver",
+        "femur-left",
+        "femur-right",
+        "pancreas",
+        "kidney-left",
+        "bladder",
+        "kidney-right"
+      ],
+      "distances_mm": {
+        "heart": 16.3,
+        "liver": 119.7,
+        "femur-left": 150.4,
+        "femur-right": 220.2,
+        "pancreas": 363.3,
+        "kidney-left": 375.5,
+        "bladder": 424.0,
+        "kidney-right": 475.7
+      },
+      "absent": [
+        "lung-left",
+        "lung-right",
+        "spleen"
+      ]
+    },
+    "15027:T6": {
+      "case": "15027",
+      "level": "T6",
+      "expected": [
+        "heart",
+        "lung-left",
+        "lung-right"
+      ],
+      "rank": 1,
+      "ranking": [
+        "heart",
+        "liver",
+        "femur-left",
+        "femur-right",
+        "pancreas",
+        "kidney-left",
+        "bladder",
+        "kidney-right"
+      ],
+      "distances_mm": {
+        "heart": 8.1,
+        "liver": 101.9,
+        "femur-left": 132.7,
+        "femur-right": 200.8,
+        "pancreas": 337.7,
+        "kidney-left": 359.1,
+        "bladder": 397.1,
+        "kidney-right": 451.7
+      },
+      "absent": [
+        "lung-left",
+        "lung-right",
+        "spleen"
+      ]
+    },
+    "15027:T7": {
+      "case": "15027",
+      "level": "T7",
+      "expected": [
+        "heart",
+        "lung-left",
+        "lung-right"
+      ],
+      "rank": 1,
+      "ranking": [
+        "heart",
+        "liver",
+        "femur-left",
+        "femur-right",
+        "pancreas",
+        "kidney-left",
+        "bladder",
+        "kidney-right"
+      ],
+      "distances_mm": {
+        "heart": 6.0,
+        "liver": 84.9,
+        "femur-left": 116.2,
+        "femur-right": 182.4,
+        "pancreas": 318.1,
+        "kidney-left": 343.2,
+        "bladder": 376.4,
+        "kidney-right": 431.0
+      },
+      "absent": [
+        "lung-left",
+        "lung-right",
+        "spleen"
+      ]
+    },
+    "15027:T8": {
+      "case": "15027",
+      "level": "T8",
+      "expected": [
+        "heart",
+        "lung-left",
+        "lung-right"
+      ],
+      "rank": 1,
+      "ranking": [
+        "heart",
+        "liver",
+        "femur-left",
+        "femur-right",
+        "pancreas",
+        "kidney-left",
+        "bladder",
+        "kidney-right"
+      ],
+      "distances_mm": {
+        "heart": 13.9,
+        "liver": 71.2,
+        "femur-left": 96.5,
+        "femur-right": 161.1,
+        "pancreas": 295.3,
+        "kidney-left": 327.9,
+        "bladder": 352.8,
+        "kidney-right": 408.4
+      },
+      "absent": [
+        "lung-left",
+        "lung-right",
+        "spleen"
+      ]
+    },
+    "15027:T9": {
+      "case": "15027",
+      "level": "T9",
+      "expected": [
+        "heart",
+        "liver",
+        "lung-left",
+        "lung-right",
+        "spleen"
+      ],
+      "rank": 1,
+      "ranking": [
+        "heart",
+        "liver",
+        "femur-left",
+        "femur-right",
+        "pancreas",
+        "kidney-left",
+        "bladder",
+        "kidney-right"
+      ],
+      "distances_mm": {
+        "heart": 33.6,
+        "liver": 58.3,
+        "femur-left": 79.5,
+        "femur-right": 140.0,
+        "pancreas": 278.6,
+        "kidney-left": 311.8,
+        "bladder": 335.4,
+        "kidney-right": 391.2
+      },
+      "absent": [
+        "lung-left",
+        "lung-right",
+        "spleen"
+      ]
+    },
+    "15040:L3": {
+      "case": "15040",
+      "level": "L3",
+      "expected": [
+        "kidney-left",
+        "kidney-right"
+      ],
+      "rank": 6,
+      "ranking": [
+        "pancreas",
+        "bladder",
+        "femur-left",
+        "femur-right",
+        "liver",
+        "kidney-left",
+        "heart",
+        "kidney-right",
+        "lung-right"
+      ],
+      "distances_mm": {
+        "pancreas": 59.6,
+        "bladder": 65.5,
+        "femur-left": 107.1,
+        "femur-right": 111.1,
+        "liver": 123.0,
+        "kidney-left": 143.6,
+        "heart": 157.0,
+        "kidney-right": 231.7,
+        "lung-right": 240.6
+      },
+      "absent": [
+        "lung-left",
+        "spleen"
+      ]
+    },
+    "15041:L2": {
+      "case": "15041",
+      "level": "L2",
+      "expected": [
+        "kidney-left",
+        "kidney-right",
+        "pancreas"
+      ],
+      "rank": 2,
+      "ranking": [
+        "femur-right",
+        "kidney-right",
+        "kidney-left",
+        "liver",
+        "heart",
+        "bladder",
+        "pancreas",
+        "lung-left",
+        "femur-left"
+      ],
+      "distances_mm": {
+        "femur-right": 48.9,
+        "kidney-right": 56.6,
+        "kidney-left": 57.9,
+        "liver": 125.1,
+        "heart": 141.4,
+        "bladder": 150.4,
+        "pancreas": 217.5,
+        "lung-left": 224.8,
+        "femur-left": 265.1
+      },
+      "absent": [
+        "lung-right",
+        "spleen"
+      ]
+    },
+    "15067:T5": {
+      "case": "15067",
+      "level": "T5",
+      "expected": [
+        "heart",
+        "lung-left",
+        "lung-right"
+      ],
+      "rank": 1,
+      "ranking": [
+        "heart",
+        "lung-right",
+        "femur-left",
+        "liver",
+        "kidney-left",
+        "femur-right",
+        "pancreas",
+        "kidney-right"
+      ],
+      "distances_mm": {
+        "heart": 37.5,
+        "lung-right": 86.7,
+        "femur-left": 167.8,
+        "liver": 170.5,
+        "kidney-left": 171.3,
+        "femur-right": 189.4,
+        "pancreas": 196.0,
+        "kidney-right": 285.4
+      },
+      "absent": [
+        "bladder",
+        "lung-left",
+        "spleen"
+      ]
+    },
+    "15094:L3": {
+      "case": "15094",
+      "level": "L3",
+      "expected": [
+        "kidney-left",
+        "kidney-right"
+      ],
+      "rank": 3,
+      "ranking": [
+        "bladder",
+        "pancreas",
+        "kidney-right",
+        "lung-right",
+        "heart",
+        "femur-right",
+        "kidney-left",
+        "femur-left"
+      ],
+      "distances_mm": {
+        "bladder": 92.4,
+        "pancreas": 141.2,
+        "kidney-right": 142.4,
+        "lung-right": 149.3,
+        "heart": 150.8,
+        "femur-right": 189.2,
+        "kidney-left": 220.4,
+        "femur-left": 221.4
+      },
+      "absent": [
+        "liver",
+        "lung-left",
+        "spleen"
+      ]
+    },
+    "15094:L4": {
+      "case": "15094",
+      "level": "L4",
+      "expected": [
+        "bladder",
+        "kidney-left",
+        "kidney-right"
+      ],
+      "rank": 1,
+      "ranking": [
+        "kidney-right",
+        "bladder",
+        "pancreas",
+        "femur-right",
+        "lung-right",
+        "heart",
+        "femur-left",
+        "kidney-left"
+      ],
+      "distances_mm": {
+        "kidney-right": 117.2,
+        "bladder": 121.4,
+        "pancreas": 145.4,
+        "femur-right": 164.3,
+        "lung-right": 175.3,
+        "heart": 185.5,
+        "femur-left": 204.9,
+        "kidney-left": 223.1
+      },
+      "absent": [
+        "liver",
+        "lung-left",
+        "spleen"
+      ]
+    },
+    "15094:L5": {
+      "case": "15094",
+      "level": "L5",
+      "expected": [
+        "bladder",
+        "femur-left",
+        "femur-right"
+      ],
+      "rank": 3,
+      "ranking": [
+        "kidney-right",
+        "pancreas",
+        "femur-right",
+        "bladder",
+        "femur-left",
+        "lung-right",
+        "heart",
+        "kidney-left"
+      ],
+      "distances_mm": {
+        "kidney-right": 94.8,
+        "pancreas": 151.4,
+        "femur-right": 153.4,
+        "bladder": 154.1,
+        "femur-left": 198.1,
+        "lung-right": 200.3,
+        "heart": 213.0,
+        "kidney-left": 226.6
+      },
+      "absent": [
+        "liver",
+        "lung-left",
+        "spleen"
+      ]
+    },
+    "15094:T1": {
+      "case": "15094",
+      "level": "T1",
+      "expected": [
+        "lung-left",
+        "lung-right"
+      ],
+      "rank": 2,
+      "ranking": [
+        "heart",
+        "lung-right",
+        "bladder",
+        "pancreas",
+        "kidney-left",
+        "kidney-right",
+        "femur-right",
+        "femur-left"
+      ],
+      "distances_mm": {
+        "heart": 126.8,
+        "lung-right": 140.7,
+        "bladder": 211.1,
+        "pancreas": 327.9,
+        "kidney-left": 375.2,
+        "kidney-right": 439.1,
+        "femur-right": 454.3,
+        "femur-left": 469.5
+      },
+      "absent": [
+        "liver",
+        "lung-left",
+        "spleen"
+      ]
+    },
+    "15094:T4": {
+      "case": "15094",
+      "level": "T4",
+      "expected": [
+        "heart",
+        "lung-left",
+        "lung-right"
+      ],
+      "rank": 1,
+      "ranking": [
+        "heart",
+        "lung-right",
+        "bladder",
+        "pancreas",
+        "kidney-left",
+        "kidney-right",
+        "femur-right",
+        "femur-left"
+      ],
+      "distances_mm": {
+        "heart": 89.6,
+        "lung-right": 94.9,
+        "bladder": 174.0,
+        "pancreas": 292.6,
+        "kidney-left": 348.8,
+        "kidney-right": 388.9,
+        "femur-right": 415.8,
+        "femur-left": 435.6
+      },
+      "absent": [
+        "liver",
+        "lung-left",
+        "spleen"
+      ]
+    },
+    "15094:T5": {
+      "case": "15094",
+      "level": "T5",
+      "expected": [
+        "heart",
+        "lung-left",
+        "lung-right"
+      ],
+      "rank": 1,
+      "ranking": [
+        "lung-right",
+        "heart",
+        "bladder",
+        "pancreas",
+        "kidney-left",
+        "kidney-right",
+        "femur-right",
+        "femur-left"
+      ],
+      "distances_mm": {
+        "lung-right": 78.2,
+        "heart": 79.6,
+        "bladder": 161.5,
+        "pancreas": 280.1,
+        "kidney-left": 339.2,
+        "kidney-right": 369.4,
+        "femur-right": 400.1,
+        "femur-left": 422.8
+      },
+      "absent": [
+        "liver",
+        "lung-left",
+        "spleen"
+      ]
+    },
+    "15094:T6": {
+      "case": "15094",
+      "level": "T6",
+      "expected": [
+        "heart",
+        "lung-left",
+        "lung-right"
+      ],
+      "rank": 1,
+      "ranking": [
+        "lung-right",
+        "heart",
+        "bladder",
+        "pancreas",
+        "kidney-left",
+        "kidney-right",
+        "femur-right",
+        "femur-left"
+      ],
+      "distances_mm": {
+        "lung-right": 60.4,
+        "heart": 68.5,
+        "bladder": 146.0,
+        "pancreas": 264.4,
+        "kidney-left": 326.1,
+        "kidney-right": 343.5,
+        "femur-right": 381.2,
+        "femur-left": 406.1
+      },
+      "absent": [
+        "liver",
+        "lung-left",
+        "spleen"
+      ]
+    }
+  },
+  "skipped": [
+    "13627:T1",
+    "13800:T1",
+    "13800:T2",
+    "14434:S1"
+  ],
+  "stride": 2,
+  "floor": 0.6,
+  "n_lesions": 180,
+  "n_patients": 46,
+  "n_ranked": 171,
+  "top1": 0.5277777777777778,
+  "top3": 0.8222222222222222,
+  "mean_rank": 2.0350877192982457
+}
