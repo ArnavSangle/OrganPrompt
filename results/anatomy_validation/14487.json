@@ -9,17 +9,17 @@
     },
     "femur-left": {
       "overlap": 0.0,
-      "proximity": 0.0073972660572864165,
-      "score": 0.0036986330286432082,
-      "distance_mm": 134.18507949500955,
-      "voxels": 231
+      "proximity": 0.0073761643004695765,
+      "score": 0.0036880821502347882,
+      "distance_mm": 134.5718174466828,
+      "voxels": 219
     },
     "femur-right": {
       "overlap": 0.0,
       "proximity": 0.007632273186234284,
       "score": 0.003816136593117142,
       "distance_mm": 130.0225637367933,
-      "voxels": 289
+      "voxels": 262
     },
     "heart": {
       "overlap": 0.0,
@@ -30,17 +30,17 @@
     },
     "kidney-left": {
       "overlap": 0.0,
-      "proximity": 0.0034111614881722485,
-      "score": 0.0017055807440861243,
-      "distance_mm": 292.15527965104195,
-      "voxels": 2683
+      "proximity": 0.0034343676216864534,
+      "score": 0.0017171838108432267,
+      "distance_mm": 290.17441990934793,
+      "voxels": 3077
     },
     "kidney-right": {
       "overlap": 0.0,
-      "proximity": 0.004095706717304235,
-      "score": 0.0020478533586521176,
-      "distance_mm": 243.15810726266866,
-      "voxels": 1514
+      "proximity": 0.004092126208112078,
+      "score": 0.002046063104056039,
+      "distance_mm": 243.37173956600788,
+      "voxels": 1122
     },
     "liver": {
       "overlap": 0.0,
@@ -51,34 +51,34 @@
     },
     "lung-left": {
       "overlap": 0.0,
-      "proximity": 0.017771222959270888,
-      "score": 0.008885611479635444,
-      "distance_mm": 55.27074750521433,
-      "voxels": 103188
+      "proximity": 0.017746045704728,
+      "score": 0.008873022852364,
+      "distance_mm": 55.35058179375558,
+      "voxels": 94893
     },
     "lung-right": {
       "overlap": 0.0,
-      "proximity": 0.016216629813789685,
-      "score": 0.008108314906894842,
-      "distance_mm": 60.66509388711937,
-      "voxels": 48907
+      "proximity": 0.016197522117004728,
+      "score": 0.008098761058502364,
+      "distance_mm": 60.73783821848682,
+      "voxels": 45649
     },
     "pancreas": {
       "overlap": 0.0,
-      "proximity": 0.003613786070614103,
-      "score": 0.0018068930353070515,
-      "distance_mm": 275.71809577540006,
-      "voxels": 46369
+      "proximity": 0.0035735270985978998,
+      "score": 0.0017867635492989499,
+      "distance_mm": 278.8355720857294,
+      "voxels": 25586
     },
     "spleen": {
       "overlap": 0.0,
-      "proximity": 0.023517222938664595,
-      "score": 0.011758611469332297,
-      "distance_mm": 41.52202747782363,
-      "voxels": 187
+      "proximity": 0.023472111420118628,
+      "score": 0.011736055710059314,
+      "distance_mm": 41.60375140955027,
+      "voxels": 170
     }
   },
-  "index": 0.011758611469332297,
+  "index": 0.011736055710059314,
   "case": "14487",
   "spacing": [
     3.0,
@@ -103,16 +103,16 @@
   ],
   "organ_sizes": {
     "bladder": 0,
-    "femur-left": 231,
-    "femur-right": 289,
+    "femur-left": 219,
+    "femur-right": 262,
     "heart": 0,
-    "kidney-left": 2683,
-    "kidney-right": 1514,
+    "kidney-left": 3077,
+    "kidney-right": 1122,
     "liver": 0,
-    "lung-left": 103188,
-    "lung-right": 48907,
-    "pancreas": 46369,
-    "spleen": 187
+    "lung-left": 94893,
+    "lung-right": 45649,
+    "pancreas": 25586,
+    "spleen": 170
   },
   "peak_sim": {
     "bladder": 0.12198717147111893,

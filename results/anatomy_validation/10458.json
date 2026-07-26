@@ -23,24 +23,24 @@
     },
     "heart": {
       "overlap": 0.0,
-      "proximity": 0.008505859867583853,
-      "score": 0.0042529299337919265,
-      "distance_mm": 116.56600926509934,
-      "voxels": 378
+      "proximity": 0.00851738732863105,
+      "score": 0.004258693664315525,
+      "distance_mm": 116.40689502736564,
+      "voxels": 442
     },
     "kidney-left": {
       "overlap": 0.0,
-      "proximity": 0.005692806171726148,
-      "score": 0.002846403085863074,
-      "distance_mm": 174.66029297933824,
-      "voxels": 113
+      "proximity": 0.005667851257714124,
+      "score": 0.002833925628857062,
+      "distance_mm": 175.43370556680867,
+      "voxels": 72
     },
     "kidney-right": {
       "overlap": 0.0,
-      "proximity": 0.017847805905939606,
-      "score": 0.008923902952969803,
-      "distance_mm": 55.02929599694986,
-      "voxels": 35
+      "proximity": 0.01779671474500685,
+      "score": 0.008898357372503425,
+      "distance_mm": 55.19014600886188,
+      "voxels": 2
     },
     "liver": {
       "overlap": 0.0,
@@ -51,17 +51,17 @@
     },
     "lung-left": {
       "overlap": 0.0,
-      "proximity": 0.009664023937448345,
-      "score": 0.004832011968724173,
-      "distance_mm": 102.47656488359614,
-      "voxels": 18531
+      "proximity": 0.00962460818290659,
+      "score": 0.004812304091453295,
+      "distance_mm": 102.90033349887541,
+      "voxels": 16403
     },
     "lung-right": {
       "overlap": 0.0,
-      "proximity": 0.008118909505757273,
-      "score": 0.004059454752878637,
-      "distance_mm": 122.16925065994157,
-      "voxels": 13900
+      "proximity": 0.007602709996640856,
+      "score": 0.003801354998320428,
+      "distance_mm": 130.5320458680964,
+      "voxels": 12510
     },
     "pancreas": {
       "overlap": 0.0,
@@ -78,7 +78,7 @@
       "voxels": 0
     }
   },
-  "index": 0.008923902952969803,
+  "index": 0.008898357372503425,
   "case": "10458",
   "spacing": [
     2.5,
@@ -108,12 +108,12 @@
     "bladder": 0,
     "femur-left": 0,
     "femur-right": 0,
-    "heart": 378,
-    "kidney-left": 113,
-    "kidney-right": 35,
+    "heart": 442,
+    "kidney-left": 72,
+    "kidney-right": 2,
     "liver": 0,
-    "lung-left": 18531,
-    "lung-right": 13900,
+    "lung-left": 16403,
+    "lung-right": 12510,
     "pancreas": 0,
     "spleen": 0
   },
