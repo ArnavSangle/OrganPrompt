@@ -89,6 +89,42 @@ TYPICAL_PEAK = {
     "spleen": 0.1309,        # sd 0.0218
 }
 
+# Per-organ POOLED mean and sd of raw similarity, over every voxel of every
+# patient in the same 35-patient held-out fit that produced TYPICAL_PEAK
+# (scripts/fit_organ_stats.py, results/organ_stats_heldout.json -- "mean"/"sd"
+# fields). TYPICAL_PEAK equalises organs by SCALE only (raw / peak); it has no
+# offset term, so an organ with a high response floor can win voxels on that
+# floor alone. ORGAN_MEAN/ORGAN_SD instead support a z-score calibration:
+# keep a voxel only if raw_similarity >= mean + k*sd for that organ, which
+# corrects for baseline as well as scale. Not fit or tuned here -- copied
+# verbatim from the JSON, exactly as TYPICAL_PEAK was.
+ORGAN_MEAN = {
+    "bladder": -0.1502,
+    "femur-left": -0.1607,
+    "femur-right": -0.1573,
+    "heart": -0.1457,
+    "kidney-left": -0.1338,
+    "kidney-right": -0.1333,
+    "liver": -0.1249,
+    "lung-left": -0.1316,
+    "lung-right": -0.1365,
+    "pancreas": -0.1263,
+    "spleen": -0.1505,
+}
+ORGAN_SD = {
+    "bladder": 0.0413,
+    "femur-left": 0.0475,
+    "femur-right": 0.0403,
+    "heart": 0.0448,
+    "kidney-left": 0.0482,
+    "kidney-right": 0.0368,
+    "liver": 0.0445,
+    "lung-left": 0.0459,
+    "lung-right": 0.0405,
+    "pancreas": 0.0340,
+    "spleen": 0.0492,
+}
+
 
 class CompetitiveAssigner:
     """Stream per-organ similarity volumes, emit mutually exclusive organ masks.
@@ -105,9 +141,26 @@ class CompetitiveAssigner:
     are streamed, plus one transient label array per organ during finalize.
     """
 
-    def __init__(self, shape, peaks=None, unassigned=-1):
+    def __init__(self, shape, peaks=None, unassigned=-1, calibration="scale",
+                 stats=None):
+        """
+        calibration: "scale" (default, today's exact behaviour) divides raw
+        similarity by TYPICAL_PEAK (or `peaks`), giving a "fraction of typical
+        peak" ratio. "zscore" instead computes (raw - mean) / sd per organ,
+        using ORGAN_MEAN/ORGAN_SD (or `stats`, an organ_name -> (mean, sd)
+        override analogous to `peaks`). Both modes feed the same competitive
+        argmax over `best_val` -- only how a voxel's per-organ value is
+        computed changes.
+        """
         self.shape = tuple(shape)
         self.peaks = dict(TYPICAL_PEAK if peaks is None else peaks)
+        if calibration not in ("scale", "zscore"):
+            raise ValueError(f"unknown calibration mode {calibration!r}")
+        self.calibration = calibration
+        if stats is None:
+            self.stats = {n: (ORGAN_MEAN[n], ORGAN_SD[n]) for n in ORGAN_MEAN}
+        else:
+            self.stats = dict(stats)
         self.unassigned = unassigned
         self.best_val = np.full(self.shape, -np.inf, dtype=np.float32)
         # the winner is recorded as a GROUP, not an organ: bilateral pairs share
@@ -117,10 +170,19 @@ class CompetitiveAssigner:
 
     def _calibrate(self, organ_class, sim):
         name = CLASS_NAMES[organ_class]
+        sim = sim.astype(np.float32)
+        if self.calibration == "zscore":
+            stat = self.stats.get(name)
+            if not stat:
+                raise KeyError(f"no mean/sd stats for organ {name!r}")
+            mean, sd = stat
+            if not sd:
+                raise KeyError(f"zero sd for organ {name!r}")
+            return (sim - float(mean)) / float(sd)
         scale = self.peaks.get(name)
         if not scale:
             raise KeyError(f"no typical peak for organ {name!r}")
-        return sim.astype(np.float32) / float(scale)
+        return sim / float(scale)
 
     def _gid(self, organ_class):
         return _GROUP_ID[GROUP_OF[CLASS_NAMES[organ_class]]]
@@ -191,10 +253,12 @@ class CompetitiveAssigner:
         A mask is the connected component of the group's won territory that
         contains the organ's own peak voxel; for a bilateral pair the territory is
         first cut on the image midline so each side gets its own half. `floor` is
-        expressed as a fraction of the organ's typical peak: winning a voxel is not
-        enough, the organ must also answer near the level it answers at when it
-        really is present, or every voxel in the body would end up assigned to
-        something.
+        compared against whatever `best_val` holds -- in "scale" calibration that
+        is a fraction of the organ's typical peak (default floor 0.6); in
+        "zscore" calibration it is a per-organ z-score (best_val >= floor means
+        best_val standard deviations above that organ's own mean). Either way,
+        winning a voxel is not enough: the organ must also clear the floor, or
+        every voxel in the body would end up assigned to something.
         """
         gone = self.absent()
         for gid, members in self._members().items():

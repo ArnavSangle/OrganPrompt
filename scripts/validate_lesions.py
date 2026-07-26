@@ -53,8 +53,18 @@ def testable_lesions(labels, on_disk):
     return out
 
 
+def default_floor(calibration):
+    """The floor that matches each calibration mode's own scale.
+
+    0.6 is a fraction of TYPICAL_PEAK and means nothing on a z-score axis; 2.0 is
+    a z-score and means nothing as a fraction of peak. Neither default is a fit --
+    2.0 is the pre-registered k for the zscore A/B, not tuned after seeing results.
+    """
+    return {"scale": 0.6, "zscore": 2.0}[calibration]
+
+
 def score_patient(ct, lesion_coords, spacing, model, text_features, device,
-                  floor=0.6, alpha=0.5, beta=0.5):
+                  floor=0.6, alpha=0.5, beta=0.5, calibration="scale"):
     """{level: {organ: record}} for one patient, from a single inference pass.
 
     Organ masks are streamed one at a time and each is scored against EVERY
@@ -62,7 +72,7 @@ def score_patient(ct, lesion_coords, spacing, model, text_features, device,
     many lesions the patient carries.
     """
     organs = list(range(len(CLASS_NAMES)))
-    assigner = CompetitiveAssigner(ct.shape)
+    assigner = CompetitiveAssigner(ct.shape, calibration=calibration)
     for oc, sim in iter_organ_similarity(ct, model, text_features, device, organs):
         assigner.update(oc, sim)
         del sim
@@ -104,11 +114,19 @@ def main():
     ap.add_argument("--device", default="cuda")
     ap.add_argument("--out_dir", default="results/lesion_validation")
     ap.add_argument("--stride", type=int, default=2)
-    ap.add_argument("--floor", type=float, default=0.6)
+    ap.add_argument("--calibration", choices=["scale", "zscore"], default="scale",
+                     help="scale: today's raw/TYPICAL_PEAK ratio (unchanged "
+                          "default). zscore: per-organ (raw-mean)/sd, floor "
+                          "compared as a z-score instead of a ratio.")
+    ap.add_argument("--floor", type=float, default=None,
+                     help="defaults to 0.6 for --calibration scale, 2.0 for "
+                          "--calibration zscore; pass explicitly to override")
     ap.add_argument("--alpha", type=float, default=0.5)
     ap.add_argument("--beta", type=float, default=0.5)
     ap.add_argument("--max_cases", type=int, default=0, help="0 = all")
     a = ap.parse_args()
+    if a.floor is None:
+        a.floor = default_floor(a.calibration)
 
     labels = load_lesion_labels(str(Path(a.root) / "Spine-Mets-CT-SEG_Clinical.xlsx"))
     cases_dir = Path(a.root) / "spine_mets_ct_seg"
@@ -145,7 +163,7 @@ def main():
             if not coords:
                 continue
             scored = score_patient(ct, coords, spacing, model, tf, a.device,
-                                   a.floor, a.alpha, a.beta)
+                                   a.floor, a.alpha, a.beta, a.calibration)
             del p, ct
         except Exception as e:
             print(f"[validate_lesions] {case}: SKIP ({e})", flush=True)
@@ -167,7 +185,8 @@ def main():
                   + ", ".join(f"{n}={dmm[n]:.0f}mm" for n in order[:4]), flush=True)
 
     summary = {"per_lesion": per_lesion, "skipped": skipped,
-               "stride": a.stride, "floor": a.floor, **summarize(per_lesion)}
+               "stride": a.stride, "floor": a.floor, "calibration": a.calibration,
+               **summarize(per_lesion)}
     (out_dir / "summary.json").write_text(json.dumps(summary, indent=2))
     print(f"[validate_lesions] n_lesions={summary['n_lesions']} "
           f"n_patients={summary['n_patients']} top1={summary['top1']:.2f} "
