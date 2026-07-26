@@ -244,6 +244,53 @@ python scripts/eval_organ_transfer.py --vol <ctorg volume> --labels <ctorg label
 α/β weighting, per-patient aggregation (currently max-over-organs), and organ thresholds
 are open parameters — to be tuned once real per-patient scores exist across the full cohort.
 
+### Per-lesion validation
+
+Per-patient validation caps out at 20 evaluation points (patients with exactly one
+involved vertebral level). Scoring per lesion instead — one point per labelled vertebra,
+still one inference pass per patient — lifts this to 180 lesions across 46 patients.
+
+```bash
+python scripts/validate_lesions.py --device cuda   # -> results/lesion_validation/summary.json
+python scripts/analyze_lesions.py                  # patient-clustered bootstrap CI + permutation p
+```
+
+**Headline result:** mean rank 1.78 (95% CI [1.56, 2.03], patient-clustered bootstrap),
+chance 2.96, permutation p < 0.0001 — chance is excluded from the CI. T1–T10 all beat
+chance (T8/T9 near-perfect); L3/L4 beat it clearly; the thoracolumbar junction (T11–L2)
+and L5 sit at or below chance. 34/180 lesions top-rank an anatomically impossible organ,
+concentrated in bladder and femur phantoms.
+
+Two hypotheses for the phantom pattern were tested and rejected as clean explanations:
+
+- **Field-of-view** (`scripts/scan_extent.py`) — checks whether phantom patients'
+  scans simply don't extend far enough to contain the true organ. Rejected: phantom
+  patients have *more* caudal coverage than clean ones (median 122mm vs 88.5mm below
+  the last segmented vertebra).
+- **Missing-class / prompt confusion** (`scripts/prompt_confusion.py`) — a
+  text-encoder-only diagnostic showing the femur prompt embeds almost identically to an
+  undefined humerus/scapula prompt, and the bladder prompt is closest to an undefined
+  aorta prompt — both beating the organ's own defined classmates. Motivated an
+  experiment, not a fix on its own (see below).
+
+**Calibration variants tested** (each a single pre-registered run against the 180-lesion
+set, reported as-is, not retuned after seeing results):
+
+| variant | mean rank | top1 / top3 | impossible top-1 | bilateral pair splits | verdict |
+|---|---|---|---|---|---|
+| baseline (ratio-to-peak, floor 0.6) | 1.78 | — | 34/180 | 34/540 | — |
+| + rib/humerus/aorta hard negatives | 2.04 | 0.53 / 0.82 | 37/180 | 58/540 (lung 46, new) | mixed/negative |
+| z-score calibration (`mean + 2·sd`) | 1.82 | 0.50 / 0.83 | 79/180 | 0/540 (perfect) | mixed/negative |
+
+Global hard negatives traded a femur/rib confusion for a new lung-boundary one (the
+negative bled into lung's own scoring since it was applied everywhere, not per-organ).
+The z-score floor is more permissive than the ratio floor — it lets most organs retain a
+sliver of territory almost everywhere, which zeroes out bilateral asymmetry but roughly
+doubles impossible detections, since organs with no business near a lesion still win it
+at trivial (0–1mm) distance. Neither is a clean win; both are documented in
+`results/lesion_validation_negatives/` and `results/lesion_validation_zscore/` /
+`results/lesion_validation_scale_check/` respectively.
+
 ## Project structure
 
 ```
