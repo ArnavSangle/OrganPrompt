@@ -57,7 +57,7 @@ def test_score_patient_scores_each_lesion_against_every_organ(monkeypatch):
     shape = (4, 8, 8)
     calls = []
 
-    def fake_iter(ct, model, tf, device, organs=None):
+    def fake_iter(ct, model, tf, device, organs=None, neg_text_features=None):
         calls.append(ct.shape)
         organs = list(range(len(CLASS_NAMES))) if organs is None else organs
         rng = np.random.RandomState(0)
@@ -85,13 +85,35 @@ def _row(shape, r):
     return m
 
 
+def test_score_patient_threads_neg_text_features_through_to_iter_organ_similarity(monkeypatch):
+    """The vision-side missing-class test (rib/humerus/aorta negatives) only
+    does anything if score_patient actually forwards neg_text_features into
+    iter_organ_similarity -- otherwise load_organcam's negatives are computed
+    and then silently dropped."""
+    shape = (3, 6, 6)
+    received = []
+
+    def fake_iter(ct, model, tf, device, organs=None, neg_text_features=None):
+        received.append(neg_text_features)
+        organs = list(range(len(CLASS_NAMES))) if organs is None else organs
+        for oc in organs:
+            yield oc, np.full(ct.shape, 0.9, dtype=np.float32)
+
+    monkeypatch.setattr(vl, "iter_organ_similarity", fake_iter)
+    coords = {"T2": np.argwhere(_row(shape, 3))}
+    sentinel = object()
+    vl.score_patient(np.zeros(shape, np.float32), coords, (1.0, 1.0, 1.0),
+                     object(), None, "cpu", neg_text_features=sentinel)
+    assert received == [sentinel]
+
+
 def test_score_patient_excludes_tumor_voxels_from_organ_masks(monkeypatch):
     """Spine-Mets lesions are vertebral bone by construction, so an organ firing
     on a lesion voxel is a model artifact. Leaving it in lets a confused
     prediction at the lesion fake perfect overlap with itself."""
     shape = (3, 6, 6)
 
-    def fake_iter(ct, model, tf, device, organs=None):
+    def fake_iter(ct, model, tf, device, organs=None, neg_text_features=None):
         organs = list(range(len(CLASS_NAMES))) if organs is None else organs
         for oc in organs:
             yield oc, np.full(ct.shape, 0.9, dtype=np.float32)
