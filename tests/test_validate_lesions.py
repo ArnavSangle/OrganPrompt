@@ -137,7 +137,7 @@ def test_score_patient_defaults_to_scale_calibration(monkeypatch):
             captured["calibration"] = kw.get("calibration", "scale")
             super().__init__(*a, **kw)
 
-    def fake_iter(ct, model, tf, device, organs=None):
+    def fake_iter(ct, model, tf, device, organs=None, neg_text_features=None):
         organs = list(range(len(CLASS_NAMES))) if organs is None else organs
         for oc in organs:
             yield oc, np.full(ct.shape, 0.1, dtype=np.float32)
@@ -159,7 +159,7 @@ def test_score_patient_passes_zscore_calibration_through(monkeypatch):
             captured["calibration"] = kw.get("calibration", "scale")
             super().__init__(*a, **kw)
 
-    def fake_iter(ct, model, tf, device, organs=None):
+    def fake_iter(ct, model, tf, device, organs=None, neg_text_features=None):
         organs = list(range(len(CLASS_NAMES))) if organs is None else organs
         for oc in organs:
             yield oc, np.full(ct.shape, 0.1, dtype=np.float32)
