@@ -21,10 +21,11 @@ from src.data.spine_mets_labels import load_lesion_labels
 import scripts.compute_index as ci
 
 # Vertebral level -> organs whose typical craniocaudal extent overlaps that level.
-# Deliberately generous (an organ spans several levels) but never trivial: no
-# level expects more than 4 of the 11 classes, and the sets are disjoint between
-# upper thoracic and lumbar. Cervical levels expect nothing in our 11-organ set
-# and are excluded from the test entirely.
+# Deliberately generous (an organ spans several levels, and the thoracolumbar
+# junction carries a wide expected set once the lung's true inferior extent is
+# accounted for -- see the T11/T12 comment below) but never trivial: upper
+# thoracic and pure-lumbar sets stay disjoint. Cervical levels expect nothing in
+# our 11-organ set and are excluded from the test entirely.
 _LUNGS = ["lung-left", "lung-right"]
 _KIDNEYS = ["kidney-left", "kidney-right"]
 EXPECTED = {
@@ -33,8 +34,16 @@ EXPECTED = {
     "T7": _LUNGS + ["heart"], "T8": _LUNGS + ["heart"],
     "T9": ["heart", "liver", "spleen"] + _LUNGS,
     "T10": ["liver", "spleen"] + _LUNGS,
-    "T11": ["liver", "spleen", "pancreas"],
-    "T12": ["liver", "spleen", "pancreas"] + _KIDNEYS,
+    # Lungs included at T11/T12 despite ending here in older, coarser textbook
+    # diagrams: the posterior costophrenic (costodiaphragmatic) recess -- the
+    # true inferior limit of aerated lung -- averages spinal level 13.5 +/- 0.6
+    # (lower half of L1) on 282 PA chest radiographs (Clinical Radiology,
+    # PubMed 19589417), a full vertebral level below T12. T11 and T12 both sit
+    # within or above that typical range, so a lung ranked highly at either
+    # level reflects normal anatomy, not a phantom detection. See
+    # docs/references/anatomy-citations.md for the full source list.
+    "T11": ["liver", "spleen", "pancreas"] + _LUNGS,
+    "T12": ["liver", "spleen", "pancreas"] + _KIDNEYS + _LUNGS,
     "L1": ["liver", "spleen", "pancreas"] + _KIDNEYS,
     "L2": ["pancreas"] + _KIDNEYS,
     "L3": _KIDNEYS,

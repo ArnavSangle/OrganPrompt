@@ -9,6 +9,19 @@ def test_expected_organs_cover_thoracic_and_lumbar():
     assert "bladder" in va.EXPECTED["L5"]
 
 
+def test_expected_includes_lungs_at_T11_and_T12():
+    # Per Clinical Radiology (PubMed 19589417, 282 PA chest radiographs), the
+    # posterior costophrenic sulcus averages spinal level 13.5 +/- 0.6 -- the
+    # lower half of L1 -- a full vertebral level below T12. Both T11 and T12
+    # sit within (or above) that typical range, so a lung ranked highly at
+    # either level is anatomically plausible, not a phantom detection. See
+    # docs/references/anatomy-citations.md for full sourcing.
+    assert "lung-left" in va.EXPECTED["T11"]
+    assert "lung-right" in va.EXPECTED["T11"]
+    assert "lung-left" in va.EXPECTED["T12"]
+    assert "lung-right" in va.EXPECTED["T12"]
+
+
 def test_single_level_cases_filters_to_exactly_one_level():
     labels = {"a": {"T2": "lytic"}, "b": {"T2": "lytic", "L4": "blastic"}, "c": {}}
     assert va.single_level_cases(labels) == {"a": "T2"}
