@@ -1,0 +1,131 @@
+{
+  "per_organ": {
+    "bladder": {
+      "overlap": 0.0,
+      "proximity": 0.010574243749386722,
+      "score": 0.005287121874693361,
+      "distance_mm": 93.5694107021126,
+      "voxels": 3430
+    },
+    "femur-left": {
+      "overlap": 0.0,
+      "proximity": 0.008163820727299837,
+      "score": 0.0040819103636499186,
+      "distance_mm": 121.49166577800975,
+      "voxels": 338
+    },
+    "femur-right": {
+      "overlap": 0.0,
+      "proximity": 0.008549826901660475,
+      "score": 0.004274913450830238,
+      "distance_mm": 115.96143226078512,
+      "voxels": 4212
+    },
+    "heart": {
+      "overlap": 0.0,
+      "proximity": 0.0,
+      "score": 0.0,
+      "distance_mm": null,
+      "voxels": 0
+    },
+    "kidney-left": {
+      "overlap": 0.0,
+      "proximity": 0.008741610595090345,
+      "score": 0.004370805297545173,
+      "distance_mm": 113.39539534758524,
+      "voxels": 3
+    },
+    "kidney-right": {
+      "overlap": 0.0,
+      "proximity": 0.007856256836223202,
+      "score": 0.003928128418111601,
+      "distance_mm": 126.28708096574113,
+      "voxels": 918
+    },
+    "liver": {
+      "overlap": 0.0,
+      "proximity": 0.0,
+      "score": 0.0,
+      "distance_mm": null,
+      "voxels": 0
+    },
+    "lung-left": {
+      "overlap": 0.0,
+      "proximity": 0.012232062028147792,
+      "score": 0.006116031014073896,
+      "distance_mm": 80.75236503042998,
+      "voxels": 4523
+    },
+    "lung-right": {
+      "overlap": 0.0,
+      "proximity": 0.01986871059843222,
+      "score": 0.00993435529921611,
+      "distance_mm": 49.330392354645646,
+      "voxels": 4213
+    },
+    "pancreas": {
+      "overlap": 0.0,
+      "proximity": 0.0,
+      "score": 0.0,
+      "distance_mm": null,
+      "voxels": 0
+    },
+    "spleen": {
+      "overlap": 0.0,
+      "proximity": 0.02251333195368982,
+      "score": 0.01125666597684491,
+      "distance_mm": 43.41812531601326,
+      "voxels": 2039
+    }
+  },
+  "index": 0.01125666597684491,
+  "case": "15094",
+  "spacing": [
+    0.5,
+    0.9765625,
+    0.9765625
+  ],
+  "tumor_voxels": 535108,
+  "alpha": 0.5,
+  "beta": 0.5,
+  "percentile": 99.9,
+  "stride": 1,
+  "assign": "competitive",
+  "floor": 0.6,
+  "absent": [
+    "heart",
+    "liver",
+    "pancreas"
+  ],
+  "slice_range": [
+    185,
+    1038
+  ],
+  "organ_sizes": {
+    "bladder": 3430,
+    "femur-left": 338,
+    "femur-right": 4212,
+    "heart": 0,
+    "kidney-left": 3,
+    "kidney-right": 918,
+    "liver": 0,
+    "lung-left": 4523,
+    "lung-right": 4213,
+    "pancreas": 0,
+    "spleen": 2039
+  },
+  "peak_sim": {
+    "bladder": 0.1117723137140274,
+    "femur-left": 0.11654800176620483,
+    "femur-right": 0.09857353568077087,
+    "heart": 0.1192903071641922,
+    "kidney-left": 0.12695881724357605,
+    "kidney-right": 0.11258085072040558,
+    "liver": 0.15029233694076538,
+    "lung-left": 0.1798277050256729,
+    "lung-right": 0.1504620462656021,
+    "pancreas": 0.10134612023830414,
+    "spleen": 0.13262373208999634
+  },
+  "z_extent_mm": 426.5
+}
