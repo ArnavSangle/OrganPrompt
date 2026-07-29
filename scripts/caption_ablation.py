@@ -218,9 +218,15 @@ def evaluate_level(cache, text_features):
 
 
 def plot_heatmap(all_results: dict, out_path: Path):
-    """Heatmap: classes sorted by mean IoU across non-adversarial levels
-    (L1-L4), descending. Bilateral pairs tend to end up adjacent naturally,
-    and the visual gradient guides the eye from top (strong) to bottom (hard).
+    """Heatmap: bilateral pairs kept adjacent, groups ordered by difficulty.
+
+    Sorting rows purely by mean IoU splits the pairs apart -- lung-left landed
+    first and lung-right sixth, which buries the single most important
+    comparison in this figure: the two lungs get the SAME adversarial
+    transformation at L5 and respond very differently (lung-left 0.83->0.36,
+    lung-right 0.78->0.63). Rows are therefore grouped so each left/right pair
+    is adjacent, and the groups themselves are ordered by their mean IoU on the
+    non-adversarial levels, preserving the easy-to-hard gradient.
     """
     plt.rcParams.update({
         "font.family": "sans-serif",
@@ -234,7 +240,26 @@ def plot_heatmap(all_results: dict, out_path: Path):
         c: float(np.mean([all_results[l]["per_class"][c]["iou"] for l in non_adv]))
         for c in CLASS_NAMES
     }
-    classes = sorted(CLASS_NAMES.keys(), key=lambda c: -class_mean_easy[c])
+
+    # Group bilateral pairs by their shared stem ("lung-left"/"lung-right" -> "lung"),
+    # order groups by group-mean IoU, and keep left before right within a pair.
+    def stem(c):
+        n = CLASS_NAMES[c]
+        return n.rsplit("-", 1)[0] if n.endswith(("-left", "-right")) else n
+
+    groups = {}
+    for c in CLASS_NAMES:
+        groups.setdefault(stem(c), []).append(c)
+    for members in groups.values():
+        members.sort(key=lambda c: CLASS_NAMES[c])          # -left before -right
+    classes = [
+        c
+        for _, members in sorted(
+            groups.items(),
+            key=lambda kv: -float(np.mean([class_mean_easy[c] for c in kv[1]])),
+        )
+        for c in members
+    ]
 
     matrix = np.zeros((len(classes), len(levels_all)))
     for j, l in enumerate(levels_all):
@@ -258,7 +283,7 @@ def plot_heatmap(all_results: dict, out_path: Path):
 
     ax.set_title(
         "Caption ablation: per-class IoU across five prompt formulation levels\n"
-        "(rows sorted by mean IoU on non-adversarial levels — hard classes at bottom)",
+        "(bilateral pairs adjacent; groups ordered easy → hard by mean IoU on L1–L4)",
         fontsize=12, pad=10,
     )
 

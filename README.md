@@ -18,9 +18,14 @@ Evaluated on the [TotalSegmentator v2.0.1](https://github.com/wasserth/TotalSegm
 
 **Progression across method iterations:**
 
+These are ablation stages of this method, not competing methods — each row adds one
+change to the row above it. "Untrained starting point" is where the pipeline begins
+before any fine-tuning, not a comparison baseline; for comparison against published
+methods see [Comparison to published weakly-supervised methods](#comparison-to-published-weakly-supervised-methods).
+
 | Version | Method | mIoU |
 |---|---|---|
-| Baseline | Vanilla-gradient CAM (no fine-tuning) | 0.003 |
+| Untrained starting point | Vanilla-gradient CAM (no fine-tuning) | 0.003 |
 | v0 | GradCAM + SigLIP fine-tuning | 0.063 |
 | v1 | + patch-level contrastive loss | 0.307 |
 | v3 | + resume from v1 | 0.469 |
@@ -86,6 +91,39 @@ To contextualize these weakly-supervised results, we compare against [TotalSegme
 
 **Takeaway.** On large, high-contrast organs (liver, lungs, heart) OrganCAM reaches 0.87–0.90 slice Dice with *no pixel labels* — within striking distance of supervised performance once the metric caveat is accounted for. The gap widens exactly where weak supervision is expected to struggle: small, low-contrast structures (pancreas 0.42 vs 0.89; kidneys 0.60–0.63 vs 0.94–0.95). This is the intended demonstration — text supervision recovers most of the localization signal for morphologically distinctive organs, and the residual gap quantifies the cost of removing dense annotation.
 
+## Comparison to published weakly-supervised methods
+
+The fully-supervised comparison above establishes the ceiling. This section places OrganCAM among methods that, like it, do **not** use dense per-voxel labels.
+
+**Supervision strength is not uniform across "weakly-supervised" methods, and that distinction drives the comparison.** These are ordered from weakest to strongest supervision signal:
+
+| Supervision tier | What the model is given per training image | Annotation cost |
+|---|---|---|
+| **Image-level / text** *(OrganCAM)* | Only that an organ is present, via a text prompt — no spatial hint whatsoever | Lowest |
+| **Point** | One clicked pixel inside each organ | Low |
+| **Scribble** | A hand-drawn stroke through each organ | Moderate |
+| **Fully-supervised** | Every voxel labelled | Highest |
+
+Point- and scribble-supervised methods receive per-image *spatial* information that OrganCAM never sees. They are included below for context, but **they are not a like-for-like baseline** — a scribble already answers "where," which is the entire problem OrganCAM is solving from text alone.
+
+| Method | Supervision | Task / dataset | Reported Dice |
+|---|---|---|---|
+| **OrganCAM (this work)** | **Image-level text** | 11 organs, TotalSegmentator (2D slice) | **0.42–0.90** (mean 0.742) |
+| [MedCLIP-SAMv2](https://arxiv.org/abs/2409.19483) (zero-shot) | Text prompt, no masks | Breast US, brain MRI, lung X-ray, lung CT | +13.07% over prior zero-shot |
+| [MedCLIP-SAMv2](https://arxiv.org/abs/2409.19483) (weakly-sup.) | Text + pseudo-label refinement | same four tasks | +11.21% over prior weakly-sup. |
+| [PET-CT lesion CAM](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC8510879/) | Image-level | Tumor lesions, PET-CT | 0.47 median *(vs 0.72 fully-sup. U-Net)* |
+| [Probabilistic-aware learning](https://arxiv.org/pdf/2403.02566) | Point | 3D multi-organ | +18.1% / +10.2% over prior point-sup. |
+| [Probabilistic-aware learning](https://arxiv.org/pdf/2403.02566) | Scribble | 3D multi-organ | +58.4% / +17.6% over prior scribble-sup. |
+| Scribble-supervised (BTCV, representative) | Scribble | Multi-organ abdominal CT | Spleen 0.83, liver 0.82, L-kidney 0.76, R-kidney 0.72 |
+
+**Three caveats a reader should apply before comparing any two rows.**
+
+1. **Different datasets.** Published multi-organ weak supervision is mostly benchmarked on BTCV, AMOS, or WORD; OrganCAM is on TotalSegmentator. Organ sets, slice thickness, and contrast protocols differ.
+2. **Different metrics.** OrganCAM's 2D per-slice Dice on organ-present slices is systematically more forgiving than 3D volumetric Dice (same caveat as the fully-supervised table above).
+3. **Several entries report *relative* gains**, not absolute Dice, because that is what those papers publish — a "+13.07%" cannot be placed on the same axis as "0.83".
+
+**Takeaway.** Within the image-level tier — the only strictly like-for-like comparison — OrganCAM's per-organ range (0.42–0.90) sits above the image-level PET-CT CAM result (0.47 median), and the closest methodological relative is MedCLIP-SAMv2, which shares the BiomedCLIP backbone and text-driven premise but pairs it with SAM for mask refinement rather than using patch-similarity directly. Against scribble-supervised multi-organ CT (spleen 0.83, liver 0.82, kidneys 0.72–0.76), OrganCAM is **competitive on large organs despite using strictly less supervision** (liver 0.89, lungs 0.88–0.90, spleen 0.77) and clearly behind on kidneys (0.60–0.63) and pancreas (0.42) — consistent with the fully-supervised comparison, where the same small/low-contrast structures drive the gap.
+
 ## Caption ablation
 
 To characterize how much the model actually uses the prompt text (rather than memorizing organ appearance from images alone), the fine-tuned v4 model was re-evaluated with five prompt formulation levels — text embeddings the only variable, no retraining:
@@ -116,15 +154,26 @@ To characterize how much the model actually uses the prompt text (rather than me
 
 **1. Class names carry most of the signal (L1 ≈ 96% of L4).** Fine-tuning made the organ-name → visual-region mapping strong enough that a single word reaches 96% of the mIoU obtained from the full multi-sentence descriptions.
 
-**2. Position language is a refinement, not a substitute (L3 < L1).** Removing organ identity while keeping position cues *lowers* IoU below the class-name-only baseline. The model needs to know *what* to look for before *where* becomes useful.
+**2. Position language is a refinement, not a substitute (L3 < L1).** Removing organ identity while keeping position cues *lowers* IoU below the class-name-only level (L1). The model needs to know *what* to look for before *where* becomes useful.
 
 **3. Bilateral pairs are prompt-sensitive; unilateral organs are prompt-robust.** Under L5 (adversarial position swaps), classes that rely on left/right disambiguation collapse (kidney-left -63%, lung-left -57%, femurs -55%) while organs with unique positions are unaffected (liver, spleen, heart, bladder unchanged). This is direct evidence that the model *uses* text position cues for localization — it isn't image-only classification with text as a passenger.
+
+**3a. Adversarial robustness scales with how much organ-intrinsic (non-positional) anatomy the prompt contains.** The two lungs receive the *same* L5 transformation but respond very differently: lung-left collapses 0.83 → 0.36 (-57%) while lung-right degrades only 0.78 → 0.63 (-19%). Reading the prompts explains the gap. Every left/right token flips under the swap, so lung-left's distinguishing clause — *"slightly smaller than the right due to the heart pushing into the left hemithorax"* — inverts cleanly and ends up describing the other lung, leaving nothing pointing at the correct organ. Lung-right's prompt contains a laterality-**independent** clause the swap cannot corrupt: *"Three lobes are present, divided by fissures visible as thin lines."* The right lung genuinely has three lobes and the left has two, so that sentence keeps pointing at the right lung no matter how the position words are flipped. The practical implication is that prompt robustness is controllable: including morphological cues that are invariant under position swaps (lobe count, characteristic shape) hardens a bilateral class against exactly the failure mode L5 probes.
 
 **4. Pancreas is data-limited, not prompt-limited.** IoU stays at 0.21-0.22 across every level, including L1 (just the word "pancreas") and L4 (full description). Prompt engineering will not fix pancreas; the ceiling is inherent to weakly-supervised text-driven segmentation for small, low-contrast structures.
 
 ### Unintended natural experiment
 
-The L3 prompt for `lung-right` was auto-generated via Claude Haiku and contained a labeling error — the first two words are `"The left lung..."` describing the right lung's position. This single-word inconsistency contradicts the class label the model was trained against, and IoU on `lung-right` at L3 collapsed to 0.23 while `lung-left` at L3 held at 0.83. In effect: **one word swapped in one of eleven prompts cost 55 IoU points on the affected class** — a real-world illustration of the prompt sensitivity L5 was designed to probe.
+The L3 prompts were auto-generated via Claude Haiku, and the one for `lung-right` came out wrong in **both** of its content words:
+
+| | generated L3 prompt | correct per the L4 convention |
+|---|---|---|
+| `lung-left` | "The **left** lung is located in the **right** half of the axial CT image." | ✓ correct |
+| `lung-right` | "The **left** lung occupies the **left** half of the image." | should read "The **right** lung ... the **left** half" |
+
+The organ name is wrong *and* the position is wrong, and the two errors are mutually consistent: the resulting sentence is a valid description of the **left** lung. So the model did not degrade or get confused — it correctly followed a prompt that describes a different organ, and segmented the left lung. IoU on `lung-right` at L3 fell to 0.23 while `lung-left` at L3 held at 0.829 (essentially identical to its 0.828 at L4, confirming the L3 *level* is not itself harmful for lungs).
+
+In effect: **a two-word error in one of eleven prompts cost 55 IoU points on the affected class** — a real-world illustration of exactly the prompt sensitivity L5 was designed to probe, arrived at by accident. It also demonstrates the failure is *directional*, not degradative: a wrong-but-coherent prompt produces a confident segmentation of the wrong structure, which is a more dangerous failure mode than low confidence would be.
 
 ### Qualitative masks
 
@@ -243,6 +292,18 @@ python scripts/eval_organ_transfer.py --vol <ctorg volume> --labels <ctorg label
 
 α/β weighting, per-patient aggregation (currently max-over-organs), and organ thresholds
 are open parameters — to be tuned once real per-patient scores exist across the full cohort.
+
+### Qualitative organ maps on bone-metastasis CT
+
+The same per-organ visualization used for the TotalSegmentator pipeline, applied to Spine-Mets data — all 11 organ maps on a single thoracic lesion slice (CT / raw patch-similarity / overlay):
+
+![Spine-Mets organ grid](figures/paper/fig4_spine_organ_grid.png)
+
+Lesion overlays across the index-score range, showing what a low, mid, and high index score actually look like:
+
+![Spine-Mets lesion overlays](figures/paper/fig5_spine_lesion_overlays.png)
+
+Both figures highlight the top 2% of each slice's own similarity distribution rather than an absolute cutoff: raw patch-text similarity is routinely negative everywhere on a slice, and organs win *relatively* rather than absolutely, so an absolute-zero threshold renders most panels blank. Regenerate with `python scripts/make_spine_mets_figures.py`.
 
 ### Per-lesion validation
 

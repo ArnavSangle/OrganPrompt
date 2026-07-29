@@ -40,3 +40,28 @@ femur shaft — visual confirmation of the diagnosed mechanism
 ("bright hyperdense cortical ring... central medullary canal") matches a rib
 or humeral head in cross-section as well as it matches a real femur, and
 nothing in the 11-class vocabulary was defined to outbid that confusion.
+
+**Figure 4 — OrganCAM organ maps on bone-metastasis CT.** All 11 organ
+classes at a single thoracic lesion slice (Spine-Mets case 13055, T8 lesion,
+slice 354), arranged as the Phase 1 Grad-CAM summary figure was: top row CT,
+middle row raw patch-text similarity, bottom row overlay. The slice is the T8
+*lesion* slice rather than the patient's peak-tumor slice — the latter sits at
+the pelvis, where heart, lungs, liver and spleen are simply out of frame, so
+their columns would show noise and wrongly imply the model hallucinates
+organs that are in fact absent. Overlays highlight the top 2% of each slice's
+own similarity distribution (see Figure 3 caption for why an absolute
+threshold is inappropriate). Lung-left and lung-right localize to their
+respective lung fields; abdominal classes (liver, spleen, pancreas, kidneys)
+have no true target at this level and show correspondingly diffuse response.
+
+**Figure 5 — Bone-metastasis index across the score range.** Three patients
+spanning the index distribution, one per column: 14643 (index 0.006), 13627
+(0.190), 13653 (0.500 — the cohort maximum). Top row: ground-truth lesion
+mask (red) on the peak-tumor slice. Bottom row: similarity map for the
+organ scoring highest against that lesion, with the resulting index. The
+progression is the point — at low index the nearest-organ map sits well away
+from the lesion, at high index it is effectively touching it. Note the
+low-index panel names lung-left as nearest organ at a pelvic slice: this is a
+phantom detection of exactly the kind characterized in the per-lesion
+validation, retained here rather than hidden because the low index value
+(0.006) correctly reflects that nothing real is near this lesion.
