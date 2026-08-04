@@ -15,8 +15,8 @@ checkpoints/
 /Totalsegmentator_dataset_v201/
 Totalsegmentator_dataset_v201.zip
 
-# Reference papers (local only)
-papers/
+# Literature review PDFs + extracted text (local only, large)
+lit-review/
 
 # Claude Code internal
 .claude/
@@ -40,3 +40,18 @@ results/bone_index/
 
 # Scratch overlays from debugging runs
 figures/debug/
+
+# LaTeX build artifacts (the .tex/.bib sources ARE tracked; the build is not).
+# main.pdf is excluded deliberately: it is ~6MB and fully regenerable via
+# scripts/build_paper.py, so committing it would bloat history on every revision.
+paper/*.aux
+paper/*.bbl
+paper/*.blg
+paper/*.log
+paper/*.out
+paper/*.toc
+paper/*.fls
+paper/*.fdb_latexmk
+paper/*.synctex.gz
+paper/main.pdf
+paper/sections/*.aux

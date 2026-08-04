@@ -1,0 +1,80 @@
+\section{Anatomical basis for the expected-organ table}
+\label{app:anatomy}
+
+The correction described in \S\ref{sec:results:lesion} changes a headline
+number, so the reasoning behind it is reproduced here rather than only cited. The
+full source list, with quoted passages and the questions put to each source, is
+in \code{docs/references/anatomy-citations.md} in the repository.
+
+\paragraph{The question, asked before the change was made.}
+Should the \code{EXPECTED} entries for T11 and T12 include the lungs? Put
+anatomically: at typical inspiration, does the posterior lung base, via the
+costophrenic recess, reach the T11 vertebral level, and the T12 level? Does this
+differ by side, sex, or respiratory phase? The research was completed and the
+answer fixed before the expected-organ table was edited and before the
+validation was re-scored. This ordering matters, because the alternative
+procedure, changing the table and keeping whichever version improves the metric,
+would make the evaluation circular.
+
+\paragraph{Primary quantitative source.}
+Oh et al.\ \cite{oh2009retrodiaphragmatic} retrospectively reviewed 540
+consecutive posteroanterior chest radiographs from general health screening, of
+which 282 met inclusion criteria (clear visualization of the inferior boundary
+of the posterior costophrenic sulcus behind the right hemidiaphragm, no
+diaphragm-affecting abnormality; 155 men, 127 women, mean age
+$40.7 \pm 8.4$ years). They measured the depth of the posterior costophrenic
+sulcus below the diaphragmatic dome and scored its level against the spine.
+
+The mean right posterior costophrenic sulcus depth was $29.2 \pm 15.6$\,mm, at
+an average spinal level of $13.5 \pm 0.6$, which is the lower half of the L1
+vertebral body: a full vertebral level below T12. Depth increased with height,
+BMI and total diaphragmatic height, indicating normal population variation
+rather than a rare tail. The authors' own conclusion is that a standard
+posteroanterior chest radiograph must extend more than 3\,cm below the lateral
+costophrenic sulcus, or to the L1 spine level, to capture the retrodiaphragmatic
+lung fully.
+
+Both T11 and T12 therefore sit at or above the population-average posterior
+lung and pleural extent. A lung detected at either level is consistent with
+normal anatomy and is not evidence of a phantom detection.
+
+\paragraph{Triangulating sources.}
+Three further references were consulted and agree on direction. A textbook-derived
+thorax chapter states that lung tissue does not normally extend much below T10 in
+quiet respiration, while the pleural cavity's inferior extent reaches
+approximately T12 through the costodiaphragmatic recess, or lower along the
+twelfth rib in the midscapular line, and flags these levels as approximate. A
+descriptive anatomy reference for the costodiaphragmatic recess notes that during
+deep inspiration the lungs descend up to two intercostal spaces into the recess.
+A clinical teaching reference places the lower border of the lung at the
+vertebral column at the upper half of T11 in moderate respiration, before any
+inspiratory excursion is added.
+
+The distinction that resolves the apparent disagreement between the T10 and
+T11--L1 figures is that lung parenchyma in quiet breathing and the aerated lung
+at inspiration are not the same boundary. The expected-organ table scores whether
+a predicted lung mask could plausibly extend to a level, which tracks the
+inspiratory and recess extent, not the resting position.
+
+\paragraph{Points of convergence.}
+Every source giving a specific level places the posterior lung base at T11 or
+below: T11 in moderate respiration, approximately T12 for the recess, and the
+lower half of L1 as a quantitative radiographic average. No source reported a
+systematic left--right asymmetry large enough to justify treating the two lungs
+differently. The Oh et al.\ study measured the right side specifically because
+the right costophrenic sulcus is the one clearly visible below the liver and
+diaphragm on a frontal film, which is a measurement-visibility constraint and
+not a claim about the left side.
+
+\paragraph{Decision, and what it changed.}
+Both T11 and T12 include \org{lung-left} and \org{lung-right}. The weakest
+single-source claim already places T11 within range, and T12 sits comfortably
+below every conservative estimate. No source was found that would support
+treating a lung detection at either level as anatomically impossible.
+
+Applying the correction moved mean rank from 1.94 to 1.78, reduced anatomically
+impossible top-1 detections from 38 to 34, and moved chance from 3.01 to 2.91,
+since chance depends on expected-set size. It also moved T11 from below chance to
+above it. As noted in \S\ref{sec:discussion}, the fact that one such error existed
+is itself evidence that the table may contain others, particularly in this same
+thoracolumbar region where the anatomy is genuinely variable.

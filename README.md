@@ -1,4 +1,4 @@
-# OrganCAM
+# OrganPrompt
 
 Text-supervised weakly-supervised organ localization in CT slices. Fine-tunes [BioMedCLIP](https://huggingface.co/microsoft/BiomedCLIP-PubMedBERT_256-vit_base_patch16_224) with a patch-level contrastive loss so that per-patch text–image cosine similarity acts as a segmentation map — no per-pixel labels required at inference.
 
@@ -67,12 +67,12 @@ To contextualize these weakly-supervised results, we compare against [TotalSegme
 
 **Metric caveat — do not subtract these columns.** The two numbers are *not* the same metric:
 
-- **OrganCAM** reports **2D per-slice Dice** on organ-present axial slices (top-K per volume).
+- **OrganPrompt** reports **2D per-slice Dice** on organ-present axial slices (top-K per volume).
 - **TotalSegmentator** reports **3D volumetric Dice** over whole volumes.
 
 2D slice Dice on organ-present slices is systematically *more forgiving* than 3D volumetric Dice (no empty or partial-boundary slices dragging the average down), so the true supervised → weakly-supervised gap is **wider** than the raw column difference suggests. Treat the TotalSegmentator column as an approximate upper bound achievable *with* full pixel supervision, not a like-for-like benchmark.
 
-| Organ | OrganCAM Dice (2D, weakly-sup.) | TotalSegmentator Dice (3D, fully-sup.) |
+| Organ | OrganPrompt Dice (2D, weakly-sup.) | TotalSegmentator Dice (3D, fully-sup.) |
 |---|---:|---:|
 | Liver | 0.893 | 0.965 |
 | Spleen | 0.768 | 0.983 |
@@ -89,40 +89,41 @@ To contextualize these weakly-supervised results, we compare against [TotalSegme
 † TotalSegmentator v1 segments the heart as separate chambers, not a single structure. Range spans myocardium (0.937) to left ventricle (0.955). Our dataset (v2.0.1) uses a single merged heart label, so this row is not a direct 1:1 match.
 ‡ TotalSegmentator segments lungs per-lobe. Left = upper/lower lobe (0.971 / 0.985); right = upper/middle/lower lobe (0.944 / 0.975 / 0.988). Our labels merge lobes into whole left/right lung, so the whole-lung supervised Dice (not separately reported) would differ slightly.
 
-**Takeaway.** On large, high-contrast organs (liver, lungs, heart) OrganCAM reaches 0.87–0.90 slice Dice with *no pixel labels* — within striking distance of supervised performance once the metric caveat is accounted for. The gap widens exactly where weak supervision is expected to struggle: small, low-contrast structures (pancreas 0.42 vs 0.89; kidneys 0.60–0.63 vs 0.94–0.95). This is the intended demonstration — text supervision recovers most of the localization signal for morphologically distinctive organs, and the residual gap quantifies the cost of removing dense annotation.
+**Takeaway.** On large, high-contrast organs (liver, lungs, heart) OrganPrompt reaches 0.87–0.90 slice Dice with *no pixel labels* — within striking distance of supervised performance once the metric caveat is accounted for. The gap widens exactly where weak supervision is expected to struggle: small, low-contrast structures (pancreas 0.42 vs 0.89; kidneys 0.60–0.63 vs 0.94–0.95). This is the intended demonstration — text supervision recovers most of the localization signal for morphologically distinctive organs, and the residual gap quantifies the cost of removing dense annotation.
 
 ## Comparison to published weakly-supervised methods
 
-The fully-supervised comparison above establishes the ceiling. This section places OrganCAM among methods that, like it, do **not** use dense per-voxel labels.
+The fully-supervised comparison above establishes the ceiling. This section places OrganPrompt among methods that, like it, do **not** use dense per-voxel labels.
 
 **Supervision strength is not uniform across "weakly-supervised" methods, and that distinction drives the comparison.** These are ordered from weakest to strongest supervision signal:
 
 | Supervision tier | What the model is given per training image | Annotation cost |
 |---|---|---|
-| **Image-level / text** *(OrganCAM)* | Only that an organ is present, via a text prompt — no spatial hint whatsoever | Lowest |
+| **Image-level / text** *(OrganPrompt)* | Only that an organ is present, via a text prompt — no spatial hint whatsoever | Lowest |
 | **Point** | One clicked pixel inside each organ | Low |
 | **Scribble** | A hand-drawn stroke through each organ | Moderate |
 | **Fully-supervised** | Every voxel labelled | Highest |
 
-Point- and scribble-supervised methods receive per-image *spatial* information that OrganCAM never sees. They are included below for context, but **they are not a like-for-like baseline** — a scribble already answers "where," which is the entire problem OrganCAM is solving from text alone.
+Point- and scribble-supervised methods receive per-image *spatial* information that OrganPrompt never sees. They are included below for context, but **they are not a like-for-like baseline** — a scribble already answers "where," which is the entire problem OrganPrompt is solving from text alone.
 
 | Method | Supervision | Task / dataset | Reported Dice |
 |---|---|---|---|
-| **OrganCAM (this work)** | **Image-level text** | 11 organs, TotalSegmentator (2D slice) | **0.42–0.90** (mean 0.742) |
-| [MedCLIP-SAMv2](https://arxiv.org/abs/2409.19483) (zero-shot) | Text prompt, no masks | Breast US, brain MRI, lung X-ray, lung CT | +13.07% over prior zero-shot |
-| [MedCLIP-SAMv2](https://arxiv.org/abs/2409.19483) (weakly-sup.) | Text + pseudo-label refinement | same four tasks | +11.21% over prior weakly-sup. |
-| [PET-CT lesion CAM](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC8510879/) | Image-level | Tumor lesions, PET-CT | 0.47 median *(vs 0.72 fully-sup. U-Net)* |
-| [Probabilistic-aware learning](https://arxiv.org/pdf/2403.02566) | Point | 3D multi-organ | +18.1% / +10.2% over prior point-sup. |
-| [Probabilistic-aware learning](https://arxiv.org/pdf/2403.02566) | Scribble | 3D multi-organ | +58.4% / +17.6% over prior scribble-sup. |
-| Scribble-supervised (BTCV, representative) | Scribble | Multi-organ abdominal CT | Spleen 0.83, liver 0.82, L-kidney 0.76, R-kidney 0.72 |
+| **OrganPrompt (this work)** | **Image-level text** | 11 organs, TotalSegmentator (2D slice) | **0.42–0.90** (mean 0.742) |
+| [MedCLIP-SAMv2](https://doi.org/10.1016/j.media.2025.103749) (zero-shot) | Text prompt, no masks | BUSI, brain MRI, COVID-QU-Ex, lung CT | 78.21 mean DSC |
+| [MedCLIP-SAMv2](https://doi.org/10.1016/j.media.2025.103749) (weakly-sup.) | Text + pseudo-label refinement | same four tasks | 82.11 mean DSC |
+| [PET-CT lesion CAM](https://doi.org/10.1117/1.JMI.8.5.054003) (Früh et al. 2021) | Image-level | Tumor lesions, PET-CT | 0.47 median *(vs 0.72 fully-sup. U-Net)* |
+| [Probabilistic-aware learning](https://doi.org/10.48550/arXiv.2403.02566) (Jiang et al. 2024) | Point | BTCV (CT), CHAOS (MRI) | +18.1% / +10.2% over prior point-sup. |
+| [Probabilistic-aware learning](https://doi.org/10.48550/arXiv.2403.02566) (Jiang et al. 2024) | Scribble | BTCV (CT), CHAOS (MRI) | +58.4% / +17.6% over prior scribble-sup. |
 
 **Three caveats a reader should apply before comparing any two rows.**
 
-1. **Different datasets.** Published multi-organ weak supervision is mostly benchmarked on BTCV, AMOS, or WORD; OrganCAM is on TotalSegmentator. Organ sets, slice thickness, and contrast protocols differ.
-2. **Different metrics.** OrganCAM's 2D per-slice Dice on organ-present slices is systematically more forgiving than 3D volumetric Dice (same caveat as the fully-supervised table above).
-3. **Several entries report *relative* gains**, not absolute Dice, because that is what those papers publish — a "+13.07%" cannot be placed on the same axis as "0.83".
+1. **Different datasets.** Published multi-organ weak supervision is mostly benchmarked on BTCV, AMOS, or WORD; OrganPrompt is on TotalSegmentator. Organ sets, slice thickness, and contrast protocols differ.
+2. **Different metrics.** OrganPrompt's 2D per-slice Dice on organ-present slices is systematically more forgiving than 3D volumetric Dice (same caveat as the fully-supervised table above).
+3. **Two entries report *relative* gains**, not absolute Dice, because that is what those papers publish — a "+18.1%" cannot be placed on the same axis as "0.83". MedCLIP-SAMv2's DSC is on a 0–100 scale over a different organ set entirely.
 
-**Takeaway.** Within the image-level tier — the only strictly like-for-like comparison — OrganCAM's per-organ range (0.42–0.90) sits above the image-level PET-CT CAM result (0.47 median), and the closest methodological relative is MedCLIP-SAMv2, which shares the BiomedCLIP backbone and text-driven premise but pairs it with SAM for mask refinement rather than using patch-similarity directly. Against scribble-supervised multi-organ CT (spleen 0.83, liver 0.82, kidneys 0.72–0.76), OrganCAM is **competitive on large organs despite using strictly less supervision** (liver 0.89, lungs 0.88–0.90, spleen 0.77) and clearly behind on kidneys (0.60–0.63) and pancreas (0.42) — consistent with the fully-supervised comparison, where the same small/low-contrast structures drive the gap.
+> **Corrected 2026-07-29.** This table previously credited MedCLIP-SAMv2 with "+13.07% / +11.21% over prior methods" and carried a "Scribble-supervised (BTCV, representative)" row (spleen 0.83, liver 0.82, kidneys 0.72–0.76). Neither survived verification: the MedCLIP-SAMv2 paper reports absolute DSC (78.21 zero-shot, 82.11 weakly supervised) and states no such percentages, and the scribble row's numbers could not be traced to any publication. The percentages are replaced with the figures the paper actually reports; the untraceable row is removed.
+
+**Takeaway.** Within the image-level tier — the only strictly like-for-like comparison — OrganPrompt's per-organ range (0.42–0.90) sits above the image-level PET-CT CAM result (0.47 median), on a different task. The closest methodological relative is MedCLIP-SAMv2, which shares the BiomedCLIP backbone and text-driven premise but pairs it with SAM for mask refinement rather than reading patch-similarity directly. That architectural difference, not the score, is the useful comparison: delegating mask formation to a second model makes the pipeline stronger and simultaneously makes it impossible to attribute a failure to the prompt — which is exactly what the caption ablation here relies on being able to do. No cross-tier "gap" should be computed from this table. The shape that *is* supported comes from the fully-supervised comparison above: the deficit concentrates in small, low-contrast structures (pancreas 0.42, kidneys 0.60–0.63) and nearly closes for large, high-contrast ones (liver 0.89, lungs 0.88–0.90).
 
 ## Caption ablation
 
@@ -141,7 +142,7 @@ To characterize how much the model actually uses the prompt text (rather than me
 | Level | mIoU | Dice |
 |---|---:|---:|
 | L1 class_name | 0.607 | 0.728 |
-| L2 generic_clinical | 0.627 | 0.744 |
+| L2 generic_clinical | 0.627 | 0.743 |
 | L3 position_only | 0.561 | 0.684 |
 | **L4 full_anatomical** | **0.627** | **0.744** |
 | L5 adversarial | 0.458 | 0.583 |
@@ -258,20 +259,25 @@ python scripts/visualize_masks.py
 
 ## Bone-metastasis organ index (Phase 1)
 
-Applies the same OrganCAM patch-similarity model to a second question: given a bone
+Applies the same OrganPrompt patch-similarity model to a second question: given a bone
 metastasis, which organ is it closest to invading? This phase uses **ground-truth**
 tumor localization (no weakly-supervised tumor detection yet — that's Phase 2) so the
 index itself can be validated before adding a second layer of learned uncertainty.
 
 **Datasets:**
 - [Spine-Mets-CT-SEG](https://www.cancerimagingarchive.net/collection/spine-mets-ct-seg/) — primary anchor. 55 patients, 3D DICOM CT with per-vertebra SEG masks; lesion type (lytic/blastic/mixed) per vertebral level comes from the collection's clinical spreadsheet (`Spine-Mets-CT-SEG_Clinical.xlsx`), not the SEG file itself. Tumor mask = union of vertebra masks for levels the spreadsheet marks as involved.
-- CT-ORG — organ-only NIfTI ground truth (liver, kidneys, lungs, bladder), used purely to sanity-check that OrganCAM's organ maps transfer to a CT protocol it wasn't trained on, before trusting the index.
+- CT-ORG — organ-only NIfTI ground truth (liver, kidneys, lungs, bladder), used purely to sanity-check that OrganPrompt's organ maps transfer to a CT protocol it wasn't trained on, before trusting the index.
 
 **Index:** for each (tumor, organ) pair, `overlap = |T∩O|/|T|` and `proximity = 1/(1+d_mm)`
-where `d_mm` is the minimum physical surface distance (`scipy.ndimage.distance_transform_edt`
-with mm spacing, not voxel counts). The two are blended (`alpha*overlap + beta*proximity`,
+where `d_mm` is the minimum physical surface distance, computed with a `scipy.spatial.cKDTree`
+over voxel coordinates scaled by mm spacing (not voxel counts). A distance transform is
+deliberately *not* used here: `distance_transform_edt` allocates a float64 array over the
+whole volume (~600MB per organ, ×11 organs) just to read one minimum out of it, which is
+enough to exhaust memory on a full-resolution scan. Both point sets are small, so a KD-tree
+answers the same question in a few MB. (The EDT *is* used, appropriately, for the HD95 and
+NSD surface metrics in `evaluate_masks.py`.) The two are blended (`alpha*overlap + beta*proximity`,
 default 0.5/0.5) per organ, and a patient's index is the max blended score across organs —
-the nearest/most-involved organ drives the score. OrganCAM runs per-axial-slice (as in the
+the nearest/most-involved organ drives the score. OrganPrompt runs per-axial-slice (as in the
 main pipeline above); 2D organ maps are stacked into a 3D organ-probability volume aligned
 to the CT grid so distance can be computed in 3D against the 3D tumor mask.
 
@@ -317,10 +323,17 @@ python scripts/analyze_lesions.py                  # patient-clustered bootstrap
 ```
 
 **Headline result:** mean rank 1.78 (95% CI [1.56, 2.03], patient-clustered bootstrap),
-chance 2.96, permutation p < 0.0001 — chance is excluded from the CI. T1–T10 all beat
-chance (T8/T9 near-perfect); L3/L4 beat it clearly; the thoracolumbar junction (T11–L2)
-and L5 sit at or below chance. 34/180 lesions top-rank an anatomically impossible organ,
-concentrated in bladder and femur phantoms.
+top-1 0.62 / top-3 0.89, chance 2.91, permutation p < 0.0001 — chance is excluded from
+the CI. **T1–T11 all beat chance** (T8/T9 perfect at rank 1.00); L3/L4 beat it clearly;
+**T12, L1, L2 and L5** sit at or below chance. 34/180 lesions top-rank an anatomically
+impossible organ, concentrated in bladder and femur phantoms.
+
+Note that T11 moved from below chance to above it as a *consequence* of the T11/T12
+anatomy fix, not as a separate change: adding lungs to the expected set at that level
+both corrected the answer key and enlarged the expected set, which lowers chance there.
+The failure band is therefore narrower than earlier write-ups of this result stated — it
+is T12–L2 plus L5, and the figure derives the band from the data rather than naming
+levels, so it cannot drift out of sync again.
 
 Two hypotheses for the phantom pattern were tested and rejected as clean explanations:
 
@@ -337,11 +350,28 @@ Two hypotheses for the phantom pattern were tested and rejected as clean explana
 **Calibration variants tested** (each a single pre-registered run against the 180-lesion
 set, reported as-is, not retuned after seeing results):
 
-| variant | mean rank | top1 / top3 | impossible top-1 | bilateral pair splits | verdict |
-|---|---|---|---|---|---|
-| baseline (ratio-to-peak, floor 0.6) | 1.78 | — | 34/180 | 34/540 | — |
-| + rib/humerus/aorta hard negatives | 2.04 | 0.53 / 0.82 | 37/180 | 58/540 (lung 46, new) | mixed/negative |
-| z-score calibration (`mean + 2·sd`) | 1.82 | 0.50 / 0.83 | 79/180 | 0/540 (perfect) | mixed/negative |
+Both variants were run *before* the T11/T12 lung ground-truth fix, so they are scored
+against the stricter pre-fix `EXPECTED` table. **They must be compared against the pre-fix
+baseline row below (mean rank 1.94), not against the current headline 1.78** — that
+difference is the answer key changing, not the method. Chance moves with the answer key
+too: 3.01 pre-fix, 2.91 post-fix.
+
+| variant | `EXPECTED` | mean rank | top1 / top3 | ranked | impossible top-1 | bilateral pair splits | verdict |
+|---|---|---|---|---|---|---|---|
+| **baseline, current** (ratio-to-peak, floor 0.6) | post-fix | **1.78** | 0.62 / 0.89 | 178/180 | 34/180 | 34/540 | adopted |
+| baseline, pre-fix — *comparator for the two rows below* | pre-fix | 1.94 | 0.59 / 0.86 | 178/180 | 38/180 | 34/540 | superseded |
+| + rib/humerus/aorta hard negatives | pre-fix | 2.04 | 0.53 / 0.82 | 171/180 | 37/180 | 58/540 (lung 46, new) | mixed/negative |
+| z-score calibration (`mean + 2·sd`) | pre-fix | 1.82 | 0.50 / 0.83 | 164/180 | 79/180 | 0/540 (perfect) | mixed/negative |
+
+The `ranked` column is a second reason to read the mean-rank column cautiously: both
+variants leave more lesions unrankable than the baseline does (9 and 14 more
+respectively), so their mean ranks average over an easier, smaller subset. Both variants'
+top-1/top-3, which are computed over all 180, fall regardless — that is the cleaner
+signal, and it points the same way.
+
+Pair splits are unchanged by the anatomy fix (34/540 in both baseline rows), as expected:
+splitting depends on the mask geometry, which the fix did not touch — only on the answer
+key it is scored against.
 
 Global hard negatives traded a femur/rib confusion for a new lung-boundary one (the
 negative bled into lung's own scoring since it was applied everywhere, not per-organ).

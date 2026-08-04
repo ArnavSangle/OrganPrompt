@@ -30,7 +30,6 @@ OUT = Path(__file__).parent.parent / "figures" / "paper"
 BLUE = "#0072B2"
 GREY = "#999999"
 VERMILION = "#D55E00"
-FAILURE_BAND = {"T11", "T12", "L1", "L2", "L5"}
 
 plt.rcParams.update({
     "font.family": "sans-serif",
@@ -53,7 +52,10 @@ def fig1_per_level():
 
     fig, ax = plt.subplots(figsize=(7.0, 3.2))
     x = np.arange(len(levels))
-    colors = [VERMILION if l in FAILURE_BAND else BLUE for l in levels]
+    # Derived from the data, never hardcoded: a hardcoded band silently went stale
+    # when the T11/T12 anatomy fix moved T11 from below chance to above it.
+    failing = [r >= c for r, c in zip(ranks, chance)]
+    colors = [VERMILION if f else BLUE for f in failing]
 
     ax.bar(x, ranks, width=0.6, color=colors, zorder=3)
     ax.plot(x, chance, marker="o", markersize=3, linewidth=1.0, color=GREY,
@@ -73,9 +75,11 @@ def fig1_per_level():
 
     from matplotlib.patches import Patch
     from matplotlib.lines import Line2D
+    beats = ", ".join(l for l, f in zip(levels, failing) if not f)
+    fails = ", ".join(l for l, f in zip(levels, failing) if f)
     handles = [
-        Patch(facecolor=BLUE, label="observed (T1–T10, L3–L4)"),
-        Patch(facecolor=VERMILION, label="observed (thoracolumbar junction: T11–L2, L5)"),
+        Patch(facecolor=BLUE, label=f"beats chance ({beats})"),
+        Patch(facecolor=VERMILION, label=f"at/below chance ({fails})"),
         Line2D([0], [0], color=GREY, linestyle="--", marker="o", markersize=3,
                label="chance (order statistic)"),
     ]

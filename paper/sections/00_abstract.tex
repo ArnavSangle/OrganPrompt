@@ -1,0 +1,29 @@
+Dense per-voxel annotation is the binding constraint on CT segmentation.
+Vision--language models trained on image--text pairs offer a route around it,
+but their contrastive objective aligns pooled image and caption embeddings, so
+individual patch tokens are never required to be spatially discriminative:
+reading per-patch similarity off such a model recovers 0.003 mIoU. We make that
+spatial property an explicit training objective, aligning each ViT patch token
+with the organ's text embedding against a downsampled mask, so per-patch cosine
+similarity becomes directly readable as a segmentation map at inference, with no
+gradients, no classifier, and no second-stage mask refiner. On 11 organ classes
+from TotalSegmentator this reaches 0.653 mIoU and 0.757 Dice using no per-pixel
+labels at inference; a calibration correction contributes 0.059 of that with no
+retraining. A prompt ablation shows the text is load-bearing rather than a class
+index, since corrupting positional language collapses exactly the classes that
+depend on laterality and leaves uniquely-positioned organs unaffected. The same
+ablation shows elaboration is not where the value lies: a bare class name
+recovers 96.9\% of a full multi-sentence anatomical description, and a one-line
+generic caption matches it outright. An accidental two-word prompt error
+revealed that failures are directional rather than degradative, producing a
+confident, clean segmentation of the wrong organ, which is the more dangerous
+failure mode because nothing in the output signals it. Carrying the frozen model
+onto an unseen dataset and protocol, we compute a bone-metastasis proximity
+index over Spine-Mets-CT-SEG: across 180 lesions in 46 patients the correct
+organ ranks 1.78 on average against a chance rank of 2.91 ($p < 0.0001$,
+patient-clustered permutation test), beating chance at every level from T1 to
+T11 and concentrating its failures in two of eleven classes. We
+report two pre-registered calibration variants that were run and not adopted,
+each with a diagnosed mechanism, along with a ground-truth error in our own
+evaluation table found and corrected from anatomical literature, and a
+calibration leak found and repaired. Both corrections changed headline numbers.

@@ -1,0 +1,498 @@
+% OrganPrompt bibliography.
+%
+% Every DOI below was resolved against Crossref, PubMed/PMC, TCIA, or the arXiv
+% stamp inside the PDF itself -- none are from recall. arXiv IDs for the papers
+% held locally in lit-review/ were read out of each PDF's own sidebar stamp.
+% Where a paper has both a preprint and a published version, both identifiers
+% are recorded and the published DOI is the one in the `doi` field.
+
+% ---------------------------------------------------------------------------
+% Backbone / vision-language pretraining
+% ---------------------------------------------------------------------------
+
+@article{zhang2025biomedclip,
+  title     = {A Multimodal Biomedical Foundation Model Trained from Fifteen
+               Million Image--Text Pairs},
+  author    = {Zhang, Sheng and Xu, Yanbo and Usuyama, Naoto and Xu, Hanwen and
+               Bagga, Jaspreet and Tinn, Robert and Preston, Sam and Rao, Rajesh
+               and Wei, Mu and Valluri, Naveen and Wong, Cliff and Tupini, Andrea
+               and Wang, Yu and Mazzola, Matt and Shukla, Swadheen and
+               Liden, Lars and Gao, Jianfeng and Crabtree, Angela and
+               Piening, Brian and Bifulco, Carlo and Lungren, Matthew P. and
+               Naumann, Tristan and Wang, Sheng and Poon, Hoifung},
+  journal   = {NEJM AI},
+  year      = {2025},
+  doi       = {10.1056/AIoa2400640},
+  note      = {BiomedCLIP; preprint arXiv:2303.00915}
+}
+
+@inproceedings{radford2021clip,
+  title     = {Learning Transferable Visual Models From Natural Language
+               Supervision},
+  author    = {Radford, Alec and Kim, Jong Wook and Hallacy, Chris and
+               Ramesh, Aditya and Goh, Gabriel and Agarwal, Sandhini and
+               Sastry, Girish and Askell, Amanda and Mishkin, Pamela and
+               Clark, Jack and Krueger, Gretchen and Sutskever, Ilya},
+  booktitle = {Proceedings of the 38th International Conference on Machine
+               Learning (ICML)},
+  volume    = {139},
+  pages     = {8748--8763},
+  year      = {2021},
+  doi       = {10.48550/arXiv.2103.00020},
+  note      = {PMLR proceedings carry no DOI; arXiv DOI given}
+}
+
+@inproceedings{zhai2023siglip,
+  title     = {Sigmoid Loss for Language Image Pre-Training},
+  author    = {Zhai, Xiaohua and Mustafa, Basil and Kolesnikov, Alexander and
+               Beyer, Lucas},
+  booktitle = {Proceedings of the IEEE/CVF International Conference on Computer
+               Vision (ICCV)},
+  pages     = {11975--11986},
+  year      = {2023},
+  doi       = {10.1109/ICCV51070.2023.01100},
+  note      = {SigLIP; preprint arXiv:2303.15343}
+}
+
+@inproceedings{lin2023pmcclip,
+  title     = {PMC-CLIP: Contrastive Language-Image Pre-training Using
+               Biomedical Documents},
+  author    = {Lin, Weixiong and Zhao, Ziheng and Zhang, Xiaoman and Wu, Chaoyi
+               and Zhang, Ya and Wang, Yanfeng and Xie, Weidi},
+  booktitle = {Medical Image Computing and Computer Assisted Intervention
+               (MICCAI)},
+  series    = {Lecture Notes in Computer Science},
+  year      = {2023},
+  doi       = {10.1007/978-3-031-43993-3_51},
+  note      = {preprint arXiv:2303.07240}
+}
+
+@inproceedings{xu2024metaclip,
+  title     = {Demystifying CLIP Data},
+  author    = {Xu, Hu and Xie, Saining and Tan, Xiaoqing Ellen and Huang,
+               Po-Yao and Howes, Russell and Sharma, Vasu and Li, Shang-Wen and
+               Ghosh, Gargi and Zettlemoyer, Luke and Feichtenhofer, Christoph},
+  booktitle = {International Conference on Learning Representations (ICLR)},
+  year      = {2024},
+  doi       = {10.48550/arXiv.2309.16671},
+  note      = {MetaCLIP; ICLR proceedings carry no DOI, arXiv DOI given}
+}
+
+@inproceedings{gadre2023datacomp,
+  title     = {DataComp: In Search of the Next Generation of Multimodal
+               Datasets},
+  author    = {Gadre, Samir Yitzhak and Ilharco, Gabriel and Fang, Alex and
+               Hayase, Jonathan and Smyrnis, Georgios and Nguyen, Thao and
+               Marten, Ryan and Wortsman, Mitchell and Ghosh, Dhruba and
+               Zhang, Jieyu and others},
+  booktitle = {Advances in Neural Information Processing Systems (NeurIPS),
+               Datasets and Benchmarks Track},
+  year      = {2023},
+  doi       = {10.48550/arXiv.2304.14108},
+  note      = {NeurIPS proceedings carry no DOI; arXiv DOI given}
+}
+
+@inproceedings{dosovitskiy2021vit,
+  title     = {An Image is Worth 16x16 Words: Transformers for Image Recognition
+               at Scale},
+  author    = {Dosovitskiy, Alexey and Beyer, Lucas and Kolesnikov, Alexander and
+               Weissenborn, Dirk and Zhai, Xiaohua and Unterthiner, Thomas and
+               Dehghani, Mostafa and Minderer, Matthias and Heigold, Georg and
+               Gelly, Sylvain and Uszkoreit, Jakob and Houlsby, Neil},
+  booktitle = {International Conference on Learning Representations (ICLR)},
+  year      = {2021},
+  doi       = {10.48550/arXiv.2010.11929},
+  note      = {ViT; ICLR proceedings carry no DOI, arXiv DOI given}
+}
+
+@article{gu2021pubmedbert,
+  title   = {Domain-Specific Language Model Pretraining for Biomedical Natural
+             Language Processing},
+  author  = {Gu, Yu and Tinn, Robert and Cheng, Hao and Lucas, Michael and
+             Usuyama, Naoto and Liu, Xiaodong and Naumann, Tristan and
+             Gao, Jianfeng and Poon, Hoifung},
+  journal = {ACM Transactions on Computing for Healthcare},
+  volume  = {3},
+  number  = {1},
+  pages   = {1--23},
+  year    = {2021},
+  doi     = {10.1145/3458754},
+  note    = {PubMedBERT, the text encoder inside BiomedCLIP}
+}
+
+% ---------------------------------------------------------------------------
+% Dense / local alignment from vision-language models. This is the closest
+% prior art to our patch-level objective: each of these extracts or trains
+% spatially-resolved text-image correspondence rather than global alignment.
+% ---------------------------------------------------------------------------
+
+@inproceedings{huang2021gloria,
+  title     = {GLoRIA: A Multimodal Global-Local Representation Learning
+               Framework for Label-efficient Medical Image Recognition},
+  author    = {Huang, Shih-Cheng and Shen, Liyue and Lungren, Matthew P. and
+               Yeung, Serena},
+  booktitle = {Proceedings of the IEEE/CVF International Conference on Computer
+               Vision (ICCV)},
+  year      = {2021},
+  doi       = {10.1109/ICCV48922.2021.00391}
+}
+
+@inproceedings{zhou2022maskclip,
+  title     = {Extract Free Dense Labels from CLIP},
+  author    = {Zhou, Chong and Loy, Chen Change and Dai, Bo},
+  booktitle = {Computer Vision -- ECCV 2022},
+  series    = {Lecture Notes in Computer Science},
+  year      = {2022},
+  doi       = {10.1007/978-3-031-19815-1_40},
+  note      = {MaskCLIP}
+}
+
+@inproceedings{rao2022denseclip,
+  title     = {DenseCLIP: Language-Guided Dense Prediction with Context-Aware
+               Prompting},
+  author    = {Rao, Yongming and Zhao, Wenliang and Chen, Guangyi and Tang,
+               Yansong and Zhu, Zheng and Huang, Guan and Zhou, Jie and Lu,
+               Jiwen},
+  booktitle = {Proceedings of the IEEE/CVF Conference on Computer Vision and
+               Pattern Recognition (CVPR)},
+  year      = {2022},
+  doi       = {10.1109/CVPR52688.2022.01755}
+}
+
+@misc{yang2025clipdense,
+  title        = {Exploring CLIP's Dense Knowledge for Weakly Supervised
+                  Semantic Segmentation},
+  author       = {Yang, Zhiwei and Meng, Yucong and Fu, Kexue and Tang, Feilong
+                  and Wang, Shuo and Song, Zhijian},
+  year         = {2025},
+  publisher    = {arXiv},
+  doi          = {10.48550/arXiv.2503.20826}
+}
+
+@misc{li2024clipexplain,
+  title        = {A Closer Look at the Explainability of Contrastive
+                  Language-Image Pre-training},
+  author       = {Li, Yi and Wang, Hualiang and Duan, Yiqun and Zhang, Jiheng
+                  and Li, Xiaomeng},
+  year         = {2024},
+  publisher    = {arXiv},
+  doi          = {10.48550/arXiv.2304.05653}
+}
+
+@misc{caron2021dino,
+  title        = {Emerging Properties in Self-Supervised Vision Transformers},
+  author       = {Caron, Mathilde and Touvron, Hugo and Misra, Ishan and
+                  J{\'e}gou, Herv{\'e} and Mairal, Julien and Bojanowski, Piotr
+                  and Joulin, Armand},
+  year         = {2021},
+  publisher    = {arXiv},
+  doi          = {10.48550/arXiv.2104.14294},
+  note         = {DINO}
+}
+
+@inproceedings{lueddecke2022clipseg,
+  title     = {Image Segmentation Using Text and Image Prompts},
+  author    = {L{\"u}ddecke, Timo and Ecker, Alexander},
+  booktitle = {Proceedings of the IEEE/CVF Conference on Computer Vision and
+               Pattern Recognition (CVPR)},
+  year      = {2022},
+  doi       = {10.1109/CVPR52688.2022.00695},
+  note      = {CLIPSeg}
+}
+
+% ---------------------------------------------------------------------------
+% Fully-supervised reference / datasets
+% ---------------------------------------------------------------------------
+
+@inproceedings{ronneberger2015unet,
+  title     = {U-Net: Convolutional Networks for Biomedical Image Segmentation},
+  author    = {Ronneberger, Olaf and Fischer, Philipp and Brox, Thomas},
+  booktitle = {Medical Image Computing and Computer-Assisted Intervention
+               (MICCAI)},
+  series    = {Lecture Notes in Computer Science},
+  pages     = {234--241},
+  year      = {2015},
+  doi       = {10.1007/978-3-319-24574-4_28}
+}
+
+@misc{chen2021transunet,
+  title        = {TransUNet: Transformers Make Strong Encoders for Medical Image
+                  Segmentation},
+  author       = {Chen, Jieneng and Lu, Yongyi and Yu, Qihang and Luo, Xiangde
+                  and Adeli, Ehsan and Wang, Yan and Lu, Le and Yuille, Alan L.
+                  and Zhou, Yuyin},
+  year         = {2021},
+  publisher    = {arXiv},
+  doi          = {10.48550/arXiv.2102.04306}
+}
+
+@article{yang2023medmnist,
+  title   = {MedMNIST v2 -- A large-scale lightweight benchmark for 2D and 3D
+             biomedical image classification},
+  author  = {Yang, Jiancheng and Shi, Rui and Wei, Donglai and Liu, Zequan and
+             Zhao, Lin and Ke, Bilian and Pfister, Hanspeter and Ni, Bingbing},
+  journal = {Scientific Data},
+  volume  = {10},
+  number  = {1},
+  pages   = {41},
+  year    = {2023},
+  doi     = {10.1038/s41597-022-01721-8}
+}
+
+@inproceedings{ji2022amos,
+  title     = {AMOS: A Large-Scale Abdominal Multi-Organ Benchmark for Versatile
+               Medical Image Segmentation},
+  author    = {Ji, Yuanfeng and Bai, Haotian and Ge, Chongjian and Yang, Jie and
+               Zhu, Ye and Zhang, Ruimao and Li, Zhen and Zhanng, Lingyan and
+               Ma, Wanling and Wan, Xiang and Luo, Ping},
+  booktitle = {Advances in Neural Information Processing Systems (NeurIPS)},
+  volume    = {35},
+  year      = {2022},
+  doi       = {10.52202/068431-2661}
+}
+
+@article{luo2022word,
+  title   = {WORD: A large scale dataset, benchmark and clinical applicable
+             study for abdominal organ segmentation from CT image},
+  author  = {Luo, Xiangde and Liao, Wenjun and Xiao, Jianghong and Chen, Jieneng
+             and Song, Tao and Zhang, Xiaofan and Li, Kang and Metaxas,
+             Dimitris N. and Wang, Guotai and Zhang, Shaoting},
+  journal = {Medical Image Analysis},
+  volume  = {82},
+  pages   = {102642},
+  year    = {2022},
+  doi     = {10.1016/j.media.2022.102642}
+}
+
+@article{wasserthal2023totalsegmentator,
+  title   = {TotalSegmentator: Robust Segmentation of 104 Anatomic Structures
+             in CT Images},
+  author  = {Wasserthal, Jakob and Breit, Hanns-Christian and Meyer, Manfred T.
+             and Pradella, Maurice and Hinck, Daniel and Sauter, Alexander W.
+             and Heye, Tobias and Boll, Daniel T. and Cyriac, Joshy and Yang,
+             Shan and Bach, Michael and Segeroth, Martin},
+  journal = {Radiology: Artificial Intelligence},
+  volume  = {5},
+  number  = {5},
+  pages   = {e230024},
+  year    = {2023},
+  doi     = {10.1148/ryai.230024}
+}
+
+@misc{wasserthal2023totalsegdataset,
+  title     = {Dataset with segmentations of 117 important anatomical structures
+               in 1228 CT images},
+  author    = {Wasserthal, Jakob and Breit, Hanns-Christian and
+               Meyer, Manfred T. and Pradella, Maurice and Hinck, Daniel and
+               Sauter, Alexander W. and Heye, Tobias and Boll, Daniel T. and
+               Cyriac, Joshy and Yang, Shan and Bach, Michael and
+               Segeroth, Martin},
+  year      = {2023},
+  publisher = {Zenodo},
+  version   = {2.0.1},
+  doi       = {10.5281/zenodo.10047292},
+  note      = {the release actually used for training and evaluation here}
+}
+
+@article{isensee2021nnunet,
+  title   = {nnU-Net: a self-configuring method for deep learning-based
+             biomedical image segmentation},
+  author  = {Isensee, Fabian and Jaeger, Paul F. and Kohl, Simon A. A. and
+             Petersen, Jens and Maier-Hein, Klaus H.},
+  journal = {Nature Methods},
+  volume  = {18},
+  number  = {2},
+  pages   = {203--211},
+  year    = {2021},
+  doi     = {10.1038/s41592-020-01008-z}
+}
+
+@misc{pieper2024spinemets,
+  title        = {Spine Metastatic Bone Cancer: Pre and Post Radiotherapy CT
+                  (Spine-Mets-CT-SEG)},
+  author       = {Pieper, Steve and Haouchine, Nazim and Hackney, David B. and
+                  Wells, William M. and Sanhinova, Malika and Balboni, Tracy and
+                  Spektor, Alexander and Huynh, Mai and Tanguturi, Shyam and
+                  Kim, Elizabeth and Guenette, Jeffrey P. and Kozono, David E.
+                  and Czajkowski,Bryan and Caplan, Sarah and Doyle, Patrick and
+                  Kang, Hyesun and Alkalay, Ron N.},
+  year         = {2024},
+  publisher    = {The Cancer Imaging Archive},
+  version      = {1},
+  doi          = {10.7937/kh36-ds04},
+  note         = {55 patients; released 2024-09-25}
+}
+
+@article{rister2020ctorg,
+  title   = {CT-ORG, a new dataset for multiple organ segmentation in
+             computed tomography},
+  author  = {Rister, Blaine and Yi, Darvin and Shivakumar, Kaushik and
+             Mukherjee, Tomomi and Rubin, Daniel L.},
+  journal = {Scientific Data},
+  volume  = {7},
+  pages   = {381},
+  year    = {2020},
+  doi     = {10.1038/s41597-020-00715-8}
+}
+
+% ---------------------------------------------------------------------------
+% Weakly-supervised segmentation / CAM lineage
+% ---------------------------------------------------------------------------
+
+@inproceedings{selvaraju2017gradcam,
+  title     = {Grad-CAM: Visual Explanations from Deep Networks via
+               Gradient-Based Localization},
+  author    = {Selvaraju, Ramprasaath R. and Cogswell, Michael and Das, Abhishek
+               and Vedantam, Ramakrishna and Parikh, Devi and Batra, Dhruv},
+  booktitle = {Proceedings of the IEEE International Conference on Computer
+               Vision (ICCV)},
+  pages     = {618--626},
+  year      = {2017},
+  doi       = {10.1109/ICCV.2017.74},
+  note      = {extended journal version: 10.1007/s11263-019-01228-7}
+}
+
+@inproceedings{zhou2016cam,
+  title     = {Learning Deep Features for Discriminative Localization},
+  author    = {Zhou, Bolei and Khosla, Aditya and Lapedriza, Agata and
+               Oliva, Aude and Torralba, Antonio},
+  booktitle = {Proceedings of the IEEE Conference on Computer Vision and
+               Pattern Recognition (CVPR)},
+  pages     = {2921--2929},
+  year      = {2016},
+  doi       = {10.1109/CVPR.2016.319}
+}
+
+@inproceedings{chattopadhay2018gradcampp,
+  title     = {Grad-CAM++: Generalized Gradient-Based Visual Explanations for
+               Deep Convolutional Networks},
+  author    = {Chattopadhay, Aditya and Sarkar, Anirban and Howlader, Prantik
+               and Balasubramanian, Vineeth N.},
+  booktitle = {IEEE Winter Conference on Applications of Computer Vision (WACV)},
+  pages     = {839--847},
+  year      = {2018},
+  doi       = {10.1109/WACV.2018.00097}
+}
+
+@misc{koleilat2024medclipsam,
+  title        = {MedCLIP-SAM: Bridging Text and Image Towards Universal Medical
+                  Image Segmentation},
+  author       = {Koleilat, Taha and Asgariandehkordi, Hojat and Rivaz, Hassan
+                  and Xiao, Yiming},
+  year         = {2024},
+  publisher    = {arXiv},
+  doi          = {10.48550/arXiv.2403.20253},
+  note         = {the v1 of MedCLIP-SAMv2; MICCAI 2024 version
+                  10.1007/978-3-031-72390-2\_60}
+}
+
+@article{koleilat2025medclipsamv2,
+  title   = {MedCLIP-SAMv2: Towards universal text-driven medical image
+             segmentation},
+  author  = {Koleilat, Taha and Asgariandehkordi, Hojat and Rivaz, Hassan and
+             Xiao, Yiming},
+  journal = {Medical Image Analysis},
+  volume  = {106},
+  pages   = {103749},
+  year    = {2025},
+  doi     = {10.1016/j.media.2025.103749},
+  note    = {preprint arXiv:2409.19483}
+}
+
+@inproceedings{kirillov2023sam,
+  title     = {Segment Anything},
+  author    = {Kirillov, Alexander and Mintun, Eric and Ravi, Nikhila and Mao,
+               Hanzi and Rolland, Chloe and Gustafson, Laura and Xiao, Tete and
+               Whitehead, Spencer and Berg, Alexander C. and Lo, Wan-Yen and
+               Doll{\'a}r, Piotr and Girshick, Ross},
+  booktitle = {Proceedings of the IEEE/CVF International Conference on Computer
+               Vision (ICCV)},
+  year      = {2023},
+  doi       = {10.1109/ICCV51070.2023.00371}
+}
+
+@article{ma2024medsam,
+  title   = {Segment anything in medical images},
+  author  = {Ma, Jun and He, Yuting and Li, Feifei and Han, Lin and You, Chenyu
+             and Wang, Bo},
+  journal = {Nature Communications},
+  volume  = {15},
+  pages   = {654},
+  year    = {2024},
+  doi     = {10.1038/s41467-024-44824-z}
+}
+
+@article{fruh2021petct,
+  title   = {Weakly supervised segmentation of tumor lesions in PET-CT hybrid
+             imaging},
+  author  = {Fr{\"u}h, Marcel and Fischer, Marc and Schilling, Andreas and
+             Gatidis, Sergios and Hepp, Tobias},
+  journal = {Journal of Medical Imaging},
+  volume  = {8},
+  number  = {5},
+  pages   = {054003},
+  year    = {2021},
+  doi     = {10.1117/1.JMI.8.5.054003},
+  note    = {PMID 34660843; median Dice 0.47 weakly supervised vs 0.72 supervised}
+}
+
+@article{jiang2024probabilistic,
+  title   = {Enhancing Weakly Supervised 3D Medical Image Segmentation through
+             Probabilistic-aware Learning},
+  author  = {Jiang, Runmin and Fan, Zhaoxin and Wu, Junhao and Zhu, Lenghan and
+             Huang, Xin and Wang, Tianyang and Huang, Heng and Xu, Min},
+  journal = {arXiv preprint arXiv:2403.02566},
+  year    = {2024},
+  doi     = {10.48550/arXiv.2403.02566},
+  note    = {evaluated on BTCV (CT) and CHAOS (MRI)}
+}
+
+% ---------------------------------------------------------------------------
+% Anatomy reference backing the T11/T12 ground-truth correction.
+% Full source list with quoted passages: docs/references/anatomy-citations.md
+% ---------------------------------------------------------------------------
+
+@article{oh2009retrodiaphragmatic,
+  title   = {Retrodiaphragmatic portion of the lung: how deep is the posterior
+             costophrenic sulcus on posteroanterior chest radiography?},
+  author  = {Oh, J. K. and Ahn, M. I. and Kim, H. L. and Park, S. H. and
+             Shin, E.},
+  journal = {Clinical Radiology},
+  volume  = {64},
+  number  = {8},
+  pages   = {786--791},
+  year    = {2009},
+  doi     = {10.1016/j.crad.2009.04.005},
+  note    = {PMID 19589417. Do NOT cite 10.1016/S0098-1672(09)79087-3 -- that is
+             a secondary Yearbook of Diagnostic Radiology abstract of this paper
+             by a different author, not the primary study}
+}
+
+% ---------------------------------------------------------------------------
+% Statistics
+% ---------------------------------------------------------------------------
+
+@article{nikolov2021nsd,
+  title   = {Clinically Applicable Segmentation of Head and Neck Anatomy for
+             Radiotherapy: Deep Learning Algorithm Development and Validation
+             Study},
+  author  = {Nikolov, Stanislav and Blackwell, Sam and Zverovitch, Alexei and
+             Mendes, Ruheena and Livne, Michelle and De Fauw, Jeffrey and
+             Patel, Yojan and Meyer, Clemens and Askham, Harry and
+             Romera-Paredes, Bernardino and others},
+  journal = {Journal of Medical Internet Research},
+  volume  = {23},
+  number  = {7},
+  pages   = {e26151},
+  year    = {2021},
+  doi     = {10.2196/26151},
+  note    = {source of the normalized surface Dice (NSD) metric we report}
+}
+
+@book{efron1994bootstrap,
+  title     = {An Introduction to the Bootstrap},
+  author    = {Efron, Bradley and Tibshirani, Robert J.},
+  publisher = {Chapman \& Hall/CRC},
+  year      = {1994},
+  doi       = {10.1201/9780429246593}
+}

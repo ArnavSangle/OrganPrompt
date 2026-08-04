@@ -1,0 +1,168 @@
+\section{Related work}
+\label{sec:related}
+
+\subsection{Vision--language pretraining and its biomedical adaptations}
+
+CLIP established that predicting which caption belongs to which image, over 400
+million web-collected pairs, yields representations strong enough for zero-shot
+transfer across more than 30 vision benchmarks \cite{radford2021clip}. SigLIP
+later replaced the softmax-normalized contrastive objective with a pairwise
+sigmoid loss that needs no global view of the similarity matrix, which decouples
+the loss from batch size and improves results at both small and very large
+batches \cite{zhai2023siglip}.
+
+Much of the subsequent progress has been attributed to data rather than
+architecture. MetaCLIP argues explicitly that CLIP's principal ingredient is its
+curation procedure, and recovers CLIP-level performance by balancing a raw pool
+against metadata derived from CLIP's own concept list \cite{xu2024metaclip}.
+DataComp makes the same point by construction, fixing the training code and
+treating the dataset as the object of study across a 12.8-billion-pair candidate
+pool \cite{gadre2023datacomp}. Both results motivate the biomedical variants,
+where the binding constraint is domain-matched data.
+
+Two such adaptations are directly relevant. PMC-CLIP assembles PMC-OA, 1.6M
+image--caption pairs from PubMed Central's Open Access subset, most aligned at
+subfigure and subcaption granularity \cite{lin2023pmcclip}. BiomedCLIP scales
+this further with PMC-15M, 15 million figure--caption pairs drawn from 4.4
+million articles, and adapts the text side to the domain: a PubMedBERT encoder
+with a 30k domain-specific vocabulary in place of a general-domain tokenizer,
+and a context length raised to 256 tokens to accommodate the length of PMC
+captions \cite{zhang2025biomedclip}. That longer context is what makes
+multi-sentence anatomical prompts expressible at all, and this work builds on
+BiomedCLIP for that reason.
+
+The limitation these models share is the one this work addresses. All of them
+optimize alignment between a whole image and a whole caption at the level of a
+pooled global embedding. Nothing in that objective requires any individual patch
+token to be spatially discriminative, so per-patch similarity read off a
+CLS-trained model carries little localization signal. Section~\ref{sec:results}
+quantifies this: before fine-tuning, the pipeline reaches 0.003 mIoU.
+
+\subsection{Dense and local alignment from vision--language models}
+
+We are not the first to observe that global alignment is the obstacle, and the
+work closest to ours attacks it in three distinguishable ways.
+
+The first extracts dense correspondence from an already-trained model without
+changing its weights. MaskCLIP shows that CLIP's value projection retains
+substantially more spatial information than the pooled embedding suggests, and
+recovers usable dense labels by reading it directly \cite{zhou2022maskclip}.
+Subsequent work pushes this further for weakly supervised semantic segmentation
+\cite{yang2025clipdense}, and a related line examines why CLIP's raw attention
+localizes poorly and how its explainability can be repaired
+\cite{li2024clipexplain}. Self-supervised vision transformers exhibit a similar
+property, with DINO producing segmentation-like attention maps without any
+textual supervision \cite{caron2021dino}. We take the same view of where the
+signal lives, but we train the property in rather than recovering it, because
+our downstream index requires organ maps that vanish where the organ is absent,
+which is a calibration property rather than a localization one.
+
+The second adapts the model to dense prediction with a task head. DenseCLIP
+converts image-text matching into pixel-text matching and fine-tunes with a
+dense decoder \cite{rao2022denseclip}, and CLIPSeg attaches a lightweight
+transformer decoder that emits a segmentation from a text or image prompt
+\cite{lueddecke2022clipseg}. Both produce better boundaries than we do. Both
+also place a trained decoder between the prompt and the mask, which is precisely
+the attribution problem we describe below.
+
+The third is local alignment during pretraining, and GLoRIA is the closest
+medical antecedent: it learns global and local representations jointly by
+matching image sub-regions to individual words in radiology reports
+\cite{huang2021gloria}. Our objective is the same in spirit. It differs in
+supervision and in target: GLoRIA attends over report words to build
+localized representations for label-efficient recognition, whereas we supervise
+each of the 196 patch tokens directly against a downsampled organ mask, so that
+the resulting per-patch similarity is itself the segmentation rather than an
+intermediate representation.
+
+\subsection{Class activation maps and post-hoc localization}
+
+The established route from image-level labels to spatial maps is the CAM family.
+CAM recovers localization from a classifier's final-layer activations
+\cite{zhou2016cam}, and Grad-CAM generalizes this to arbitrary architectures by
+weighting activations with backpropagated gradients \cite{selvaraju2017gradcam},
+with later refinements such as Grad-CAM++ improving multi-instance localization
+\cite{chattopadhay2018gradcampp}.
+Both explain where a trained classifier looked.
+
+That framing is a poor fit here, for a reason worth stating plainly rather than
+asserting. A CAM explains a decision the network already makes. A contrastively
+pretrained vision--language model makes no per-organ decision to explain; it
+produces an embedding whose alignment with a text embedding is a similarity, not
+a class logit. Applying gradient-based localization to it recovers almost
+nothing, which is what the 0.003 starting point in Table~\ref{tab:progression}
+measures. This work therefore trains the spatial property directly instead of
+attempting to extract it post hoc, and the name reflects that: the prompt does
+the localizing, and no activation map is involved.
+
+\subsection{Text-driven medical image segmentation}
+
+The closest methodological relative is MedCLIP-SAMv2, which shares both the
+BiomedCLIP backbone and the premise that a text prompt can drive segmentation
+\cite{koleilat2025medclipsamv2}, extending an earlier version of the same
+framework \cite{koleilat2024medclipsam}. It differs in where the mask comes from:
+saliency derived from the vision--language model is used to prompt SAM
+\cite{kirillov2023sam}, which produces the final boundary, in a lineage that
+includes MedSAM's adaptation of SAM to medical images \cite{ma2024medsam}.
+
+Delegating mask formation to a second model is the stronger engineering choice
+and generally yields better boundaries. It also changes what the pipeline can be
+asked. When a refiner sits between the prompt and the output, a failure cannot
+be attributed cleanly to the text, because the refiner may repair a bad
+localization or corrupt a good one. Reading patch similarity directly, as here,
+gives up boundary quality and gains attribution: the caption ablation in
+\S\ref{sec:results:ablation} is only interpretable because nothing stands
+between the prompt and the mask. We regard that trade as the substantive
+difference between the two approaches, not the scores in
+Table~\ref{tab:weaksup}, which are computed on different datasets and organ
+sets.
+
+\subsection{Weak supervision, stratified by annotation cost}
+
+``Weakly supervised'' covers a wide range of supervision strength, and comparing
+across that range without saying so is misleading. Point-supervised methods
+receive one clicked pixel inside each structure; scribble-supervised methods
+receive a stroke through it. Recent work in this tier reports substantial gains
+over prior point- and scribble-supervised baselines on BTCV and CHAOS
+\cite{jiang2024probabilistic}. Multi-organ abdominal CT benchmarks such as AMOS
+\cite{ji2022amos} and WORD \cite{luo2022word} are the usual evaluation targets in
+this tier, which is one reason no row of Table~\ref{tab:weaksup} shares a dataset
+with our work.
+
+Both forms of annotation answer ``where'' for each training image. Image-level
+text supervision does not, which is the entire problem being solved here, so
+these methods are context rather than baselines. The strictly comparable tier is
+image-level supervision, where weakly supervised CAM-based lesion segmentation
+in PET-CT reports a median Dice of 0.47 against 0.72 for a fully supervised
+U-Net \cite{ronneberger2015unet} on the same task \cite{fruh2021petct}. That ratio, roughly two thirds of
+supervised performance recovered from image-level labels alone, is the
+expectation this work should be read against.
+
+\subsection{Fully supervised reference}
+
+TotalSegmentator provides both the dataset and the supervised ceiling. It trains
+an nnU-Net \cite{isensee2021nnunet} on 1{,}204 CT examinations sampled from
+routine clinical practice, covering 104 anatomical structures, and reports a
+mean Dice of 0.943 on a test set spanning a wide range of pathology
+\cite{wasserthal2023totalsegmentator}. Transformer-based architectures such as
+TransUNet \cite{chen2021transunet} are a common alternative in this fully
+supervised setting. The released dataset
+\cite{wasserthal2023totalsegdataset} is what this work trains on, and the
+published per-structure Dice is the reference against which
+Table~\ref{tab:fullysup} is read, subject to the 2D/3D metric caveat stated
+there.
+
+\subsection{Positioning}
+
+We validated the underlying idea on the OrganAMNIST subset of MedMNIST v2
+\cite{yang2023medmnist} before moving to full-resolution CT, and we report
+results here only on the latter.
+
+This work sits in the image-level tier and differs from its nearest neighbours
+in three respects. It trains patch-level text--image alignment as an explicit
+objective instead of extracting localization post hoc from a classifier. It
+reads the resulting similarity map directly, with no second-stage refiner, which
+preserves the ability to attribute failures to the prompt. And it carries the
+same frozen model into a downstream clinical question, the bone-metastasis
+proximity index of \S\ref{sec:results:index}, on a dataset and acquisition
+protocol the model never saw during training.

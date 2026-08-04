@@ -102,7 +102,7 @@ def fig4_organ_grid(model, tf, device):
                         rotation=90, va="center", ha="center", fontsize=8,
                         fontweight="bold")
 
-    fig.suptitle(f"OrganCAM organ maps on bone-metastasis CT "
+    fig.suptitle(f"OrganPrompt organ maps on bone-metastasis CT "
                  f"(Spine-Mets case {GRID_CASE}, {GRID_LEVEL} lesion slice {z})",
                  fontsize=10)
     fig.tight_layout(rect=[0, 0, 1, 0.96])

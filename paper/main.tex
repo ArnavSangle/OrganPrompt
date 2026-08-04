@@ -1,0 +1,84 @@
+% OrganPrompt -- arXiv preprint
+% Build:  cd paper && pdflatex main && bibtex main && pdflatex main && pdflatex main
+% (or:    python ../scripts/build_paper.py)
+\documentclass[11pt]{article}
+
+\usepackage[letterpaper,margin=1in]{geometry}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{lmodern}
+\usepackage{microtype}
+\usepackage{amsmath,amssymb}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{tabularx}
+\usepackage{makecell}
+\usepackage{enumitem}
+\usepackage{float}      % [H] for floats that must not drift out of their section
+\usepackage[section]{placeins}  % keep floats inside the section that introduces them
+\usepackage{multirow}
+\usepackage{siunitx}
+\usepackage[font=small,labelfont=bf]{caption}
+\usepackage{subcaption}
+\usepackage{xcolor}
+\usepackage{authblk}
+\usepackage[numbers,sort&compress]{natbib}
+\usepackage[colorlinks=true,linkcolor=blue!55!black,citecolor=blue!55!black,
+            urlcolor=blue!55!black]{hyperref}
+\usepackage{xurl}   % allow long URLs to break anywhere rather than overflow
+
+\graphicspath{{../figures/}{../figures/paper/}{../diagnostics/}}
+
+% Numbers in tables: right-aligned on the decimal point.
+\sisetup{detect-weight=true,detect-inline-weight=math}
+\newcommand{\org}[1]{\texttt{#1}}          % organ class names
+\newcommand{\code}[1]{\texttt{#1}}
+
+\title{\bfseries OrganPrompt: Text-Prompted Organ Localization\\
+       in CT from Image-Level Supervision, and Its Use\\
+       as a Bone-Metastasis Proximity Index}
+
+% TODO(authors): add the second author. Name, affiliation and order need to come
+% from you. Uncomment the marked lines and fill in.
+\author[1]{Arnav Sangle}
+% \author[2]{<Given name> Du}
+\affil[1]{\small [affiliation to be added]}
+% \affil[2]{\small <affiliation>}
+\affil[ ]{\small Correspondence: \href{mailto:arnavsangle08@gmail.com}{arnavsangle08@gmail.com}}
+
+% No date. Empty \date{} suppresses it entirely; do NOT use \today, which would
+% stamp the build date and change on every recompile.
+\date{}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+\input{sections/00_abstract}
+\end{abstract}
+
+\input{sections/10_introduction}
+\input{sections/20_related_work}
+\input{sections/30_methods}
+\input{sections/40_results}
+\input{sections/50_discussion}
+\input{sections/60_conclusion}
+
+\section*{Code and data availability}
+Code, prompts, and all result JSON files are available at
+\url{https://github.com/ArnavSangle/OrganPrompt}. The training and evaluation data is
+TotalSegmentator v2.0.1 \cite{wasserthal2023totalsegdataset}; the bone-metastasis cohort
+is Spine-Mets-CT-SEG \cite{pieper2024spinemets}, and the transfer sanity check uses
+CT-ORG \cite{rister2020ctorg}. Model
+checkpoints and the raw imaging data ($\sim$50\,GB) are not redistributed; every number
+reported here is reproducible from the scripts named in the text.
+
+\bibliographystyle{unsrtnat}
+\bibliography{references}
+
+\appendix
+\input{sections/90_appendix}
+\input{sections/91_prompts_generated}
+\input{sections/92_anatomy}
+
+\end{document}

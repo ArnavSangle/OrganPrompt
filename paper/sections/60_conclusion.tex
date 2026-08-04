@@ -1,0 +1,25 @@
+\section{Conclusion}
+\label{sec:conclusion}
+
+Making patch-level text--image alignment an explicit training objective turns a
+globally-aligned vision--language model into a text-prompted organ localizer,
+recovering most of the localization signal for morphologically distinctive
+structures without any per-pixel label at inference. The same frozen model
+transfers to an unseen dataset and acquisition protocol to answer a downstream
+clinical question, ranking the organ a vertebral metastasis is nearest to
+invading well above chance across 180 lesions.
+
+Two findings generalize past this pipeline. Prompt elaboration is not what makes
+text supervision work: the class name carries almost all of the signal, and
+multi-sentence anatomical description adds nothing measurable over a single
+generic sentence. And when a text-prompted localizer fails, it fails
+confidently, segmenting the wrong structure cleanly rather than signalling
+uncertainty, so prompt validation belongs in any deployed system as a
+first-class component.
+
+Our method remains bounded by the $14\times14$ patch grid, by a two-class
+failure that we diagnose but do not repair, and by single-cohort evaluation of
+the downstream index. The next experiment is specified by the diagnosis rather
+than chosen freely: scoping hard negatives to the classes they were introduced
+to correct, which is the one change the failed global-negative result actually
+implicates.

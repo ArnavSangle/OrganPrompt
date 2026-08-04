@@ -26,7 +26,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 from src.data.totalsegmentator import load_totalsegmentator
 from src.labels.templates import CLASS_NAMES, FEW_SHOT_TEMPLATES
 from src.training.freeze import UNFREEZE_PATTERNS
-from src.explainability.patch_similarity import BioMedCLIPGradCAM, BioMedCLIPPatchSimilarity, post_process_mask
+from src.explainability.patch_similarity import BioMedCLIPVanillaGradient, BioMedCLIPPatchSimilarity, post_process_mask
 
 MODEL_NAME    = "hf-hub:microsoft/BiomedCLIP-PubMedBERT_256-vit_base_patch16_224"
 OUTPUT_DIR    = Path("data/totalseg_masks")
@@ -112,7 +112,7 @@ def main():
     print(f"Method: {args.method} | Images: {n}")
 
     if args.method == "gradcam":
-        explainer = BioMedCLIPGradCAM(model, device=args.device)
+        explainer = BioMedCLIPVanillaGradient(model, device=args.device)
     else:
         explainer = BioMedCLIPPatchSimilarity(model, device=args.device)
     use_negatives = (args.method == "patch_sim") and args.use_negatives

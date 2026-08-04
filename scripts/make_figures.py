@@ -1,7 +1,7 @@
 """Generate summary figures from committed results.
 
 Two figures:
-    figures/progression.png         methodology arc: baseline → v4-tuned
+    figures/progression.png         methodology arc: untrained start → v5-tuned
     figures/calibration_impact.png  per-class v4-uniform vs v4-tuned
 
 Data is hardcoded from results already in the repo. Pure plotting — no
@@ -21,7 +21,7 @@ OUT_DIR = Path("figures")
 # ─── Methodology progression (raw untuned checkpoint peaks, unless noted) ────
 # Short, single-line labels so they don't overlap at the given figure width.
 PROGRESSION = [
-    ("baseline",       0.003),
+    ("untrained",      0.003),
     ("v0",             0.063),
     ("v1",             0.307),
     ("v3",             0.469),
@@ -82,7 +82,11 @@ def figure_progression():
 
     ax.set_ylabel("mIoU on TotalSegmentator test set", fontsize=12)
     ax.set_ylim(0, 0.82)  # headroom for annotations
-    ax.set_title("OrganCAM methodology progression (baseline → final)", fontsize=13)
+    # "baseline" deliberately avoided here: these are ablation stages of one
+    # method, not competing methods, and the first bar is where the pipeline
+    # starts rather than a comparison baseline.
+    ax.set_title("OrganPrompt methodology progression (untrained start → final)",
+                 fontsize=13)
     ax.grid(axis="y", alpha=0.3)
 
     for bar, val in zip(bars, values):

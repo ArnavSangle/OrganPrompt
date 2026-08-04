@@ -101,17 +101,24 @@ class BioMedCLIPPatchSimilarity:
         return cam.astype(np.float32)
 
 
-class BioMedCLIPGradCAM:
-    """Gradient-weighted Class Activation Map for BioMedCLIP (ViT-B/16).
+class BioMedCLIPVanillaGradient:
+    """Vanilla input-gradient saliency for BioMedCLIP (ViT-B/16).
 
-    Backprops image-text cosine similarity through the ViT to get
-    gradient-weighted patch activation maps at block 11.
+    Backprops the image-text cosine similarity to the INPUT PIXELS and takes
+    |d(score)/d(pixel)| summed over colour channels. This is plain gradient
+    saliency, NOT Grad-CAM: no activation map is involved, and the hooks
+    registered below are captured but never used by generate().
 
-        CAM = ReLU( mean_channel(grads) · acts ) for the 196 patch tokens
+    Named accordingly. It was previously called `BioMedCLIPGradCAM`, which
+    collided with the genuine Grad-CAM implementation in
+    src/explainability/gradcam.py (that one does use activations x gradients at
+    block 11). Two different algorithms shared one name across two modules:
+    scripts/generate_masks.py imported THIS one, while tests/test_gradcam.py
+    exercised the other, so the untested class was the one in the pipeline.
 
-    Unlike patch-text similarity, this uses the global CLS-token alignment
-    the model learned during training, so it works even when patch tokens
-    lack explicit spatial discrimination.
+    This class is what produced the untrained 0.003 mIoU starting point
+    reported in the paper, which is why the paper labels that row
+    "vanilla-gradient CAM" rather than "Grad-CAM".
 
     Requires one backward pass per image (slower than BioMedCLIPPatchSimilarity).
     """

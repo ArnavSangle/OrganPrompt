@@ -5,10 +5,12 @@ correct organ(s) at each labelled vertebral level (lower is better), against
 the chance mean rank for that level's expected-organ set size (grey dashed
 line; chance = (n_organs+1)/(k+1) where k is the number of organs expected at
 that level). Bars are patient-clustered across n=180 lesions / 46 patients;
-per-level n is annotated inside each bar. Thoracic levels T1–T10 beat chance
-clearly, including two perfect levels (T8, T9). Vermillion bars mark the
-thoracolumbar-junction failure band (T11, T12, L1, L2, L5), which sits at or
-below chance; L3 and L4 in between recover to beat chance clearly. This
+per-level n is annotated inside each bar. Thoracic levels T1–T11 beat chance
+clearly, including two perfect levels (T8, T9, mean rank 1.00). Vermillion bars
+mark the thoracolumbar-junction failure band (T12, L1, L2, and L5), which sits
+at or below chance; L3 and L4 in between recover to beat chance clearly. Bar
+colour is derived from each level's own observed-vs-chance comparison, not from
+a fixed list of level names. This
 per-level structure, not a single aggregate number, is the main localization
 result.
 
@@ -41,7 +43,7 @@ femur shaft — visual confirmation of the diagnosed mechanism
 or humeral head in cross-section as well as it matches a real femur, and
 nothing in the 11-class vocabulary was defined to outbid that confusion.
 
-**Figure 4 — OrganCAM organ maps on bone-metastasis CT.** All 11 organ
+**Figure 4 — OrganPrompt organ maps on bone-metastasis CT.** All 11 organ
 classes at a single thoracic lesion slice (Spine-Mets case 13055, T8 lesion,
 slice 354), arranged as the Phase 1 Grad-CAM summary figure was: top row CT,
 middle row raw patch-text similarity, bottom row overlay. The slice is the T8

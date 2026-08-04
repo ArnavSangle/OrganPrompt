@@ -1,0 +1,76 @@
+\section{Introduction}
+\label{sec:intro}
+
+Dense per-voxel annotation is the binding constraint on CT segmentation. A
+fully supervised model such as TotalSegmentator reaches a mean Dice of 0.943
+across 104 anatomical structures \cite{wasserthal2023totalsegmentator}, but that
+performance rests on expert voxel-level labels for every structure of interest.
+Extending such a system to a new structure, a new protocol, or a new clinical
+question means commissioning new annotation.
+
+Vision--language pretraining suggests an alternative. Models in the CLIP family
+learn visual concepts from natural-language supervision alone
+\cite{radford2021clip, zhai2023siglip}, and biomedical adaptations such as
+PMC-CLIP \cite{lin2023pmcclip} and BiomedCLIP \cite{zhang2025biomedclip} bring
+that capability into the medical domain at scale. If a text prompt could select
+a region as well as it selects a label, segmentation would need no pixels at
+all.
+
+The obstacle is that these models are trained for global alignment. The
+contrastive objective relates a pooled image embedding to a pooled caption
+embedding, and nothing in it requires an individual patch token to be spatially
+discriminative. Reading per-patch similarity off such a model recovers almost
+no localization: measured here, 0.003 mIoU. The conventional workaround is the
+CAM family \cite{zhou2016cam, selvaraju2017gradcam}, which extracts spatial
+maps post hoc from a classifier, but a contrastively pretrained model makes no
+per-organ decision for a CAM to explain.
+
+We make the spatial property an explicit training objective instead.
+We align each of the 196 ViT patch tokens with the organ's text embedding
+against the downsampled ground-truth mask, so that per-patch cosine similarity
+becomes directly readable as a segmentation map at inference, with no gradients,
+no classifier, and no second-stage mask refiner. We claim the following
+contributions.
+
+\textbf{A patch-level alignment objective that makes text-prompted localization
+work.} On 11 organ classes from TotalSegmentator, we reach 0.653 mIoU
+and 0.757 Dice using no per-pixel labels at inference. The patch loss is the
+single largest contributor, taking mIoU from 0.063 to 0.307 in one step, and a
+subsequent calibration correction adds a further 0.059 with no retraining at all
+(\S\ref{sec:results:phase1}).
+
+\textbf{A prompt ablation that establishes what the text is actually doing, and
+what it is not.} We show that corrupting the positional content of the prompts collapses
+precisely the classes that depend on laterality while leaving uniquely-positioned
+organs untouched, which demonstrates the text is load-bearing rather than acting
+as a class index. The same experiment shows us that elaboration is not where the value lies: a bare class name recovers 96.9\% of the full multi-sentence
+anatomical description's mIoU, and a one-line generic caption matches it
+outright (\S\ref{sec:results:ablation}).
+
+\textbf{A safety-relevant failure mode.} An accidental two-word error in one of
+eleven prompts produced not a degraded output but a confident, clean segmentation
+of the wrong organ, costing 55 IoU points on the affected class while leaving its
+bilateral partner untouched. Failures of this method are directional rather than
+degradative, which is the more dangerous kind, because nothing in the output
+signals that anything went wrong (\S\ref{sec:results:ablation}).
+
+\textbf{A downstream clinical application of the frozen model.} The same weights
+are carried, unmodified, onto Spine-Mets-CT-SEG \cite{pieper2024spinemets}, a
+dataset and acquisition protocol never seen in training, to compute a
+bone-metastasis proximity index: which organ a vertebral metastasis is closest to
+invading. Validating per lesion across 180 lesions in 46 patients, we find the correct
+organ ranks 1.78 on average against a chance rank of 2.91, with $p < 0.0001$
+under a patient-clustered permutation test (\S\ref{sec:results:lesion}).
+
+\textbf{Negative results with diagnosed mechanisms.} Two pre-registered
+calibration variants were run and neither was adopted, each for an identified
+reason rather than an unexplained regression (\S\ref{sec:results:negatives}). A
+per-level analysis further shows the localization failure is not diffuse: it
+concentrates in two of eleven classes, one of which never ranks first at any
+level where it is anatomically correct, while winning 14 times where it is not
+(\S\ref{sec:discussion}).
+
+We also report a ground-truth error found in our own evaluation table and
+corrected from anatomical literature, along with a calibration leak found and
+repaired. Both changed headline numbers. Reporting them is part of what the
+paper claims.
