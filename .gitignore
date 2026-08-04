@@ -18,6 +18,10 @@ Totalsegmentator_dataset_v201.zip
 # Literature review PDFs + extracted text (local only, large)
 lit-review/
 
+# Zotero export. Every entry worth keeping is already merged into
+# paper/references.bib with a verified DOI, so this is a working artifact.
+Exported Items.bib
+
 # Claude Code internal
 .claude/
 docs/superpowers/
