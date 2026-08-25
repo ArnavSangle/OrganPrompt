@@ -1,0 +1,1092 @@
+\documentclass[10pt]{article}
+
+\usepackage[letterpaper,margin=1in]{geometry}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{lmodern}
+\usepackage{microtype}
+\usepackage{amsmath,amssymb}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{makecell}
+\usepackage{enumitem}
+\usepackage{float}
+\usepackage[font=small,labelfont=bf]{caption}
+\usepackage{subcaption}
+\usepackage{xcolor}
+\usepackage{authblk}
+\usepackage[numbers,sort&compress]{natbib}
+\usepackage[colorlinks=true,linkcolor=blue!55!black,citecolor=blue!55!black,
+            urlcolor=blue!55!black]{hyperref}
+\usepackage{xurl}
+
+\graphicspath{{./}{figures/}}
+
+\newcommand{\org}[1]{\texttt{#1}}
+\newcommand{\code}[1]{\texttt{#1}}
+
+\setlength{\textfloatsep}{9pt plus 2pt minus 2pt}
+\setlength{\intextsep}{9pt plus 2pt minus 2pt}
+\setlength{\abovecaptionskip}{4pt}
+\setlength{\parskip}{0pt}
+\renewcommand{\topfraction}{0.92}
+\renewcommand{\bottomfraction}{0.75}
+\renewcommand{\textfraction}{0.06}
+\renewcommand{\floatpagefraction}{0.80}
+
+\title{\bfseries OrganPrompt: Weakly Supervised Organ Segmentation in CT via CLIP       Saliency Maps for Bone Metastasis Proximity Analysis}
+
+
+\author[1]{Arnav Sangle}
+\affil[1]{\small Ranchview High School}
+\date{\small Correspondence:
+\href{mailto:arnavsangle08@gmail.com}{arnavsangle08@gmail.com}}
+
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+Organ segmentation in CT underpins radiotherapy planning and surgical guidance,
+yet every organ a model recognizes was first traced by hand, slice by slice, by a
+reader trained in cross-sectional anatomy. That cost decides which structures get
+models, and better architectures do not reduce it. Vision--language models suggest
+a way around it: a structure could be named instead of outlined. In practice they
+name well and locate poorly, because their objective compares whole images with
+whole captions and nothing forces an individual patch to be discriminative.
+Text-driven methods repair this with a second network that draws the mask,
+restoring accuracy but moving the decisive step beyond the prompt's reach.
+
+We train that property directly instead, supervising every patch of the image
+encoder against the organ's text embedding. A segmentation is then read straight
+off the forward pass: no gradients, no classifier, no mask refiner. Across eleven
+organ classes the method reaches 0.653 mIoU with no per-pixel label at inference.
+Because the prompt is the only input, we can measure what the text contributes:
+corrupting the positional wording collapses exactly the classes whose identity
+depends on it. One accidental two-word prompt error produced a clean, confident
+segmentation of the wrong organ, a failure the output gives no way to detect.
+Applied unchanged to an unseen cohort with spinal metastases, the same model
+ranks the organ nearest each lesion well above chance.
+\end{abstract}
+
+\section{Introduction}
+\label{sec:intro}
+
+Knowing where an organ lies in a CT volume is a routine prerequisite for clinical
+work: radiotherapy plans require the organs at risk around a target, surgical
+planning needs the structures adjacent to a lesion, and follow-up imaging needs
+organ volumes measured consistently over time. Automatic segmentation supplies
+these and modern models do it well, with TotalSegmentator segmenting 104
+anatomical structures at an agreement level comparable to an expert reader
+\cite{wasserthal2023totalsegmentator}, so accuracy is not the open problem.
+
+The problem is where that accuracy comes from. It rests on expert voxel-level
+labels for every structure the model is meant to recognize, and those labels are
+expensive in a way that better architectures do not relieve. Tracing an organ
+boundary calls for a reader trained in cross-sectional anatomy, working on slices
+where soft-tissue contrast is poor and neighboring structures share intensity, and
+the work compounds quickly since every structure must be outlined on every slice of
+every volume. One consequence is that densely labeled CT datasets are few, and
+each is frozen in the label set supported by a funding decision
+\cite{ji2022amos, luo2022word, rister2020ctorg}, so a structure outside that
+set is unavailable to anyone working from it. In addition, at the ambiguous
+boundaries where tracing is hardest, careful annotators disagree, so the ground
+truth itself carries reader variability \cite{nikolov2021nsd}.
+
+A different kind of supervision would remove that bottleneck. Descriptions of
+anatomy already exist in quantity---in textbooks and in clinical reports---and
+vision--language models learn visual concepts from such text alone
+\cite{radford2021clip, zhai2023siglip}, with PMC-CLIP \cite{lin2023pmcclip} and
+BiomedCLIP \cite{zhang2025biomedclip} carrying the approach into the medical
+domain. If a written prompt could select a region as well as it selects a label,
+segmentation would need no traced pixels at all.
+
+The obstacle is what these models are trained to do. Their objective compares one
+pooled image embedding against one pooled caption embedding, and nothing in it
+asks any individual image patch to be discriminative on its own, so similarity
+maps read from a pretrained model are close to useless as segmentations. The
+standard repair, extracting spatial maps from a trained classifier after the fact
+\cite{zhou2016cam, selvaraju2017gradcam}, does not apply either, because a
+contrastively pretrained model makes no per-organ decision for such a method to
+explain. Recent text-driven segmentation methods therefore hand mask formation to
+a second network, which works and also means the component deciding the boundary
+is no longer the prompt.
+
+We supervise the property directly instead. During fine-tuning, each patch of the
+image encoder is aligned with the organ's text embedding against a downsampled
+ground-truth mask, so patch-text similarity becomes readable as a spatial map, and
+at inference the map comes straight off the forward pass, with no gradients, no
+classifier, and no second-stage refiner. Nothing stands between the prompt and the
+output, which is what lets us ask what the prompt is actually doing.
+
+The method recovers most of the localization signal for morphologically
+distinctive organs without a single per-pixel label at inference, and degrades on
+small, low-contrast structures as weak supervision predicts. The frozen model is
+then carried onto a cohort of patients with spinal metastases, a dataset and
+protocol it never saw in training, and asked which organ each lesion is nearest to
+invading. Our contributions are:
+
+\begin{itemize}[leftmargin=1.3em,itemsep=1pt,topsep=2pt]
+\item A patch-level alignment objective that makes text-prompted localization
+work without per-pixel labels at inference. It contributes more localization than
+any other component of the method (\S\ref{sec:results:phase1}).
+\item A prompt ablation establishing what the text does. Swapping the positional
+wording collapses the classes whose identity depends on laterality and leaves
+uniquely positioned organs untouched, so the prompt does real work and is not a
+class index in disguise (\S\ref{sec:results:ablation}).
+\item A failure mode with safety implications; an accidental two-word error in one
+of eleven prompts produced a clean, confident segmentation of the wrong organ
+(\S\ref{sec:results:ablation}).
+\item A downstream clinical use of the frozen model, ranking the organ nearest a
+vertebral metastasis well above chance on an unseen dataset and protocol
+(\S\ref{sec:results:index}).
+\item Two negative results with identified mechanisms. We adopted neither
+pre-registered calibration variant, and in each case we can say why
+(\S\ref{sec:results:negatives}). The same holds for the residual failure, which
+concentrates in two of the eleven organ classes (\S\ref{sec:discussion}).
+\end{itemize}
+
+\section{Related work}
+\label{sec:related}
+
+The approach this work builds on begins with general-purpose vision--language
+pretraining. CLIP showed that predicting which caption belongs to which image, over 400M
+web-collected pairs, gives representations strong enough for zero-shot transfer
+across more than 30 benchmarks \cite{radford2021clip}, and SigLIP replaced the
+softmax-normalized objective with a pairwise sigmoid loss that decouples the loss
+from batch size \cite{zhai2023siglip}. Later analyzes attribute much of the
+progress to data curation \cite{xu2024metaclip, gadre2023datacomp}, which
+motivates the biomedical variants, where domain-matched data is scarce: PMC-CLIP
+collects 1.6M image--caption pairs from PubMed Central \cite{lin2023pmcclip}, and
+BiomedCLIP scales to 15M figure--caption pairs from 4.4M articles with a
+PubMedBERT encoder, a 30k domain vocabulary and a 256-token context
+\cite{zhang2025biomedclip}. The longer context is what makes multi-sentence
+anatomical prompts expressible, so we build on BiomedCLIP. None of these models
+grounds text spatially, because the objective constrains pooled representations
+only, so no gradient asks a patch token to align with text on its own, and
+self-attention in the deeper blocks mixes globally, leaving a late-layer patch
+token reflecting image-wide context rather than the evidence at its own location.
+
+That pooling limitation has been attacked before, and three lines of work address
+it. The first extracts dense correspondence from
+frozen weights: MaskCLIP reads CLIP's value projection instead of the pooled
+output \cite{zhou2022maskclip}, later work pushes that recovery further for weakly
+supervised segmentation \cite{yang2025clipdense}, a related line asks why raw CLIP
+attention localizes poorly \cite{li2024clipexplain}, and self-supervised ViTs show
+similar structure with no text at all \cite{caron2021dino}. We agree about where
+the signal lives but train the property in, because our downstream index needs
+organ maps that vanish where the organ is absent, which is a calibration property.
+The second line adapts the model with a task head, as in DenseCLIP
+\cite{rao2022denseclip} and CLIPSeg \cite{lueddecke2022clipseg}; both give better
+boundaries than we do, and both put a trained decoder between prompt and mask. The
+third builds locality in during pretraining, and GLoRIA is the closest medical
+antecedent, matching image sub-regions to words in radiology reports for
+label-efficient recognition \cite{huang2021gloria}; we instead supervise the 196
+patch tokens against a downsampled mask, so the similarity map is itself the
+segmentation.
+
+Within text-driven medical segmentation itself, MedCLIP-SAMv2 is the closest
+relative. It shares the BiomedCLIP backbone and the
+text-driven premise \cite{koleilat2025medclipsamv2, koleilat2024medclipsam}, but
+the mask comes from elsewhere: vision--language saliency prompts SAM
+\cite{kirillov2023sam}, which draws the final boundary, following MedSAM
+\cite{ma2024medsam}. Handing mask formation to a second model is the stronger
+engineering choice and gives better boundaries, but it also changes what the
+pipeline can be asked, since a refiner can repair a bad localization or corrupt a
+good one and a failure can then no longer be attributed to the text. Our caption
+ablation (\S\ref{sec:results:ablation}) is interpretable only because nothing sits
+between the prompt and the mask.
+
+That lineage and ours are both weakly supervised in the broad sense, which is
+exactly where comparison becomes treacherous.
+``Weakly supervised'' covers a wide range of supervision strength, and comparisons
+across that range mislead unless the range is stated. Point- and
+scribble-supervised methods receive a clicked pixel or a stroke inside each
+structure \cite{jiang2024probabilistic}, usually on AMOS \cite{ji2022amos} or WORD
+\cite{luo2022word}, and both forms answer ``where'' for each training image.
+Image-level text supervision does not answer it at all, which is the problem we
+are solving, so we treat those methods as context and not as baselines. The
+comparable tier is image-level supervision. CAM-based lesion segmentation in
+PET-CT reports a median Dice of 0.47 against 0.72 for a fully supervised U-Net
+\cite{ronneberger2015unet} on the same task \cite{fruh2021petct}, so roughly two
+thirds of supervised performance is recoverable from image-level labels, and that
+is the expectation this work should be read against; fully supervised transformers
+such as TransUNet \cite{chen2021transunet} sit at the other end of the axis. The
+localization technique native to this tier is the CAM family \cite{zhou2016cam,
+selvaraju2017gradcam, chattopadhay2018gradcampp}, and every member of it explains
+where a trained classifier looked, whereas a contrastively pretrained model
+outputs a similarity and not a class logit, so gradient-based localization
+recovers almost nothing from it. That is the 0.003 row of
+Table~\ref{tab:progression}.
+
+Our work sits in the image-level tier and differs from its neighbors in three
+ways: patch-level alignment is trained as an explicit objective, the similarity
+map is read directly with no refiner, which preserves attribution to the prompt,
+and the frozen model is carried into a downstream clinical question on a protocol
+it never saw. We tested the idea on the OrganAMNIST subset of MedMNIST v2
+\cite{yang2023medmnist} before moving to full-resolution CT.
+
+\section{Methods}
+\label{sec:methods}
+
+\subsection{Backbone and patch-level objective}
+\label{sec:methods:patchloss}
+
+We fine-tune BioMedCLIP \cite{zhang2025biomedclip}, a ViT-B/16 visual encoder
+\cite{dosovitskiy2021vit} with a PubMedBERT text encoder \cite{gu2021pubmedbert},
+195M parameters in total. We build on a CLIP-family model \cite{radford2021clip}
+for one reason: the category is written in natural language at inference rather
+than enumerated during training, so nothing fixes the label set in advance.
+Fine-tuning updates only the upper blocks of both encoders and the projection and
+logit parameters, about 57M of 195M, with AdamW at peak learning rate $10^{-4}$,
+weight decay 0.01, 200 warmup steps then cosine annealing, and batch size 32. Each
+version in Table~\ref{tab:progression} is a 20-epoch run resumed from the previous
+checkpoint, with the exact layer names and training configuration in the
+repository.
+
+\begin{figure}[!htbp]
+\centering
+\includegraphics[width=0.88\textwidth]{pipeline.png}
+\caption{Method overview. \textbf{(A)} The patch-level training objective
+(\S\ref{sec:methods:patchloss}), in which the two grids flanking the loss are the
+arrays the per-patch BCE compares. \textbf{(B)} Inference
+(\S\ref{sec:methods:inference}), a single forward pass with no gradients,
+classifier or mask refiner. The panels run on different cohorts and share only
+the encoder weights: A shows a TotalSegmentator liver slice, B a Spine-Mets slice
+(case 10355, level T3).}
+\label{fig:pipeline}
+\end{figure}
+
+The training objective is the central component of the method and the largest
+single contributor to performance (Table~\ref{tab:progression});
+Figure~\ref{fig:pipeline}A shows it. Writing $e_p$ for the normalized embedding of
+patch $p$, $t$ for the normalized organ text embedding, $s$ for the learned logit
+scale and $y_p\in\{0,1\}$ for the patch label read off the mask pooled to the
+$14\times14$ grid and binarized at 0.5,
+\begin{equation}
+\mathcal{L}_{\text{patch}}
+  = \frac{1}{196}\sum_{p=1}^{196}
+    \mathrm{BCE}\!\left(s \cdot \langle e_p, t\rangle,\; y_p\right),
+\qquad
+\mathcal{L} = \mathcal{L}_{\text{SigLIP}} + \lambda\,\mathcal{L}_{\text{patch}},
+\end{equation}
+with $\lambda = 0.5$. Patches inside the organ are pulled toward the organ's text
+embedding and patches outside are pushed away, and that separation is what makes
+per-patch similarity readable as a spatial map: in the example of
+Figure~\ref{fig:pipeline}A, mean similarity to the liver prompt is $+0.087$
+inside the pooled mask against $-0.182$ outside. ViT-B/16 geometry at
+$224\times224$ input fixes patch supervision at $14\times14$, and that same liver
+fills 78 of the 196 cells while a thin organ occupies only a few, so boundary
+precision is coarse by construction and the HD95 of 18.8\,px reported in
+\S\ref{sec:results:phase1} mostly reflects the upsampled patch grid. This is an
+architectural property of the backbone and not an unturned knob.
+
+\subsection{Inference, calibration and competitive assignment}
+\label{sec:methods:inference}
+
+Inference (Figure~\ref{fig:pipeline}B) is a single forward pass: four blocks are
+fused instead of one, no mask is involved, and no gradient is computed. The map
+for organ $c$ is the raw cosine similarity $\langle e_p, t_c\rangle$ at each of
+the 196 patches, upsampled to $224\times224$, and averaging blocks 8--11 combines
+the semantic response of the last two blocks with the finer texture and edge
+response of blocks 8--9. Resolution therefore makes a round trip: a slice is
+resized from its native in-plane grid to $224\times224$ before encoding, readout
+happens on the $14\times14$ grid, and the map is returned to the native grid
+before any mask is formed or any distance measured, so no spatial quantity is
+computed at the resized scale. An optional hard-negative variant subtracts the strongest
+competing response over a set of negative prompts; it is tested and not adopted in
+\S\ref{sec:results:negatives}, so it is off by default.
+
+Two conventional choices turned out to be harmful, and removing both gave $+0.059$
+mIoU with no retraining. Per-image min--max normalization forces every slice to
+span the full dynamic range whether or not the organ is present, destroying the
+information that separates ``this organ is here'' from ``this organ is absent from
+this slice.'' Our maps are therefore raw cosine similarities, bounded in $[-1,1]$
+and often negative across a whole slice. Organs win relative to each other, not
+against an absolute cutoff, so every visualization in this paper thresholds at a
+percentile of the slice's own distribution and scales its colour ramp to its own
+range, which makes brightness relative and never an absolute confidence.
+Class-conditional
+negative subtraction, the second choice, cut more foreground signal than
+background. In place of both, per-class thresholds are set by sweeping IoU-optimal
+cutoffs, the only fitted quantity in the Phase~1 pipeline.
+
+Whole volumes expose a further problem that per-slice classification hides.
+Thresholding each organ's map independently means every organ always receives a
+mask: a bladder prompt run over a chest CT still has a global maximum somewhere,
+so it claims the most bladder-like thoracic tissue and reports itself present, and
+absence is not expressible. Neither component size nor peak similarity separates
+these phantoms from correct detections, since a correct spleen appeared at the 0th
+size percentile while a wrong bladder sat at the 65th, so no per-organ gate can
+remove them. Competition can, because
+the organs then contest the same voxels: each voxel goes to at most one organ, the
+one with the strongest calibrated response there, and an organ whose own best
+voxel is taken by a stronger organ is reported absent.
+
+The contest needs calibration, since raw similarity is not comparable across
+prompts and lungs peak near 0.18 against 0.06 for femurs, so an uncalibrated
+argmax would give nearly every voxel to the lungs. The default \emph{scale} mode
+divides each organ's map by that organ's typical peak response, putting all organs
+on a common ``fraction of the response this organ ever gives'' scale, while a
+\emph{z-score} mode computes $(\text{raw}-\mu_c)/\sigma_c$ per organ and also
+corrects baseline offset; the z-score mode is the variant evaluated and not
+adopted in \S\ref{sec:results:negatives}. Bilateral pairs need one further rule,
+because letting \org{kidney-left} and \org{kidney-right} bid against each other
+reproduced the same bug one level down, with an early measurement showing 37\% of
+pairs splitting this way. Presence is therefore decided for the pair as a group
+and the group's territory divided at the image midline, following the convention
+the prompts state consistently, that a patient-left organ ``appears on the RIGHT
+side of the image''. A calibrated value must also exceed a floor of 0.6, or every
+voxel in the body would be assigned to something.
+
+\subsection{Data and evaluation protocol}
+\label{sec:methods:data}
+
+Training and evaluation use TotalSegmentator v2.0.1
+\cite{wasserthal2023totalsegdataset}: 1{,}228 thoracic and abdominal CT volumes
+with per-voxel labels. We use eleven classes, forming the two lungs by merging the
+released per-lobe labels. The 80/10/10 split is at the volume level with a fixed
+seed, so no slice from a training patient appears at validation or test time, and
+within a volume the top $K=5$ slices per organ are indexed.
+
+Preprocessing applies an organ-dependent HU window ($[-1000,-200]$ for lungs,
+$[-200,1000]$ for femurs, $[-150,250]$ otherwise), rescales to $[0,1]$ and resizes
+to $224\times224$. Six of the eleven classes are defined by laterality and the
+prompts carry it explicitly, so a horizontal flip would silently invert the label;
+no rotation or flip augmentation is used.
+
+We report 2D per-slice IoU and Dice on organ-present slices, together with HD95,
+sensitivity, precision, relative volume error and normalized surface Dice
+\cite{nikolov2021nsd} at $\tau=3$\,px. This protocol is more forgiving than 3D
+volumetric scoring, because no empty or partial-boundary slices pull the average
+down, and every cross-paper comparison below inherits that caveat. Checkpoints are
+ranked by the full mask-metric suite and never by validation loss, which is the
+SigLIP CLS-level objective and can improve while the patch maps get worse. Our
+fully supervised comparator throughout is the nnU-Net \cite{isensee2021nnunet}
+released with TotalSegmentator, trained on 1{,}204 routine clinical examinations
+covering 104 structures at a mean Dice of 0.943
+\cite{wasserthal2023totalsegmentator}.
+
+\subsection{Ablation design}
+\label{sec:methods:captions}
+
+To separate the prompt's contribution from the visual encoder's, we fine-tuned the Patch-tuned-III model of Table~\ref{tab:progression} and re-evaluated it under five prompt formulations (Table~\ref{tab:captiondefs}), making sure to vary only the text embedding and retraining nothing. The five prompt formulations are as follows: class name only (L1), a generic clinical caption (L2), position language with the organ name
+removed (L3), the full multi-sentence anatomical description used in training (L4), and an adversarial variant (L5). All five sets are in the repository.
+
+\begin{table}[H]
+\centering
+\caption{Prompt formulations used in the ablation.}
+\label{tab:captiondefs}
+\begin{tabular}{ll}
+\toprule
+Level & Prompt formulation \\
+\midrule
+L1 & Class name only \\
+L2 & Generic clinical caption \\
+L3 & Position only (organ name removed) \\
+L4 & Full anatomical description (used in training) \\
+L5 & Adversarial (L4 with position words swapped) \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+L5 carries most of the weight of the ablation. It is L4 with
+LEFT$\leftrightarrow$RIGHT and top$\leftrightarrow$bottom exchanged, which keeps
+fluency, length, clause structure and every non-spatial anatomical claim, and
+inverts only the spatial content. A class that collapses under L5 was relying on
+the positional text, and a class that survives was relying on something else.
+
+One caveat belongs with the method. Our L3 prompt for \org{lung-right} was
+generated incorrectly and names the left lung and the left half of the image. We
+found this during analysis and did not design it, so \S\ref{sec:results:ablation}
+reports it as a natural experiment and not as a controlled manipulation.
+
+\subsection{Bone-metastasis proximity index and its validation}
+\label{sec:methods:index}
+
+The index reuses the Phase~1 model, frozen and unmodified, on Spine-Mets-CT-SEG
+\cite{pieper2024spinemets}: 55 patients of 3D DICOM CT with per-vertebra SEG
+masks, 46 of them with usable labels. Lesion involvement per vertebral level comes
+from the collection's clinical spreadsheet and not from the SEG file, and the
+tumor mask is the union of vertebra masks for the levels the spreadsheet marks
+involved. OrganPrompt is 2D, so each axial slice is preprocessed as in training
+and passed through the patch-similarity engine, and the per-slice maps are stacked
+and resampled to the native in-plane resolution, giving a 3D organ volume that
+competitive assignment reduces to mutually exclusive 3D masks.
+Lesion voxels are vertebral bone by construction, so any organ predicted at the
+lesion is an artifact. Those voxels are carved out of every organ mask before
+scoring; otherwise a confused prediction would fake overlap with itself. For each
+(tumor, organ) pair,
+\begin{equation}
+\text{overlap} = \frac{|T \cap O|}{|T|},
+\qquad
+\text{proximity} = \frac{1}{1 + d_{\text{mm}}},
+\qquad
+\text{score} = \alpha\,\text{overlap} + \beta\,\text{proximity},
+\end{equation}
+with $\alpha=\beta=0.5$. The patient's index is the maximum score over organs, so
+the nearest or most involved organ drives it. Both weights and the aggregation
+were fixed in advance and not fitted. Here $d_{\text{mm}}$ is the minimum physical
+distance between tumor and organ voxels, computed from a KD-tree over organ voxel
+coordinates scaled by the volume's mm spacing. Before trusting the index we
+checked the organ maps on CT-ORG \cite{rister2020ctorg}, an independent
+organ-labeled CT collection, to confirm they transfer to a protocol the model
+never saw.
+
+Validating per patient caps out at 20 evaluation points, the patients with exactly
+one involved level. Scoring per lesion raises this to 180 lesions across 46
+patients at no additional inference cost, since a patient's organ masks are scored
+against every lesion while they are resident. The quantity scored is the rank of
+the nearest anatomically expected organ in the model's distance-ordered list.
+Which organs are plausible at each vertebral level is fixed in a lookup table
+built from anatomical references \cite{oh2009retrodiaphragmatic}, with the full
+source list, the quoted passages and the question put to each source given in
+Appendix~\ref{app:anatomy} and recorded in the repository.
+
+Scoring a rank against that lookup table only means something once chance is
+defined precisely, and chance is not one constant here. The expected-organ set size $k$ varies by level,
+so the chance mean rank for a lesion is the expectation of the minimum of $k$ draws
+without replacement from $n=11$ organs, $\mathbb{E}[\text{rank}] = (n+1)/(k+1)$,
+and we report the mean of that quantity over lesions. Correcting the
+expected-organ table therefore changes chance as well as the observed statistic,
+which is why our anatomy fix moves chance from 3.01 to 2.91.
+
+Uncertainty is estimated by bootstrapping over patients, not lesions
+\cite{efron1994bootstrap}, with 5{,}000 resamples of patients drawn with
+replacement and all of a drawn patient's lesions carried with it, because lesions
+within a patient share a scan, a set of organ masks and that patient's anatomy.
+Treating 180 lesions as 180 independent trials would tighten the interval by
+roughly the square root of the mean lesions per patient, about $2\times$ here,
+which is larger than the effect of any change we made to the method. The
+significance test is a permutation test with 20{,}000 permutations, whose null
+draws a fresh random ranking for each lesion using that lesion's own $k$.
+
+Both calibration variants in \S\ref{sec:results:negatives} were specified in full
+before running, including the z-score coefficient $k=2$, and are reported as run.
+Neither was retuned afterwards, and we did not try a smaller $k$. We also state
+our exposure, since it bounds how much any single comparison should be trusted:
+the 180-lesion set has absorbed the calibration fit, the bilateral-grouping
+change, the move from per-patient to per-lesion scoring, and the two variants.
+
+We first fitted the per-organ calibration
+constants on the evaluation set itself, which made every number derived from them
+circular. They are now fitted on the 35 Spine-Mets patients outside the evaluation
+set. The correction is modest but systematic and not uniform: 10 of 11 organs
+rose, mean $+7.0\%$, so it reorders the argmax and does not cancel out of a ratio.
+Pancreas rose 21.5\% and moved from 9th to 6th, liver from 4th to 3rd, and bladder
+fell from 6th to 8th. Every number in this paper uses the corrected constants.
+
+\section{Results}
+\label{sec:results}
+
+\subsection{Text-prompted organ localization}
+\label{sec:results:phase1}
+
+The final model, the Final checkpoint of Table~\ref{tab:progression} at epoch 11, reaches mean IoU 0.653 and mean Dice
+0.757 on the TotalSegmentator test split across 11 classes with per-class
+IoU-optimal thresholds, alongside HD95 18.8\,px on a $224\times224$ grid,
+sensitivity 0.805, precision 0.749, relative volume error 0.93 and normalized
+surface Dice 0.557 at $\tau=3$\,px. All are 2D per-slice metrics on
+organ-present slices, and no per-pixel labels are used at inference: the prompt
+alone selects the organ. Table~\ref{tab:overall} in Appendix~\ref{app:overall}
+collects the same seven figures.
+
+\begin{table}[!htbp]
+\centering
+\caption{Ablation progression. Each row adds one change to the row above, so the
+rows are stages of one method and not competing methods. The untrained row is the
+starting point and not a comparison baseline.}
+\label{tab:progression}
+\begin{tabular}{llc}
+\toprule
+Version & Change & mIoU \\
+\midrule
+Baseline         & Vanilla-gradient CAM, no fine-tuning (untrained starting point) & 0.003 \\
+CLS-only         & Grad-CAM + SigLIP fine-tuning                                   & 0.063 \\
+Patch-tuned         & \quad + patch-level contrastive loss                            & 0.307 \\
+Patch-tuned-II         & \quad + resume from Patch-tuned                                          & 0.469 \\
+Patch-tuned-III         & \quad + resume from Patch-tuned-II                                          & 0.574 \\
+Calibrated   & \quad + calibration fix (raw similarities, per-class IoU-optimal thresholds) & 0.633 \\
+\textbf{Final} & \quad + one further 20-epoch resume from
+Patch-tuned-III              & \textbf{0.653} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Two rows of Table~\ref{tab:progression} matter most. The patch-level contrastive
+loss is the largest single contributor, taking mIoU from 0.063 to 0.307, so
+CLS-level fine-tuning on its own does not make patch similarity spatially
+meaningful. The calibration fix needed no retraining, added $+0.059$ mIoU and
+halved HD95. The last resume, Calibrated to Final, added $+0.020$ mIoU overall
+but concentrated it on the hardest classes: pancreas $+21\%$, kidney-right
+$+15\%$, femur-right $+10\%$, while liver, lungs, heart and bladder had already
+saturated. Per class (Table~\ref{tab:perclass}), performance tracks organ size and
+contrast almost monotonically: large, morphologically distinct organs reach
+0.79--0.83 IoU from text supervision alone, while the pancreas, small and low
+in contrast, reaches 0.29.
+
+\begin{table}[!htbp]
+\centering
+\caption{Per-class results with the fully supervised reference alongside. $N$ is
+the number of evaluated organ-present slices. The last two columns are not the
+same metric and must not be subtracted: ours is 2D per-slice Dice on organ-present
+slices, while TotalSegmentator \cite{wasserthal2023totalsegmentator} reports 3D
+volumetric Dice, which is stricter, so the true gap is wider than the difference
+suggests. $\dagger$~TotalSegmentator v1 segments the heart as chambers; the range
+spans myocardium (0.937) to left ventricle (0.955). $\ddagger$~Lungs are
+per-lobe; left $=$ upper/lower (0.971/0.985), right $=$ upper/middle/lower
+(0.944/0.975/0.988).}
+\label{tab:perclass}
+\begin{tabular}{lrrrr}
+\toprule
+Organ & $N$ & IoU & Dice (2D, weakly sup.) & TotalSeg.\ Dice (3D, fully sup.) \\
+\midrule
+Lung right   & 535 & 0.828 & 0.897 & 0.944--0.988$^\ddagger$ \\
+Liver        & 492 & 0.823 & 0.893 & 0.965 \\
+Lung left    & 545 & 0.798 & 0.875 & 0.971/0.985$^\ddagger$ \\
+Heart        & 480 & 0.787 & 0.866 & 0.937--0.955$^\dagger$ \\
+Bladder      & 265 & 0.698 & 0.796 & 0.934 \\
+Spleen       & 464 & 0.644 & 0.768 & 0.983 \\
+Femur left   & 260 & 0.587 & 0.722 & 0.914 \\
+Femur right  & 262 & 0.565 & 0.706 & 0.942 \\
+Kidney left  & 401 & 0.491 & 0.627 & 0.953 \\
+Kidney right & 403 & 0.453 & 0.595 & 0.939 \\
+Pancreas     & 395 & 0.290 & 0.419 & 0.887 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Against the fully supervised TotalSegmentator reference
+\cite{wasserthal2023totalsegmentator} in Table~\ref{tab:perclass}, the gap is
+narrow on large organs (0.87--0.90 slice Dice with no pixel labels) and widens
+exactly where weak supervision is expected to struggle, pancreas 0.42 against
+0.89 and kidneys 0.60--0.63 against 0.94--0.95. Figure~\ref{fig:totalsegqual}
+shows what that ordering looks like on the images themselves, with the
+degradation on the harder classes appearing as boundary spill rather than as
+gross mislocalization.
+
+\begin{figure}[!htbp]
+\centering
+\includegraphics[width=\textwidth]{totalseg_summary.png}
+\caption{Patch-similarity pseudo-masks for all eleven classes on the
+TotalSegmentator test split, from the Final checkpoint of
+Table~\ref{tab:progression}. One column per organ class, one representative slice
+per class, and three rows: the input CT slice, the patch-similarity map, and the
+two overlaid. The map is thresholded at the 60th percentile of its own slice and
+normalized for display only; the underlying values are raw cosine similarities, as
+described in \S\ref{sec:methods:inference}. Large, high-contrast structures
+(lungs, liver, heart) are
+recovered with clean boundaries from the prompt alone, while on smaller,
+lower-contrast
+structures (pancreas, kidneys) the degradation appears as boundary spill and not
+as gross mislocalization, matching the per-class ordering in
+Table~\ref{tab:perclass} and the $14\times14$ patch grid that bounds attainable
+boundary precision.}
+\label{fig:totalsegqual}
+\end{figure}
+
+Read against the expectation set out in \S\ref{sec:related}, where image-level
+supervision recovered roughly two thirds of a fully supervised baseline on the
+same task, the ordering matters more here than any single ratio: the metric
+mismatch that forbids subtracting the last two columns of
+Table~\ref{tab:perclass} equally forbids reading one recovery fraction off them.
+What the ordering does establish is that the prompt selects the right structure
+whenever that structure is visually distinct, and degrades where it is not. That
+is a claim about the image encoder as much as the text, and separating the two is
+what the next section does.
+
+\subsection{What the prompt contributes}
+\label{sec:results:ablation}
+
+A text-conditioned localizer invites an obvious objection: the text may be a
+passenger, with the visual encoder doing the work and the prompt acting as a class
+index. Table~\ref{tab:captions} and Figure~\ref{fig:captionheat} test that, with
+the five formulations restated beneath Table~\ref{tab:captions} so the levels can
+be read without turning back to Table~\ref{tab:captiondefs}.
+
+\textbf{(1) Class names carry most of the signal.} L1 reaches 96.9\% of L4's
+mIoU, so a single word recovers nearly everything a multi-sentence description
+provides. Anatomical detail does not buy the remaining 3\% either: a one-line
+generic caption (L2) matches the full description (L4) to within 0.0006 on both
+metrics, and the two split them. What L1 lacks is supplied by having any sentence
+context at all, not by the anatomy written into it.
+
+\textbf{(2) Position language refines rather than substitutes.} L3 keeps position
+cues and removes organ identity, and scores below L1 (0.561 vs.\ 0.607), so the
+model needs to know what to look for before where becomes useful.
+
+The aggregate numbers hide which classes move, and the per-class view in
+Figure~\ref{fig:captionheat} is where the next two findings come from.
+
+\textbf{(3) The text is not a passenger.} Under L5, the classes that depend on
+left/right disambiguation collapse (kidney-left $-63\%$, lung-left $-57\%$, femurs
+$-56\%$), while organs with unique positions are unaffected (liver, spleen, heart,
+bladder). The model uses the positional content, and corrupting it degrades the
+classes for which it matters.
+
+\textbf{(3a) Robustness tracks position-invariant anatomical content.} The two
+lungs get the same L5 transformation and respond differently: lung-left falls
+$0.83\to0.36$ ($-57\%$), lung-right only $0.78\to0.63$ ($-19\%$). Lung-left's
+distinguishing clause, \emph{``slightly smaller than the right due to the heart
+pushing into the left hemithorax''}, inverts cleanly and ends up describing the
+other lung, whereas lung-right's prompt contains a clause the swap cannot corrupt:
+\emph{``Three lobes are present, divided by fissures visible as thin lines.''} The
+right lung has three lobes and the left has two, so that sentence still points at
+the right lung after the position words are flipped, and morphological cues that
+survive a position swap therefore harden a bilateral class against the failure L5
+probes.
+
+\begin{figure}[!htbp]
+\centering
+\begin{minipage}[t]{0.32\textwidth}
+\vspace{0pt}
+\centering
+\captionof{table}{Ablation results, scoring the five formulations defined in
+Table~\ref{tab:captiondefs}. Text embeddings are the only variable and nothing
+is retrained. L4 is marked because it is the formulation used in training, not
+because it wins.}
+\label{tab:captions}
+\vspace{2pt}
+\begin{tabular}{lrr}
+\toprule
+Level & mIoU & Dice \\
+\midrule
+L1 & 0.607 & 0.728 \\
+L2 & 0.627 & 0.743 \\
+L3 & 0.561 & 0.684 \\
+L4$^{*}$ & 0.627 & 0.744 \\
+L5 & 0.458 & 0.583 \\
+\bottomrule
+\end{tabular}
+
+\vspace{10pt}
+{\footnotesize\raggedright
+\textbf{Levels} (defined in Table~\ref{tab:captiondefs},
+\S\ref{sec:methods:captions}):\\[2pt]
+\textbf{L1} class name only\\
+\textbf{L2} generic clinical caption\\
+\textbf{L3} position only, organ name removed\\
+\textbf{L4} full anatomical description, used in training\\
+\textbf{L5} L4 with its position words swapped\par}
+\end{minipage}\hfill
+\begin{minipage}[t]{0.65\textwidth}
+\vspace{0pt}
+\centering
+\includegraphics[width=\textwidth]{caption_ablation.png}
+\end{minipage}
+
+\caption{Per-class IoU across the five prompt formulations, which are defined in
+Table~\ref{tab:captiondefs}, with bilateral pairs adjacent and pair groups
+ordered easy to hard by their group mean. Classes whose identity rests on a laterality word collapse in the
+L5 column, while uniquely positioned classes are unaffected by the same
+transformation. The isolated dark cell at \org{lung-right}/L3 is the accidental
+two-word prompt error described in the text, not a property of the L3 level:
+\org{lung-left} holds 0.83 in the same column. Pancreas is flat across the whole
+row, including L1.}
+\label{fig:captionheat}
+\end{figure}
+
+\textbf{(4) Pancreas is data-limited, not prompt-limited.} Pancreas IoU stays at
+0.21--0.22 at every level, including L1, the bare word ``pancreas,'' and L4, so
+prompt engineering will not fix it and the ceiling is inherent to the approach for
+small, low-contrast structures.
+
+The L3 level supplied one further result, and unlike the four findings above we
+did not design it. Its auto-generated
+prompt for \org{lung-right} was wrong in both content words. It reads \emph{``The
+left lung occupies the left half of the image''} where the L4 convention requires
+\emph{``The right lung \ldots{} the left half.''} Organ name and position are both
+wrong and mutually consistent, so the sentence is a valid description of the left
+lung. The model did not become confused or degrade gracefully. It followed the
+prompt and segmented the left lung. IoU on \org{lung-right} at L3 fell to 0.23,
+while \org{lung-left} at L3 held at 0.829, essentially its 0.828 at L4, so the
+level itself was harmless and the cause is the two wrong words. A two-word error
+in one of eleven prompts cost 55 IoU points on the affected class, and the failure
+was directional and not degradative: a wrong but coherent prompt gives a confident
+segmentation of the wrong structure. In a clinical setting that is more dangerous
+than low confidence, because nothing in the output signals it.
+
+\subsection{Bone-metastasis proximity index and per-lesion validation}
+\label{sec:results:index}
+
+The same frozen model is next put to a different question: given a vertebral
+metastasis, which organ is it closest to invading? Across the 46 labeled
+Spine-Mets patients \cite{pieper2024spinemets} the index has mean 0.139 and median
+0.083, with 9 patients below 0.01 and a smaller cluster of clearly involved cases
+between 0.25 and 0.50, maximum 0.500 (Figure~\ref{fig:indexdist}). The
+right-skewed shape reads as the expected mix of indolent and locally aggressive
+metastases.
+
+Scoring per lesion, one point per labeled vertebra, gives 180 lesions across 46
+patients, 178 of them rankable. Mean rank is 1.78, 95\% CI $[1.56, 2.03]$, against
+a chance mean rank of 2.91, with permutation $p<0.0001$ and chance outside the
+confidence interval. Top-1 accuracy is 0.622 and top-3 is 0.894. All uncertainty
+estimates resample patients and not lesions.
+
+\begin{figure}[!htbp]
+\centering
+\begin{subfigure}{0.46\textwidth}
+  \includegraphics[width=\textwidth]{index_distribution.png}
+  \caption{}\label{fig:indexdist}
+\end{subfigure}\hfill
+\begin{subfigure}{0.52\textwidth}
+  \includegraphics[width=\textwidth]{per_level_rank.png}
+  \caption{}\label{fig:perlevel}
+\end{subfigure}
+
+\caption{(\subref{fig:indexdist}) Per-patient index across $n=46$ labeled
+patients, on the unleaked calibration. (\subref{fig:perlevel}) Per-vertebral-level
+mean rank of the correct organ(s) against that level's chance mean rank (black
+dashed, with markers). Bar color comes from each level's own
+observed-versus-chance comparison, and each level's lesion count is printed
+beneath its axis label. Numeric values are in Table~\ref{tab:perlevel}.}
+\end{figure}
+
+Averaging across all 180 lesions hides where the ranking actually succeeds and
+fails, and the level-by-level breakdown in Figure~\ref{fig:perlevel} turns out to
+matter; the per-level numbers behind it are tabulated in
+Table~\ref{tab:perlevel}, Appendix~\ref{app:perlevel}. Every thoracic level from T1 to T11 beats chance, with T8 and T9 perfect at mean
+rank 1.00, and L3 and L4 beat chance clearly. Four levels, T12, L1, L2 and L5, sit
+at or below chance. The failure is localized to the thoracolumbar junction.
+
+That level-by-level view is only as trustworthy as the answer key behind it, and
+one correction to that key changed the numbers above, so we report it here. Our expected-organ table originally dropped the lungs after T10.
+Anatomical sources place the caudal extent of the costophrenic recess at T11 or
+below, never above it \cite{oh2009retrodiaphragmatic}, so the table was wrong and
+we corrected it on that basis: both T11 and T12 now include the lungs, with the
+sources and the question put to each set out in Appendix~\ref{app:anatomy}. We decided
+the correction from the literature before applying it, and did not check which
+version improved the metric. It moved mean rank from 1.94 to 1.78 and
+anatomically impossible top-1 detections from 38 to 34. It also moved T11 from
+below chance to above it, for two reasons at once: the key at that level became
+correct, and the expected set became larger, which lowers chance there. Earlier
+descriptions of this work named T11--L2 as the failure band; after the fix the
+band is T12--L2 plus L5, and band membership in Figure~\ref{fig:perlevel} is now
+derived from each level's own observed-versus-chance comparison and not from a
+hardcoded list of level names.
+
+Even with the key corrected, a residual failure remains: 34 of 180 lesions top-rank an anatomically impossible
+organ, and these concentrate in bladder and femur phantoms. Counting top-rank wins
+by class makes it explicit: \org{bladder} takes top rank on 29 lesions, 21 of them
+anatomically wrong and 8 correct, while \org{femur-left} and \org{femur-right}
+take top rank on 14 lesions, none of them correct, so the femur classes never rank
+first at a level where a femur is expected. Figure~\ref{fig:qualitative} contrasts
+a correct detection with one of these phantoms.
+
+\begin{figure}[!htbp]
+\centering
+\includegraphics[width=\textwidth]{detection_vs_phantom.png}
+\caption{Correct localization against a phantom. Within each pair, the first panel
+is the CT at the lesion's peak axial position with ground truth in red and the
+second is raw patch-text similarity for the top-ranked organ at that slice,
+thresholded to the top 2\% of the slice's own distribution. \textbf{Left pair:}
+case 10355 at T3, \org{lung-left} correctly ranked first at 19\,mm. \textbf{Right
+pair:} case 13683 at T4, \org{femur-right} incorrectly ranked first at 8\,mm,
+ahead of heart and both lungs. The highlighted patches sit on rib cross-sections
+around the chest wall, on nothing resembling a femur shaft.}
+\label{fig:qualitative}
+\end{figure}
+
+\subsection{Analysis of failure cases}
+\label{sec:results:negatives}
+
+The phantom pattern has more than one possible explanation, so we tested two. Both
+configurations were fixed in advance and are reported as run.
+
+The simplest explanation is that phantom patients' scans do not extend far enough
+caudally to contain the true organ, so a wrong organ wins by default. A
+header-only scan-coverage measurement rejects it. Phantom patients have more
+caudal coverage than clean ones, median 122\,mm against 88.5\,mm below the last
+segmented vertebra, and 9 of 12 reach L5.
+
+Field of view is not the explanation, so we turned to the prompts themselves. A text-encoder-only diagnostic showed that the \org{femur} prompt embeds almost
+identically to an undefined \org{humerus} prompt, closer than to any of femur's
+own defined classmates, and that \org{bladder}'s nearest neighbor is an undefined
+\org{aorta} prompt. That motivated adding rib, humerus and aorta as negative
+prompts. Table~\ref{tab:variants} reports that variant and a z-score calibration
+floor. We adopted neither.
+
+\begin{table}[!htbp]
+\centering
+\small
+\caption{Calibration variants, each a single pre-registered run. Both predate the
+T11/T12 ground-truth correction and are scored against the stricter pre-fix
+table, so their comparator is the pre-fix baseline row at mean rank 1.94, not the
+headline 1.78. That difference is the answer key changing, not the method. Chance
+moves with the key too: 3.01 pre-fix, 2.91 post-fix. The pair-split column is
+the total over all bilateral pairs, so the per-class figures quoted in the text
+sum into it rather than matching it.}
+\label{tab:variants}
+\begin{tabular}{@{}llrrrrrr@{}}
+\toprule
+Variant & Key & \makecell{Mean\\rank} & Top-1 & Top-3 & Ranked & \makecell{Imposs.\\top-1} & \makecell{Pair\\splits} \\
+\midrule
+\textbf{Baseline, current} & post-fix & \textbf{1.78} & 0.62 & 0.89 & 178/180 & 34/180 & 34/540 \\
+Baseline, pre-fix \emph{(comparator)} & pre-fix & 1.94 & 0.59 & 0.86 & 178/180 & 38/180 & 34/540 \\
+$+$ rib/humerus/aorta negatives & pre-fix & 2.04 & 0.53 & 0.82 & 171/180 & 37/180 & 58/540 \\
+Z-score floor ($\mu + 2\sigma$) & pre-fix & 1.82 & 0.50 & 0.83 & 164/180 & 79/180 & 0/540 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Global hard negatives traded one confusion for another: femur pair-splitting
+improved sharply, from 31 to 4, but a new lung pair-splitting problem appeared, 0
+to 46 of 540, and top-1 and top-3 both fell. The mechanism is specific, in that the
+rib negative was subtracted from every organ's score and not only from femur's, so
+it bled into the lungs at the rib-lung boundary, where lung tissue legitimately
+abuts rib. The z-score floor moved mean rank in the right direction, 1.94 to 1.82,
+and removed bilateral pair splitting entirely, 34 to 0, but more than doubled
+anatomically impossible detections, 38 to 79, with nearly every wrong detection
+winning at 0--1\,mm. That is consistent with a floor that is too permissive: most
+organs keep a sliver of territory almost everywhere instead of vanishing where the
+organ is absent, and a sliver is enough to win a proximity contest.
+
+One caution applies to reading Table~\ref{tab:variants}. Both variants leave more
+lesions unrankable than the baseline, 171 and 164 against 178, so their mean ranks
+average over a smaller and easier subset, which flatters that column. Top-1 and
+top-3 are computed over all 180 and are the cleaner comparison, and both variants
+fall on those, which agrees with the impossible-detection counts.
+
+\section{Discussion}
+\label{sec:discussion}
+
+Three results carry most of the weight below: text supervision degrades with
+organ size and contrast rather than with prompt detail, with the class name alone
+recovering 96.9\% of the full description's mIoU; the downstream index fails
+through two specific classes rather than a hard anatomical region; and both
+conclusions are bounded by a $14\times14$ patch grid and a single-cohort
+evaluation of the index.
+
+\subsection{Where text supervision works and where it stops}
+
+Performance tracks organ size and contrast almost monotonically, and the
+pattern of where text supervision stops is more informative than the aggregate
+score: the pancreas states the ceiling most clearly, with IoU flat at
+0.213--0.218 across all five prompt formulations, while the kidneys
+(0.45--0.49 IoU) collapse 47--63\% under adversarial swaps, so prompt-limited
+and data-limited classes call for different fixes: better laterality cues for
+the kidneys, a finer patch grid or different backbone for the pancreas. That
+ceiling was built, not found. The patch objective is the largest single
+contributor (0.063 to 0.307 mIoU), and we trained it in rather than extracting
+it post hoc for a reason that generalizes: the downstream index also needs
+maps that vanish where the organ is absent, since a proximity score against a
+phantom mask means nothing, and that is a calibration property, easier to get
+from an objective that pushes non-organ patches away than from a post-hoc
+reading of a model never trained to express absence. Calibration turned out
+to be about the same property. Removing per-image min--max normalization
+added $+0.059$ mIoU and halved HD95 with no retraining, because that
+normalization was destroying exactly the signal that separates organ-here
+from organ-absent, a failure that is silent in every slice-level metric and
+only shows up when maps are compared across slices, which is what the 3D
+index does. Prompt elaboration, by contrast, bought nothing measurable: the
+class name alone recovers 96.9\% of the full description's mIoU, and position
+language without identity scores below identity alone (0.561 vs.\ 0.607), so
+anyone extending this approach should start with class names and one-line
+captions. The accidental L3 error is the sharpest illustration of why that
+text is load-bearing rather than decorative. Naming the wrong organ and the
+wrong side at once produced a clean, confident segmentation of the left lung,
+and because failures are directional rather than degradative, prompt
+validation belongs in any deployed system built this way. The same finding
+suggests a mitigation: \org{lung-right} survived the swap far better than
+\org{lung-left} ($-19.5\%$ vs.\ $-56.8\%$) because its prompt contains a
+laterality-independent clause, ``three lobes are present,'' so hardening
+bilateral prompts with position-invariant morphological cues is a
+controllable, no-retraining fix. We do not claim the best boundaries:
+DenseCLIP \cite{rao2022denseclip}, CLIPSeg \cite{lueddecke2022clipseg} and
+MedCLIP-SAMv2 \cite{koleilat2025medclipsamv2, kirillov2023sam} (our closest
+methodological relative, at 78.21 mean DSC zero-shot and 82.11 with
+pseudo-labels) all produce cleaner edges than an upsampled $14\times14$ grid.
+What we get in exchange is attribution, since a 55-point IoU drop tracing to
+two words is only attributable because no intermediate component could have
+absorbed or amplified the error, a property any refiner-based pipeline would
+lose.
+
+\subsection{What the downstream failures are made of}
+
+The failures of the index the localizer feeds have a
+finer structure than a uniform thoracolumbar failure suggests: T12 and L5 sit
+at chance rather than below it (misses of 0.10 and 0.08 against unusually
+stringent bars), L1 is a modest miss ($+0.41$), and L2 is the one genuine
+failure ($+0.90$ against a lenient chance of 3.00). That failure traces to
+two specific classes rather than a hard region: \org{bladder} takes top rank
+on 4 of 10 L2 lesions where it is nowhere near, and at L5, the one level
+where femurs are expected, neither femur class ever wins, matching a
+text-only diagnostic showing the \org{femur} prompt embeds almost identically
+to an undefined \org{humerus} prompt. We ran two pre-registered variants
+aimed at this phantom behavior and adopted neither of them. Global hard
+negatives cut femur pair-splitting from 31 to 4 but bled into the lungs (0 to
+46 pair-splits), because the negative was subtracted from every organ's score
+rather than only the classes it targeted. The implied fix is equally
+specific: scope it to the classes it was introduced for, which we have not
+run. A z-score calibration floor moved mean rank in the right direction
+(1.94 to 1.82) and eliminated pair-splitting entirely, but more than doubled
+anatomically impossible detections (38 to 79), consistent with a floor too
+permissive to let organs vanish where they are absent. The obvious response
+is to run the corrected, scoped variant. We stop instead, for a reason about
+the evaluation set: the 180-lesion set has already absorbed the calibration
+fit, the bilateral-grouping change, the move to per-lesion scoring, and these
+two variants, so further tests against it would compound a
+multiple-comparisons exposure that is already non-trivial. This says what our
+evaluation set can still support, not that nothing remains to be found.
+
+\subsection{Limitations and what they bound}
+
+Several limitations bound what these results support. Patch supervision is
+fixed at $14\times14$ by ViT-B/16 geometry, so the HD95 of 18.8\,px largely
+reflects that grid rather than gross mislocalization, and raising input
+resolution is not free, because doing so would change the geometry the
+calibration and mask-formation path is built around; the Phase~1 numbers are
+also 2D per-slice metrics, more forgiving than 3D volumetric scoring, a
+caveat every cross-paper comparison inherits. Two design choices limit what
+our experiments can separate. The anatomical descriptions were used in
+training as well as evaluation, so the ablation cannot fully distinguish
+``never necessary'' from ``already internalized,'' and the index parameters
+($\alpha=\beta=0.5$, max-over-organs aggregation) were fixed in advance with
+no sensitivity analysis reported. The remaining limitations concern the
+strength of the evidence itself. The index is evaluated on 46 patients from a
+single collection, without external validation or a clinical reference
+standard, and the per-level analysis rests on 7--17 lesions per level. We
+originally fitted the per-organ calibration constants on the evaluation set
+itself, which made early versions of these numbers circular; they are now
+fitted on 35 held-out patients instead, a correction we report rather than
+bury. We found one error in the expected-organ table and corrected it from
+the literature, and that correction moved the headline mean rank by 0.16 and
+shifted a level from below chance to above it, so one such error is reason to
+think others may remain, particularly in the same thoracolumbar region where
+the anatomy is genuinely variable. The per-organ-scoped negative variant is
+the most specific next step, since it addresses a mechanism we have already
+diagnosed; beyond that, hardening bilateral prompts with position-invariant
+cues, adopting the adversarial swap as a routine pre-deployment check, and
+validating the index on an independent cohort are what it most needs before
+any clinical claim.
+
+\section{Conclusion}
+\label{sec:conclusion}
+
+We asked whether a text prompt alone can localize an organ in CT, and what part
+of the prompt does the work. Making patch-level text--image alignment an explicit
+training objective, rather than reading localization out of a globally aligned
+model after the fact, turns BioMedCLIP into a text-prompted organ localizer that
+reaches mIoU 0.653 and Dice 0.757 across eleven classes with no per-pixel label at
+inference. The patch objective is the single largest contributor, taking mIoU from
+0.063 to 0.307, and removing per-image min--max normalization added a further
+$+0.059$ with no retraining.
+
+Two experiments separate the prompt's contribution from the encoder's and test
+whether the localizer survives a change of dataset. A controlled ablation over
+five prompt formulations, varying only the text embedding and retraining nothing,
+shows that elaboration is not what makes text supervision work: the class name
+alone recovers 96.9\% of the full anatomical description's mIoU, position language
+with the organ name removed scores below identity alone (0.561 vs.\ 0.607), and an
+adversarial position swap costs up to 56.8\% on classes that depend on laterality
+while leaving uniquely positioned organs untouched. Applied frozen and unmodified
+to a different collection and acquisition protocol, the same model ranks the organ
+a vertebral metastasis is nearest to invading at mean rank 1.78 against a chance
+of 2.91 over 180 lesions in 46 patients, with $p<0.0001$ under a
+patient-clustered permutation test.
+
+Two conclusions generalize past this pipeline. Text supervision is carried by
+class identity and by position language that refines it, not by descriptive
+length, so anyone extending this approach should start with class names and
+one-line captions. And when a text-prompted localizer fails it fails confidently,
+segmenting the wrong structure cleanly rather than signaling uncertainty, which
+makes an adversarial prompt swap a cheap pre-deployment check and prompt
+validation a requirement rather than a courtesy.
+
+The method remains bounded by the $14\times14$ patch grid, which accounts for most
+of the HD95 of 18.8\,px, by a two-class failure in \org{bladder} and the femurs
+that we diagnose but do not repair, and by single-cohort evaluation of the index
+on 46 patients with no external reference standard. The next experiment follows
+from the diagnosis rather than from a search: scope hard negatives to the classes
+they were introduced to correct, instead of subtracting them from every organ.
+Beyond that, hardening bilateral prompts with position-invariant morphological
+cues and validating the index on an independent cohort are what the method most
+needs before any clinical claim.
+
+\section*{Code and data availability}
+Code, all five verbatim prompt sets and all result JSON files are at
+\url{https://github.com/ArnavSangle/OrganPrompt}. Training and evaluation data is
+TotalSegmentator v2.0.1 \cite{wasserthal2023totalsegdataset}, the bone-metastasis
+cohort is Spine-Mets-CT-SEG \cite{pieper2024spinemets}, and the transfer check
+uses CT-ORG \cite{rister2020ctorg}. Model checkpoints and the raw imaging data
+($\sim$50\,GB) are not redistributed, and every number reported here is
+reproducible from the scripts named in the text.
+
+{\footnotesize
+\setlength{\bibsep}{1.5pt plus 0.3ex}
+\bibliographystyle{unsrtnat}
+\bibliography{references}}
+
+\appendix
+
+\section{Full Phase~1 metrics}
+\label{app:overall}
+
+The seven metrics summarised in the opening sentence of
+\S\ref{sec:results:phase1} are tabulated here. They are reported together
+because no single one of them characterises the method: mIoU and Dice measure
+region agreement, HD95 and NSD measure boundary agreement, and the boundary
+figures are bounded by the $14\times14$ patch grid rather than by localization
+quality (\S\ref{sec:methods:patchloss}).
+
+\begin{table}[H]
+\centering
+\caption{Final model on the TotalSegmentator test split, the Final checkpoint of
+Table~\ref{tab:progression} at epoch 11. Eleven organ classes, 2D per-slice
+metrics on organ-present slices, per-class IoU-optimal thresholds. HD95 is in
+pixels on a $224\times224$ grid.}
+\label{tab:overall}
+\begin{tabular}{lccccccc}
+\toprule
+Model & mIoU & Dice & HD95 (px) & Sens. & Prec. & RVE & NSD ($\tau=3$\,px) \\
+\midrule
+Final, epoch 11 & \textbf{0.653} & \textbf{0.757} & 18.8 & 0.805 & 0.749 & 0.93 & 0.557 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\section{Per-vertebral-level results}
+\label{app:perlevel}
+
+\begin{table}[H]
+\centering
+\small
+\caption{Per-vertebral-level mean rank against chance, after the correction.
+Chance is the order statistic for that level's expected-organ set size, so it
+varies by level, and a level beats chance when its observed mean rank is strictly
+below its own chance value. Here $n$ is the number of rankable lesions at that
+level, 178 of 180 in total.}
+\label{tab:perlevel}
+\begin{tabular}{lrrrl@{\hskip 2.5em}lrrrl}
+\toprule
+Level & $n$ & Mean & Chance & Verdict & Level & $n$ & Mean & Chance & Verdict \\
+\midrule
+T1  &  7 & 1.43 & 4.00 & beats           & T10 & 10 & 1.20 & 2.40 & beats \\
+T2  & 10 & 1.40 & 4.00 & beats           & T11 & 12 & 1.50 & 2.00 & beats \\
+T3  &  7 & 1.71 & 4.00 & beats           & T12 & 10 & 1.60 & 1.50 & at/below \\
+T4  & 10 & 1.30 & 3.00 & beats           & L1  & 17 & 2.41 & 2.00 & at/below \\
+T5  &  9 & 1.11 & 3.00 & beats           & L2  & 10 & 3.90 & 3.00 & at/below \\
+T6  &  7 & 1.14 & 3.00 & beats           & L3  & 17 & 2.35 & 4.00 & beats \\
+T7  &  9 & 1.11 & 3.00 & beats           & L4  & 13 & 1.31 & 3.00 & beats \\
+T8  & 10 & 1.00 & 3.00 & beats (perfect) & L5  & 13 & 3.08 & 3.00 & at/below \\
+T9  &  7 & 1.00 & 2.00 & beats (perfect) &     &    &      &      & \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\section{Anatomical basis for the expected-organ table}
+\label{app:anatomy}
+
+The question, fixed before the table was edited and before the validation was
+re-scored, was whether the \code{EXPECTED} entries for T11 and T12 should include
+the lungs. Changing the table and keeping whichever version improved the metric
+would have made the evaluation circular. Oh et al.\
+\cite{oh2009retrodiaphragmatic} reviewed 540 posteroanterior chest radiographs,
+282 of which met inclusion criteria (155 men, 127 women, mean age
+$40.7\pm8.4$ years); mean right posterior costophrenic sulcus depth was
+$29.2\pm15.6$\,mm at an average spinal level of $13.5\pm0.6$, the lower half of
+the L1 vertebral body and a full level below T12. Three further sources agree on
+direction and none reported a left--right asymmetry, so both T11 and T12 include
+\org{lung-left} and \org{lung-right}.
+
+\end{document}

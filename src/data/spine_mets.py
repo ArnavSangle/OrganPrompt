@@ -4,7 +4,7 @@ DICOM layout per patient:
     <case>/<study>/<series>/*.dcm
 where one CT series (``SKIN_TO_SKIN_SIM...``, Modality=CT, most slices) holds the
 axial stack and one SEG file (Modality=SEG) holds per-vertebra binary masks —
-one segment per vertebral level, labelled e.g. ``"T1 vertebra"``.
+one segment per vertebral level, labeled e.g. ``"T1 vertebra"``.
 
 The SEG is parsed with plain pydicom (pydicom_seg is incompatible with
 pydicom 3.x): each frame carries a ``SegmentIdentificationSequence`` (which
@@ -120,15 +120,15 @@ class SpineMetsPatient:
     spacing: tuple               # (dz, dy, dx) mm
     tumor_mask: np.ndarray       # [D,H,W] bool
     lesion_type: np.ndarray      # [D,H,W] int8 (0 none,1 lytic,2 blastic,3 mixed)
-    # {level: [N,3] voxel coords}, one entry per LABELLED level. Coordinates, not
-    # masks: a patient can carry 17 labelled levels and 17 volume-sized boolean
+    # {level: [N,3] voxel coords}, one entry per LABELED level. Coordinates, not
+    # masks: a patient can carry 17 labeled levels and 17 volume-sized boolean
     # masks is over a gigabyte, while the coordinates are a few megabytes. Their
     # union is exactly tumor_mask.
     lesion_coords: dict = field(default_factory=dict)
 
 
 def load_patient(root, case, labels):
-    """Assemble a patient: tumor mask = union of vertebra masks for labelled levels."""
+    """Assemble a patient: tumor mask = union of vertebra masks for labeled levels."""
     patient_dir = os.path.join(root, "spine_mets_ct_seg", case)
     ct_paths, seg_path = find_series(patient_dir)
     ct, spacing = load_ct_volume(ct_paths)

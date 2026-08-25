@@ -3,39 +3,44 @@
 
 \subsection{What text supervision buys, and where it stops}
 
-We find that performance tracks organ size and contrast almost monotonically
+Performance tracks organ size and contrast almost monotonically
 (Table~\ref{tab:perclass}), which is the shape expected for a method with no
 spatial supervision. The prompt must select a region by appearance and position
 alone, and both cues degrade together for small, low-contrast structures.
 
-The pancreas result is the sharpest statement of the ceiling, because
-it is invariant to the one thing we can freely change. We measure pancreas IoU
-at 0.213--0.218 across \emph{all five} of our prompt formulations: the bare word
+The pancreas result is the sharpest statement of that ceiling, because it is
+invariant to the one input that can be freely changed. Pancreas IoU holds at
+0.213--0.218 across \emph{all five} prompt formulations: the bare word
 ``pancreas,'' a generic clinical caption, position-only text, the full
-multi-sentence anatomical description, and the adversarial variant. A manipulation that moves the other classes by 60 percentage points moves the
-pancreas by half a point. We conclude that whatever limits the pancreas here is
-not in the text, so prompt engineering will not repair it. The constraint we run
-into is that a small, low-contrast, elongated structure does not present a
-$14\times14$-patch signature the encoder can separate from surrounding soft
+multi-sentence anatomical description, and the adversarial variant. The same
+manipulation that moves the other classes by 60 percentage points moves the
+pancreas by half a point. Whatever limits the pancreas here is therefore not in
+the text, so prompt engineering will not repair it. The binding constraint is
+instead that a small, low-contrast, elongated structure does not present
+a $14\times14$-patch signature the encoder can separate from surrounding soft
 tissue.
 
 The distinction between prompt-limited and data-limited classes is worth drawing
-explicitly, because the two call for different responses. The kidneys sit at 0.45--0.49 IoU and collapse by 47--63\% under adversarial
-position swaps, which tells us they depend heavily on the positional text and
-are therefore prompt-limited: better laterality cues should help them. The pancreas does not move under any prompt manipulation at all, so no amount of
-prompt engineering will recover it, and the productive direction is a finer
+explicitly, because the two call for different responses. The kidneys sit at
+0.45--0.49 IoU and collapse by 47--63\% under adversarial position swaps, a
+dependence on the positional text that marks them as prompt-limited, so better
+laterality cues should help them. The pancreas, by contrast, does not move
+under any prompt manipulation at all, so no amount of
+prompt engineering will recover it and the productive direction there is a finer
 patch grid or a different backbone. Reading only the aggregate mIoU would hide
-that difference and invite us to spend effort in the wrong place.
+that difference and send effort to the wrong place.
 
 \subsection{What the patch objective actually contributed}
 
-The largest single gain comes from adding the patch-level loss, which moves mIoU
-from 0.063 to 0.307. The size of that step is the most informative
-number in Table~\ref{tab:progression}, because it quantifies how little
-localization a globally-aligned model gives up for free. Before the patch loss
-we were fine-tuning the same backbone with the same data and the same text
-encoder, differing only in whether any objective required individual patch
-tokens to be discriminative. Without such an objective, the patch tokens of a
+That ceiling sits on top of a capability that had to be built rather than found,
+and the training progression shows how much of it was built. The largest single
+gain comes from adding the patch-level loss, which moves mIoU from 0.063 to
+0.307. The size of that step is the most informative number in
+Table~\ref{tab:progression}, because it quantifies how little localization a
+globally-aligned model gives up for free. The run before the patch loss
+fine-tuned the same backbone with the same data and the same text encoder,
+differing only in whether any objective required individual patch tokens to be
+discriminative. Without such an objective, the patch tokens of a
 contrastively trained encoder are optimized only insofar as they contribute to a
 pooled embedding, and a pooled embedding can be correct while its constituents
 are individually uninformative.
@@ -46,34 +51,37 @@ than the pooled representation reveals, and recovers it by bypassing pooling
 \cite{zhou2022maskclip}, and later work extends that recovery to weakly
 supervised semantic segmentation \cite{yang2025clipdense}. Analyses of CLIP's
 explainability reach a similar conclusion about why raw attention localizes
-poorly \cite{li2024clipexplain}. We read our 0.063 measurement as the same
+poorly \cite{li2024clipexplain}. The 0.063 measurement reads as that same
 phenomenon observed without any recovery step: the information is latent rather
 than absent, and something must either extract it or train it in.
 
-We chose to train it in, and the reason generalizes. Extraction methods
-recover \emph{where} an organ is, which is sufficient for segmentation
-benchmarks. The downstream index additionally needs organ maps that vanish
-where the organ is not present, because a proximity score computed against a
-phantom mask is meaningless. That is a calibration property rather than a
-localization one, and we found it easier to obtain from an objective that
-explicitly pushes non-organ patches away than from a post-hoc reading of a model
-never trained to express absence.
+We chose to train it in, and the reason generalizes. Extraction methods recover
+\emph{where} an organ is, which is sufficient for segmentation benchmarks, but
+the downstream index additionally needs organ maps that vanish where the organ
+is not present, because a proximity score computed against a phantom mask is
+meaningless. That is a calibration property rather than a localization one, and
+an objective that explicitly pushes non-organ patches away yields it more
+readily than a post-hoc reading of a model never trained to express
+absence.
 
 \subsection{Absence is information, and normalization destroys it}
 
-The calibration correction added 0.059 mIoU and halved HD95 without retraining,
-which makes it the cheapest improvement we report. The underlying lesson is more transferable than the number.
+Expressing absence turned out to be what the calibration correction was about as
+well. The correction added 0.059 mIoU and halved HD95 without retraining, which
+makes it the cheapest improvement in the paper, and the underlying lesson is
+more transferable than the number.
 
 Per-image min--max normalization is close to a reflex when visualizing saliency,
 and it is actively harmful here. Rescaling every slice to a fixed range forces a
 slice containing no pancreas at all to span the same output range as a slice
-centred on the pancreas. The relative ordering within each slice survives, but
+centered on the pancreas. The relative ordering within each slice survives, but
 the comparison \emph{between} slices, and therefore any notion of confidence,
 does not. The raw similarities are bounded in $[-1,1]$ and routinely negative
-across an entire slice, and that negativity is signal rather than noise: it is how the model expresses that the prompted organ is not here.
+across an entire slice, and that negativity is signal rather than noise, because
+it is how the model expresses that the prompted organ is not here.
 
 Any pipeline that reads similarity maps from a vision-language model should
-check whether it is discarding this. The failure is silent, because
+therefore check whether it is discarding this. The failure is silent, because
 normalized maps look better in figures and score similarly on any metric
 computed slice-by-slice among organ-present slices. It surfaces only when the
 maps are asked a question that requires absolute comparison across slices, which
@@ -81,44 +89,49 @@ is exactly what the 3D index does.
 
 \subsection{Elaboration is not what makes prompts work}
 
-The caption ablation licenses a stronger conclusion than ``text matters.'' We
-find the class name alone recovers 96.9\% of the full description's mIoU, and we
-find the remaining gap is closed by a one-line generic clinical caption carrying
-no anatomical content. L2 and L4 differ by 0.0006 on both metrics and split
-them, with L2 ahead on mIoU and L4 ahead on Dice. The elaborate multi-sentence
-descriptions we used throughout training therefore bought us nothing measurable
-over a single generic sentence.
+Normalization is one default that silently costs information, and prompt
+elaboration is another default worth questioning, though what it costs is effort
+rather than signal. The caption ablation licenses a stronger conclusion than
+``text matters.'' The class name alone recovers 96.9\% of the full
+description's mIoU, and a one-line generic clinical caption carrying no
+anatomical content closes the remaining gap. L2 and L4 differ by 0.0006 on both
+metrics and split them, with L2 ahead on mIoU and L4 ahead on Dice. The
+elaborate multi-sentence descriptions used throughout training therefore bought
+nothing measurable over a single generic sentence.
 
 This matters practically, because writing those descriptions was the most
 labour-intensive part of the setup, and the result says that labour was largely
-wasted. Anyone extending this approach to a new organ set
-should write class names and one-line captions, verify that this suffices, and
-invest the saved effort in the failure modes below. One qualification applies: our descriptions were used during training as well as evaluation, so
-we cannot separate the possibility that the model has already absorbed the
+wasted. Anyone extending this approach to a new organ set should therefore write
+class names and one-line captions, verify that this suffices, and invest the
+saved effort in the failure modes below. One qualification applies to that
+advice: the descriptions served during training as well as evaluation, so the
+ablation cannot separate the possibility that the model has already absorbed the
 anatomical content from the possibility that the content was never necessary.
 Distinguishing those would require retraining with short captions, which we did
 not do.
 
 The L3 result sharpens what the positional language is for. Position without
-identity is actively worse than identity alone (0.561 vs.\ 0.607), so we
-conclude the position clauses are not carrying the localization. They refine a
-target the class name has already selected.
+identity is actively worse than identity alone (0.561 vs.\ 0.607), which places
+the position clauses outside the localization itself; they refine a target the
+class name has already selected.
 
 \subsection{Failure is directional, which is the safety-relevant finding}
 
-The accidental error in the L3 \org{lung-right} prompt is the most operationally
-important result in this paper, and we did not design it. The prompt named the wrong organ \emph{and} the wrong side, consistently, so it
-became a valid description of the left lung. The model did not degrade, hedge,
-or produce a diffuse map. It confidently segmented the left lung, and we measured
-IoU on \org{lung-right} falling to 0.23 while \org{lung-left} at the same prompt
-level held at 0.829, which proves the level itself was harmless and isolates the
-cause to two words.
+The same prompt level that sharpened that point also produced the most
+operationally important result in this paper, and we did not design it. The
+accidental error in the L3 \org{lung-right} prompt named the wrong organ
+\emph{and} the wrong
+side, consistently, so it became a valid description of the left lung. The model
+did not degrade, hedge, or produce a diffuse map; it confidently segmented the
+left lung. IoU on \org{lung-right} fell to 0.23 while \org{lung-left} at the
+same prompt level held at 0.829, which proves the level itself was harmless and
+isolates the cause to two words.
 
-We therefore observe that a wrong-but-coherent prompt yields a confident
-segmentation of the wrong structure. For any deployed system this is a worse
-failure mode than low confidence, because nothing in the output signals
-that anything went wrong. The mask is clean, well-formed, and anatomically
-plausible. It is simply of a different organ. We argue that systems built on
+A wrong-but-coherent prompt therefore yields a confident segmentation of the
+wrong structure. For any deployed system this is a worse
+failure mode than low confidence, because nothing in the output signals that
+anything went wrong: the mask is clean, well-formed, and anatomically plausible,
+and it is simply of a different organ. We argue that systems built on
 text-prompted localization need prompt validation as a first-class component,
 not an afterthought, because a wrong prompt does not announce itself downstream.
 
@@ -126,72 +139,82 @@ This failure mode is a direct consequence of the property the paper spends its
 length establishing. A model that genuinely follows its prompt will follow a
 wrong prompt just as faithfully as a right one, and the same evidence that
 proves the text is load-bearing (finding 3) also proves that corrupting the text
-is dangerous. This is not a defect specific to our pipeline. Any
-method in which the prompt truly determines the output inherits it, and methods
-that place a trained refiner between prompt and mask may partially mask the
-symptom without removing the cause.
+is dangerous. This is not a defect specific to one pipeline, because any method
+in which the prompt truly determines the output inherits it, and methods that
+place a trained refiner between prompt and mask may partially mask the symptom
+without removing the cause.
 
-Finding 3a gives a concrete mitigation. We saw \org{lung-right} survive
-the adversarial swap far better than \org{lung-left} ($-19.5\%$ vs.\ $-56.8\%$)
-because its prompt contains a clause the swap cannot corrupt: the right lung
-genuinely has three lobes and the left has two, so ``three lobes are present''
-still points at the correct organ after every laterality word is flipped. We
-conclude that prompt robustness is controllable by construction. If we include
-morphological cues that are invariant under position swaps, such as lobe count,
-characteristic shape, or vessel pattern, a bilateral class stops depending
-entirely on laterality words it cannot verify. The swap test itself is cheap enough to be a routine design check: it
-requires no retraining, and a class that collapses under it is a class whose
-prompt rests entirely on assertions the image cannot confirm.
+Finding 3a gives a concrete mitigation for that danger. The \org{lung-right}
+class survives the adversarial swap far better than \org{lung-left}
+($-19.5\%$ vs.\ $-56.8\%$) because its prompt contains a clause the swap cannot
+corrupt: the
+right lung genuinely has three lobes and the left has two, so ``three lobes are
+present'' still points at the correct organ after every laterality word is
+flipped. We conclude that prompt robustness is controllable by construction,
+since including morphological cues that are invariant under position swaps, such
+as lobe count, characteristic shape, or vessel pattern, stops a bilateral class
+from depending entirely on laterality words it cannot verify. The swap test
+itself is cheap enough to be a routine design check, because it requires no
+retraining, and a class that collapses under it is a class whose prompt rests
+entirely on assertions the image cannot confirm.
 
 \subsection{Where our approach sits among dense-alignment methods}
 
-We do not claim the best boundaries. DenseCLIP fine-tunes with a dense decoder
-\cite{rao2022denseclip}, CLIPSeg attaches a transformer decoder emitting a
-segmentation from a prompt \cite{lueddecke2022clipseg}, and MedCLIP-SAMv2 hands
-mask formation to SAM \cite{koleilat2025medclipsamv2, kirillov2023sam}. All of
-these will produce cleaner edges than an upsampled $14\times14$ grid.
+Every one of those prompt findings depends on being able to attribute an output
+to the prompt, and that ability follows from an architectural choice worth
+placing against the alternatives. We do not claim the best boundaries. DenseCLIP
+fine-tunes with a dense decoder \cite{rao2022denseclip}, CLIPSeg attaches a
+transformer decoder emitting a segmentation from a prompt
+\cite{lueddecke2022clipseg}, and MedCLIP-SAMv2 hands mask formation to SAM
+\cite{koleilat2025medclipsamv2, kirillov2023sam}, and all of these will produce
+cleaner edges than an upsampled $14\times14$ grid.
 
-What we gain by not doing this is attribution. Our caption ablation is
+What we gain by not doing this is attribution. The caption ablation is
 interpretable precisely because nothing sits between the prompt and the mask: a
 55-point IoU drop can be traced to two words, because there is no intermediate
-component that might have absorbed or amplified the error. Had a trained
-decoder been in the path, we could not have said whether the decoder repaired a
-bad localization or a good one was corrupted downstream. The architectural simplicity is the enabling
-condition for the prompt findings rather than an oversight, and any attempt to
-replicate those findings on a refiner-based pipeline would face this confound.
+component that might have absorbed or amplified the error. Had a trained decoder
+been in the path, we could not have said whether the decoder repaired a bad
+localization or a good one was corrupted downstream. The architectural
+simplicity is therefore the enabling condition for the prompt findings rather
+than an oversight, and any attempt to replicate those findings on a
+refiner-based pipeline would face this confound.
 
-GLoRIA is the closest medical antecedent, learning global and local
-representations jointly by matching sub-regions to report words
-\cite{huang2021gloria}. The important difference is the supervision target. GLoRIA attends over words to build localized representations for
-label-efficient recognition, whereas we supervise patch tokens directly against
-a mask so the similarity map is the output rather than an intermediate. That
-choice is what makes the map usable as geometry in our index, and it is also
-what makes our failures legible as prompt failures.
+The same trade-off appears in the medical literature, where GLoRIA is the
+closest antecedent, learning global and local representations jointly by
+matching sub-regions to report words \cite{huang2021gloria}. The important
+difference is the supervision target: GLoRIA attends over words to build
+localized representations for label-efficient recognition, whereas we supervise
+patch tokens directly against a mask so the similarity map is the output rather
+than an intermediate. That choice is what makes the map usable as geometry in
+the index, and it is also what makes the failures legible as prompt failures.
 
 \subsection{Our failure band is narrower than it first appears}
 
+Turning from the localizer to the index it feeds, the downstream failures have a
+structure of their own, and it is finer than our own earlier summaries of it.
 Describing T12--L2 and L5 as a uniform ``thoracolumbar failure'' overstates the
 evidence, because those four levels fail in three different ways
 (Table~\ref{tab:perlevel}).
 
-\textbf{T12 and L5 are at chance, not below it.} We measure T12 missing by 0.10
-rank (1.60 vs.\ 1.50) and L5 by 0.08 (3.08 vs.\ 3.00). T12 in particular faces the most stringent bar in the study: with seven expected organs its chance mean
-rank is 1.50, so our model must rank a correct organ essentially first, every
-time, to register any margin at all. Missing that bar by a tenth of a rank is not
-comparable to failing a lenient one.
+\textbf{T12 and L5 are at chance, not below it.} T12 misses by 0.10 rank
+(1.60 vs.\ 1.50) and L5 by 0.08 (3.08 vs.\ 3.00). T12 in particular faces
+the most stringent bar in the study, because with seven expected organs its
+chance mean rank is 1.50, so the model must rank a correct organ essentially
+first, every time, to register any margin at all. Missing that bar by a tenth of
+a rank is therefore not comparable to failing a lenient one.
 
-\textbf{L1 is a modest miss against a stringent bar}, at $+0.41$ against chance
-2.00 with $k=5$.
+\textbf{L1 is a modest miss against a stringent bar.} It misses by $+0.41$
+against a chance mean rank of 2.00, computed over $k=5$ expected organs.
 
-\textbf{L2 is our only genuine failure}, at $+0.90$ against a lenient chance of
-3.00 with only three expected organs. It is the one level where the model is
-clearly worse than guessing, and it deserves to be reported as such
-rather than averaged into a band.
+\textbf{L2 is our only genuine failure.} It misses by $+0.90$ against a lenient
+chance of 3.00 with only three expected organs, which makes it the one level
+where the model is clearly worse than guessing, so it deserves to be reported as
+such rather than averaged into a band.
 
 \subsection{Two classes account for much of our damage}
 
 The per-lesion detail identifies a more specific culprit than ``the lumbar spine
-is hard.'' Across all 180 lesions we count the following.
+is hard.'' Across all 180 lesions the top-rank counts run as follows.
 
 \begin{itemize}
 \item \org{bladder} takes top rank on 29 lesions, of which \textbf{21 are
@@ -203,80 +226,87 @@ is hard.'' Across all 180 lesions we count the following.
       where one is not.
 \end{itemize}
 
-This reframes our phantom problem. We are not looking at a generally-sound model
-that occasionally misfires at difficult levels. Two of our eleven classes are
-mislocalized in a way that produces false positives broadly and contributes
-nothing where they would be correct. The two failing levels follow directly. At
-L2, \org{bladder} hijacks top rank on 4 of 10 lesions at a level in the upper
-lumbar spine where the bladder is nowhere near. At L5, the one level where
-femurs \emph{are} expected, neither of our femur classes ever wins, and the
-level's correct detections come from \org{bladder} instead.
+These counts reframe our phantom problem. The picture is not a generally-sound
+model that occasionally misfires at difficult levels; two of the eleven
+classes are mislocalized in a way that produces false positives broadly
+and contributes nothing where they would be correct. The two failing levels
+follow directly from that. At L2, \org{bladder} hijacks top rank on 4 of 10
+lesions at a level in the upper lumbar spine where the bladder is nowhere near.
+At L5, the one level where femurs \emph{are} expected, neither femur class
+ever wins, and the level's correct detections come from \org{bladder}
+instead.
 
 It is unlikely to be coincidence that these are precisely the two classes the
-text-only prompt diagnostic flagged. The \org{femur} prompt's appearance clause (``bright hyperdense cortical ring $\ldots$ central medullary canal'')
-embeds almost identically to an undefined \org{humerus} prompt, more closely
-than to any of femur's own defined classmates, and it describes a rib in
-cross-section about as well as it describes a femur. The qualitative panel
-(Figure~\ref{fig:qualitative}) confirms this visually: the winning
+text-only prompt diagnostic flagged. The \org{femur} prompt's appearance clause
+(``bright hyperdense cortical ring $\ldots$ central medullary canal'') embeds
+almost identically to an undefined \org{humerus} prompt, more closely than to
+any of femur's own defined classmates, and it describes a rib in cross-section
+about as well as it describes a femur. The qualitative panel
+(Figure~\ref{fig:qualitative}) confirms this visually, because the winning
 \org{femur-right} patches sit on rib cross-sections around the chest wall, on no
-structure resembling a femoral shaft. The class is not localizing a femur at all. It is matching a generic cortical ring, and the 11-class vocabulary contains
-nothing defined to outbid it.
+structure resembling a femoral shaft. The class is therefore not localizing a
+femur at all; it is matching a generic cortical ring, and the 11-class
+vocabulary contains nothing defined to outbid it.
 
-These counts rest on small per-level samples ($n=10$ at L2, $n=13$ at L5) and
-should be read as a diagnosis to act on rather than a precise effect size.
+The per-level counts above rest on small samples ($n=10$ at L2, $n=13$ at L5),
+so they should be read as a diagnosis to act on rather than a precise effect
+size.
 
 \subsection{Why both our calibration variants failed}
 
-Both negative results have identified causes, which is what makes them worth
-reporting rather than merely disclosing.
+We ran two variants aimed at this phantom behavior and adopted neither of them.
+Both negative results have identified causes, however, which is what makes them
+worth reporting rather than merely disclosing.
 
 \textbf{Our global hard negatives failed by over-application, not by being the
 wrong idea.} We added rib, humerus and aorta negatives to target exactly the
-confusion we diagnosed above, and they worked on their intended target: femur
-pair-splitting fell from 31 to 4. But we subtracted the negative from
-\emph{every} organ's score rather than only from the classes it was meant to
+confusion diagnosed above, and they worked on their intended target: femur
+pair-splitting fell from 31 to 4. But the subtraction applied to
+\emph{every} organ's score rather than only to the classes it was meant to
 correct, so it bled into the lungs' own scoring at the rib-lung boundary, where
 lung tissue legitimately abuts rib, and created 46 new lung pair splits that had
-not existed. The mechanism is specific and so is the fix it implies. We should
-scope each negative to the classes we introduced it for, so that humerus and rib
-compete only against our femurs and aorta only against our bladder. That per-organ-scoped variant has not
-been run, and this result reads as ``wrong scoping'' rather than ``negatives do
-not help.''
+not existed. Because the mechanism is specific, so is the fix it implies: we
+should scope each negative to the classes we introduced it for, so that humerus
+and rib compete only against the femurs and aorta only against the bladder. That
+per-organ-scoped variant has not been run, and this result therefore reads as
+``wrong scoping'' rather than ``negatives do not help.''
 
 \textbf{Our z-score floor failed by permissiveness.} It eliminated bilateral
 pair splitting entirely ($34 \to 0$) and improved mean rank against its correct
 comparator ($1.94 \to 1.82$), but it more than doubled anatomically impossible
-detections ($38 \to 79$). Both effects follow from one mechanism. A floor
-set at $\mu + 2\sigma$ per organ is lenient enough that most organs retain a
-sliver of territory almost everywhere instead of correctly vanishing where they
-are absent. Slivers make bilateral territory symmetric, which zeroes our splits,
-and a sliver is also enough to win a proximity contest at 0--1\,mm, which is
-where nearly every new wrong detection landed.
+detections ($38 \to 79$). Both effects follow from one mechanism, because a
+floor set at $\mu + 2\sigma$ per organ is lenient enough that most organs retain
+a sliver of territory almost everywhere instead of correctly vanishing where
+they are absent. Slivers make bilateral territory symmetric, which zeroes the
+splits, and a sliver is also enough to win a proximity contest at 0--1\,mm,
+which is where nearly every new wrong detection landed.
 
 \subsection{Evaluation-set discipline, and why we stop here}
 
-The 180-lesion set has now absorbed several decisions: the calibration fit, the
-bilateral-grouping change, the move from per-patient to per-lesion scoring, and
-the two pre-registered calibration variants. It is a finite resource, and
-continuing to test hypotheses against it would compound a multiple-comparisons
-exposure that is already non-trivial.
+The obvious response to both diagnoses is to run the corrected variants, and we
+stop instead, for a reason that is about the evaluation set rather than the
+method. The 180-lesion set has now absorbed several decisions: the calibration
+fit, the bilateral-grouping change, the move from per-patient to per-lesion
+scoring, and the two pre-registered calibration variants. It is a finite
+resource, so continuing to test hypotheses against it would compound a
+multiple-comparisons exposure that is already non-trivial.
 
 This is our stated reason for not pursuing the residual phantom detections
 further in this work, and we intend it to be read as a claim about what our
 evaluation set can still support rather than a claim that nothing remains to be
-found. The per-organ-scoped negative variant is the obvious next experiment, and the
-right way to run it is against fresh data, or with
-the exposure declared in advance, not as one more pass over the same 46
-patients.
+found. The per-organ-scoped negative variant is the obvious next experiment, and
+the right way to run it is therefore against fresh data, or with the exposure
+declared in advance, not as one more pass over the same 46 patients.
 
 \subsection{Limitations of the localization method}
 
-\textbf{Resolution.} Patch supervision is fixed at $14\times14$ by ViT-B/16 at $224\times224$.
-Boundary precision is bounded by that grid, and the HD95 of 18.8\,px largely
-reflects it. Raising input resolution is not a free fix: it changes the patch geometry our entire calibration and
+\textbf{Resolution.} Patch supervision is fixed at $14\times14$ by ViT-B/16 at
+$224\times224$. Boundary precision is therefore bounded by that grid, and the
+HD95 of 18.8\,px largely reflects it. Raising input resolution is not a free
+fix, because it changes the patch geometry that the entire calibration and
 mask-formation path is built around.
 
-\textbf{Metric asymmetry.} All our Phase~1 numbers are 2D per-slice metrics on
+\textbf{Metric asymmetry.} All Phase~1 numbers are 2D per-slice metrics on
 organ-present slices, which is systematically more forgiving than 3D volumetric
 scoring. Every cross-paper comparison here inherits that caveat, and the
 supervised-to-weakly-supervised gap is wider than the tables' raw column
@@ -290,20 +320,21 @@ not do it.
 
 \subsection{Limitations of the index}
 
-\textbf{We use ground-truth tumor localization.} We attempt no weakly-supervised
-tumor detection. We made this a scoping decision rather than an oversight:
-adding a second layer of learned uncertainty before validating the index itself
-would give us an uninterpretable result, since we could not attribute a failure
-to the index or to the detector. It does mean our pipeline is not end-to-end
-weakly supervised, and a deployed version would need that second stage.
+\textbf{We use ground-truth tumor localization.} The pipeline attempts no
+weakly-supervised tumor detection. We made this a scoping decision rather than
+an oversight: adding a second layer of learned uncertainty before validating the
+index itself would yield an uninterpretable result, since a failure could not be
+attributed to the index or to the detector. It does mean the pipeline is not
+end-to-end weakly supervised, and a deployed version would need that second
+stage.
 
 \textbf{We fix our index parameters rather than fitting them.} We chose
-$\alpha = \beta = 0.5$ and max-over-organs aggregation a priori. They are defensible but arbitrary, and no
-sensitivity analysis over them is reported.
+$\alpha = \beta = 0.5$ and max-over-organs aggregation a priori, so they are
+defensible but arbitrary, and no sensitivity analysis over them appears here.
 
-\textbf{Cohort.} We evaluate our index on 46 patients from a single collection,
+\textbf{Cohort.} We evaluate the index on 46 patients from a single collection,
 with no external validation and no comparison against a clinical reference
-standard for organ-involvement risk. Our per-level analysis rests on 7--17
+standard for organ-involvement risk. The per-level analysis rests on 7--17
 lesions per level.
 
 \textbf{Calibration provenance.} We originally fitted our per-organ constants on
@@ -314,18 +345,19 @@ constants, but the history is part of the record.
 \textbf{Our expected-organ table may still be imperfect.} We found one error in
 it and corrected it from anatomical literature, and that correction moved our
 headline mean rank by 0.16 and shifted an entire level from below chance to
-above it. The existence of one such error is evidence that others may remain, particularly in the same thoracolumbar region where the anatomy is
-genuinely ambiguous. This is a real limit on how finely the per-level results
-should be read.
+above it. The existence of one such error is evidence that others may remain,
+particularly in the same thoracolumbar region where the anatomy is genuinely
+ambiguous, so this is a real limit on how finely the per-level results should be
+read.
 
 \subsection{Future work}
 
 The per-organ-scoped negative variant described above is the most specific next
-step, because it addresses a mechanism we diagnosed rather than a
-guess. Beyond that, we would harden our bilateral prompts with
-position-invariant morphological cues, as our finding 3a implies, and adopt the
-adversarial swap as a routine pre-deployment check. We would retrain with
-minimal captions to resolve the prompt confound above. We would extend our index
-to bone tumors as a distinct tissue target. And we would seek external
-validation on an independent cohort, which the index most needs before any
-clinical claim could be entertained.
+step, because it addresses a diagnosed mechanism rather than a guess. Beyond
+that, hardening the bilateral prompts with position-invariant morphological
+cues, as finding 3a implies, and adopting the adversarial swap as a routine
+pre-deployment check are the natural follow-ups on the localization side.
+Retraining with minimal captions would resolve the prompt confound above, and
+extending the index to bone tumors would take it to a distinct tissue target.
+Finally, we would seek external validation on an independent cohort, which is
+what the index most needs before any clinical claim could be entertained.

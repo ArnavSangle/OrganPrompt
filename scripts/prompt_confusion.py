@@ -1,4 +1,4 @@
-"""Do the femur and bladder prompts describe structures we never labelled?
+"""Do the femur and bladder prompts describe structures we never labeled?
 
 results/lesion_validation/scan_extent.json killed the field-of-view explanation
 for the 24 bladder/femur phantoms: the patients that produce them have MORE
@@ -49,7 +49,7 @@ from src.tumor.organ_volume import MODEL_NAME
 import scripts.compute_index as ci
 
 # Written in the FEW_SHOT_TEMPLATES style on purpose: same "Axial CT scan of..."
-# opening, same appearance-then-neighbours structure. A bare label like "a rib"
+# opening, same appearance-then-neighbors structure. A bare label like "a rib"
 # would embed differently for reasons of phrasing rather than anatomy, and the
 # comparison would measure our writing instead of the model.
 DISTRACTOR_TEMPLATES = {
@@ -119,7 +119,7 @@ DISTRACTOR_TEMPLATES = {
 
 
 def encode_prompts(prompts, checkpoint, device):
-    """(N, D) L2-normalised text features from the FINE-TUNED encoder.
+    """(N, D) L2-normalized text features from the FINE-TUNED encoder.
 
     The checkpoint matters: the base BioMedCLIP text tower and the fine-tuned one
     disagree, and it is the fine-tuned one that produced the phantoms.
@@ -137,7 +137,7 @@ def encode_prompts(prompts, checkpoint, device):
 
 
 def cosine_matrix(a, b):
-    """(rows, cols) cosine similarity; inputs are assumed L2-normalised."""
+    """(rows, cols) cosine similarity; inputs are assumed L2-normalized."""
     return np.asarray(a, dtype=np.float64) @ np.asarray(b, dtype=np.float64).T
 
 

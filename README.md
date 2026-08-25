@@ -102,7 +102,7 @@ The fully-supervised comparison above establishes the ceiling. This section plac
 | **Image-level / text** *(OrganPrompt)* | Only that an organ is present, via a text prompt — no spatial hint whatsoever | Lowest |
 | **Point** | One clicked pixel inside each organ | Low |
 | **Scribble** | A hand-drawn stroke through each organ | Moderate |
-| **Fully-supervised** | Every voxel labelled | Highest |
+| **Fully-supervised** | Every voxel labeled | Highest |
 
 Point- and scribble-supervised methods receive per-image *spatial* information that OrganPrompt never sees. They are included below for context, but **they are not a like-for-like baseline** — a scribble already answers "where," which is the entire problem OrganPrompt is solving from text alone.
 
@@ -286,7 +286,7 @@ to the CT grid so distance can be computed in 3D against the 3D tumor mask.
 # one patient -> results/bone_index/<case>.json
 python scripts/compute_index.py --case 10355 --device cuda
 
-# every labelled patient -> results/bone_index/summary.json (mean/median/min/max)
+# every labeled patient -> results/bone_index/summary.json (mean/median/min/max)
 python scripts/batch_index.py --device cuda
 
 # qualitative overlay: tumor + top-scoring organ map on the peak tumor slice
@@ -314,7 +314,7 @@ Both figures highlight the top 2% of each slice's own similarity distribution ra
 ### Per-lesion validation
 
 Per-patient validation caps out at 20 evaluation points (patients with exactly one
-involved vertebral level). Scoring per lesion instead — one point per labelled vertebra,
+involved vertebral level). Scoring per lesion instead — one point per labeled vertebra,
 still one inference pass per patient — lifts this to 180 lesions across 46 patients.
 
 ```bash

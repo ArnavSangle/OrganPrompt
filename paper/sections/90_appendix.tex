@@ -36,3 +36,30 @@ L5  & 13 & 3.08 & 3.00 & at/below chance \\
 \end{tabular}
 \end{table}
 
+\section{All organ maps on a Spine-Mets slice}
+\label{app:organgrid}
+
+The index is computed from the 11 organ maps that Figure~\ref{fig:organgrid}
+shows in full. It is reproduced here rather than in the body because eleven
+columns cannot be read at single-column width, and because
+\S\ref{sec:results:lesion} makes the argument it supports on the two cases in
+Figure~\ref{fig:qualitative}, where the distinction between a correct detection
+and a phantom is visible.
+
+\begin{figure}[p]
+\centering
+\includegraphics[width=\textwidth]{fig4_spine_organ_grid.png}
+\caption{All 11 organ maps on a single Spine-Mets thoracic lesion slice (case
+13055, T8 lesion). The rows are the CT slice, the raw patch-text similarity, and
+the overlay. The highlight marks the top 2\% of each slice's own similarity
+distribution rather than an absolute
+cutoff, because raw similarity is routinely negative across an entire slice and
+organs win relatively rather than absolutely, so an absolute-zero threshold
+renders most panels blank. The panel is the T8 \emph{lesion} slice rather than
+the patient's peak-tumor slice, which sits at the pelvis where heart, lungs,
+liver and spleen are out of frame; that slice would display noise in those
+columns and wrongly imply the model hallucinates organs that are in fact
+absent.}
+\label{fig:organgrid}
+\end{figure}
+

@@ -42,13 +42,13 @@ class PatchContrastiveLoss:
 
     def __call__(
         self,
-        text_features: torch.Tensor,  # (B, 512) L2-normalised, already on device
+        text_features: torch.Tensor,  # (B, 512) L2-normalized, already on device
         gt_masks: torch.Tensor,        # (B, 224, 224) float in {0, 1}, on device
         logit_scale: float = 1.0,
     ) -> torch.Tensor:
         B = self._raw_patch_tokens.shape[0]
 
-        # Project patch tokens → (B, 196, 512), L2-normalise
+        # Project patch tokens → (B, 196, 512), L2-normalize
         patch_emb = F.normalize(
             self.model.visual.head(self._raw_patch_tokens), dim=-1
         )

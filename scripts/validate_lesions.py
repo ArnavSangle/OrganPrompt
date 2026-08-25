@@ -1,4 +1,4 @@
-"""Per-lesion anatomical validation: one evaluation point per labelled vertebra.
+"""Per-lesion anatomical validation: one evaluation point per labeled vertebra.
 
 scripts/validate_anatomy.py scores one point per patient and can only use the 20
 patients with exactly one involved level, because a patient with lesions at T2
@@ -7,7 +7,7 @@ on the whole Phase 1 result: with n=20, four assignment configurations have
 already been scored on the same points, and removing the calibration leak moved p
 from 0.0195 to 0.0529. There is no statistical room left to test anything else.
 
-Scoring per LESION removes the ceiling. Each labelled vertebra carries its own
+Scoring per LESION removes the ceiling. Each labeled vertebra carries its own
 expectation -- a T2 lesion should rank the lungs, an L4 lesion the kidneys -- so
 multi-level patients become usable and the evaluation set grows from 20 points to
 184 across 46 patients.
@@ -38,7 +38,7 @@ import scripts.compute_index as ci
 
 
 def testable_lesions(labels, on_disk):
-    """{case: [levels]} for every labelled level with an expected organ set.
+    """{case: [levels]} for every labeled level with an expected organ set.
 
     Unlike single_level_cases this keeps multi-level patients, which is the whole
     point -- they hold 164 of the 184 usable lesions.

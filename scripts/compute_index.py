@@ -149,7 +149,7 @@ def main():
     ap.add_argument("--assign", choices=["competitive", "independent"],
                      default="competitive",
                      help="competitive: one voxel one organ, absent organs come back "
-                          "empty. independent: per-organ percentile (the old behaviour)")
+                          "empty. independent: per-organ percentile (the old behavior)")
     ap.add_argument("--floor", type=float, default=0.6,
                      help="competitive only: minimum response as a fraction of the "
                           "organ's typical peak")

@@ -65,7 +65,7 @@ def score_organ(tumor, organ, spacing, alpha=0.5, beta=0.5, tumor_coords=None):
 def score_organ_against_lesions(lesion_coords, organ, spacing, alpha=0.5, beta=0.5):
     """{level: score record} for ONE organ mask against MANY lesions.
 
-    Per-lesion evaluation scores each labelled vertebra separately, but the organ
+    Per-lesion evaluation scores each labeled vertebra separately, but the organ
     masks are what cost a full inference pass and a volume-sized allocation to
     produce. So the loop is inverted relative to score_organ: an organ is scored
     against every lesion in the patient while it is resident, then discarded.

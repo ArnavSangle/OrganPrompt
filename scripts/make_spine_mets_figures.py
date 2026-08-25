@@ -5,7 +5,7 @@ Two figures, mirroring how the Phase 1 TotalSegmentator work was visualized
 
   figures/paper/fig4_spine_organ_grid.{svg,png}
       11 organ columns x 3 rows (CT / patch-similarity / overlay) on a single
-      Spine-Mets slice -- the direct analogue of the Grad-CAM summary figure,
+      Spine-Mets slice -- the direct analog of the Grad-CAM summary figure,
       showing every organ map the index is computed from.
 
   figures/paper/fig5_spine_lesion_overlays.{svg,png}
@@ -52,10 +52,31 @@ OVERLAY_CASES = [
     ("13653", "high index (0.50)"),
 ]
 
+def _register_latin_modern():
+    """Match the paper body font (main.tex loads lmodern).
+
+    TeX Live ships Latin Modern as OTF but does not install it as a system font,
+    so matplotlib cannot see it until it is registered. No-op without TeX Live.
+    """
+    import matplotlib.font_manager as fm
+    for root in (Path(r"C:/texlive"), Path("/usr/share/texmf-dist")):
+        if not root.exists():
+            continue
+        for otf in root.glob("**/fonts/opentype/public/lm/lmroman10-*.otf"):
+            try:
+                fm.fontManager.addfont(str(otf))
+            except Exception:
+                pass
+
+
+_register_latin_modern()
+
 plt.rcParams.update({
-    "font.family": "sans-serif",
-    "font.sans-serif": ["Helvetica", "Arial", "DejaVu Sans"],
-    "font.size": 8,
+    "font.family": "serif",
+    "font.serif": ["Latin Modern Roman", "CMU Serif", "DejaVu Serif"],
+    "mathtext.fontset": "cm",
+    "font.size": 14,
+    "svg.fonttype": "none",
 })
 
 
@@ -79,7 +100,12 @@ def fig4_organ_grid(model, tf, device):
     ct = _ct_window(p.ct[z])
 
     n = len(CLASS_NAMES)
-    fig, axes = plt.subplots(3, n, figsize=(1.35 * n, 4.4))
+    # Drawn at the printed width (\textwidth = 6.5in). It was previously
+    # 1.35in per column, i.e. 14.85in for 11 organs, which LaTeX then shrank to
+    # 0.44x -- every 7pt label landed near 3pt on the page. At 6.5in the panels
+    # are only ~0.59in wide, so if the columns read too small, split this into
+    # two stacked blocks of six and five rather than widening it again.
+    fig, axes = plt.subplots(3, n, figsize=(6.5, 6.5 * 4.4 / (1.35 * n)))
     for oc in range(n):
         sim = vol[oc, 0]
         # Same percentile highlight as fig3: raw similarity is routinely negative
@@ -89,7 +115,10 @@ def fig4_organ_grid(model, tf, device):
         masked = np.ma.masked_where(sim < thresh, sim)
 
         axes[0, oc].imshow(ct, cmap="gray")
-        axes[0, oc].set_title(CLASS_NAMES[oc], fontsize=7)
+        # 11 columns across a fixed 6.5in width leaves ~0.59in per panel --
+        # column titles cannot follow the general size bump without colliding
+        # into their neighbors, so this stays close to its original size.
+        axes[0, oc].set_title(CLASS_NAMES[oc], fontsize=8)
         axes[1, oc].imshow(sim, cmap="viridis")
         axes[2, oc].imshow(ct, cmap="gray")
         axes[2, oc].imshow(masked, cmap="viridis", alpha=0.65,
@@ -97,15 +126,21 @@ def fig4_organ_grid(model, tf, device):
         for r in range(3):
             axes[r, oc].axis("off")
 
+    # Row labels sit well clear of the first column (-0.45 rather than -0.12).
+    # Font size here is tied to that offset -- enlarging one without the other
+    # reopens the exact "similarity"/"overlay" overprint this spacing fixed.
     for r, lab in enumerate(["CT", "similarity", "overlay"]):
-        axes[r, 0].text(-0.12, 0.5, lab, transform=axes[r, 0].transAxes,
+        axes[r, 0].text(-0.45, 0.5, lab, transform=axes[r, 0].transAxes,
                         rotation=90, va="center", ha="center", fontsize=8,
                         fontweight="bold")
 
+    # Suptitle kept modest and given real headroom (rect top dropped to 0.90,
+    # from 0.96): at the larger paper-wide base font it was tall enough to
+    # print through the column titles below it.
     fig.suptitle(f"OrganPrompt organ maps on bone-metastasis CT "
                  f"(Spine-Mets case {GRID_CASE}, {GRID_LEVEL} lesion slice {z})",
-                 fontsize=10)
-    fig.tight_layout(rect=[0, 0, 1, 0.96])
+                 fontsize=13)
+    fig.tight_layout(rect=[0, 0, 1, 0.90])
     fig.savefig(OUT / "fig4_spine_organ_grid.svg", bbox_inches="tight", transparent=True)
     fig.savefig(OUT / "fig4_spine_organ_grid.png", dpi=300, bbox_inches="tight")
     plt.close(fig)
@@ -117,7 +152,7 @@ def fig5_lesion_overlays(model, tf, device):
     index = json.loads(Path("results/bone_index/summary.json").read_text())["per_case"]
 
     fig, axes = plt.subplots(2, len(OVERLAY_CASES),
-                             figsize=(3.0 * len(OVERLAY_CASES), 6.2))
+                             figsize=(6.5, 6.5 * 6.2 / (3.0 * len(OVERLAY_CASES))))
     for col, (case, label) in enumerate(OVERLAY_CASES):
         p = load_patient(ROOT, case, labels)
         z = _peak_tumor_slice(p)
@@ -136,18 +171,22 @@ def fig5_lesion_overlays(model, tf, device):
 
         axes[0, col].imshow(ct, cmap="gray")
         axes[0, col].imshow(np.ma.masked_where(~tm, tm), cmap="autumn", alpha=0.85)
-        axes[0, col].set_title(f"{case} — {label}\nlesion (slice {z})", fontsize=8)
+        # 3 columns across 6.5in is ~2.17in each -- these titles are long
+        # strings ("14643 -- low index (0.006)"), so they stay near their
+        # original size rather than the general bump, or they collide into
+        # the neighboring column exactly as they did at 18pt.
+        axes[0, col].set_title(f"{case} — {label}\nlesion (slice {z})", fontsize=10)
 
         axes[1, col].imshow(ct, cmap="gray")
         axes[1, col].imshow(masked, cmap="viridis", alpha=0.65,
                             vmin=thresh, vmax=float(sim.max()))
         axes[1, col].set_title(f"nearest organ: {CLASS_NAMES[top]}\n"
-                               f"index = {index[case]:.3f}", fontsize=8)
+                               f"index = {index[case]:.3f}", fontsize=10)
         for r in range(2):
             axes[r, col].axis("off")
 
-    fig.suptitle("Bone-metastasis index across the score range", fontsize=10)
-    fig.tight_layout(rect=[0, 0, 1, 0.95])
+    fig.suptitle("Bone-metastasis index across the score range", fontsize=14)
+    fig.tight_layout(rect=[0, 0, 1, 0.90])
     fig.savefig(OUT / "fig5_spine_lesion_overlays.svg", bbox_inches="tight", transparent=True)
     fig.savefig(OUT / "fig5_spine_lesion_overlays.png", dpi=300, bbox_inches="tight")
     plt.close(fig)

@@ -80,7 +80,7 @@ def rank_of_expected(per_organ, expected):
 
 
 def distances_mm(per_organ):
-    """Invert proximity back to millimetres: prox = 1/(1+d) -> d = 1/prox - 1.
+    """Invert proximity back to millimeters: prox = 1/(1+d) -> d = 1/prox - 1.
 
     Rank alone cannot detect a broken ranking. An organ that is not in the scan at
     all still gets a phantom component, and phantom components sit near the spine,

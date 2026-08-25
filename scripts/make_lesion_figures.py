@@ -25,16 +25,44 @@ from src.data.scan_extent import level_rank
 
 OUT = Path(__file__).parent.parent / "figures" / "paper"
 
-# Colorblind-safe (Okabe-Ito): observed = blue, chance = grey, thoracolumbar
-# junction (the failure band) highlighted in vermillion.
-BLUE = "#0072B2"
-GREY = "#999999"
-VERMILION = "#D55E00"
+# Two-hue categorical set, muted for print. Validated colorblind-safe: passes
+# lightness band, chroma floor, CVD separation (worst adjacent dE 16.2 protan)
+# and normal-vision separation (dE 22.6). Do not desaturate further -- muting
+# these below the current chroma drops them under the CVD separation floor.
+BLUE = "#3B6EA5"       # beats chance
+BRICK = "#B4543A"      # at or below chance
+# Reference lines are annotation, not a category, so they wear ink rather than a
+# hue -- that keeps the two hues above meaning exactly one thing each.
+INK = "#1A1A1A"
+
+def _register_latin_modern():
+    """Make the paper's body font available to matplotlib.
+
+    main.tex loads lmodern, so figure text should be Latin Modern Roman rather
+    than a sans fallback. TeX Live ships the OTF but does not install it as a
+    system font, so matplotlib cannot see it until it is registered here. Silent
+    no-op when TeX Live is absent -- font.serif then falls through to DejaVu.
+    """
+    import matplotlib.font_manager as fm
+    for root in (Path(r"C:/texlive"), Path("/usr/share/texmf-dist")):
+        if not root.exists():
+            continue
+        for otf in root.glob("**/fonts/opentype/public/lm/lmroman10-*.otf"):
+            try:
+                fm.fontManager.addfont(str(otf))
+            except Exception:
+                pass
+
+
+_register_latin_modern()
 
 plt.rcParams.update({
-    "font.family": "sans-serif",
-    "font.sans-serif": ["Helvetica", "Arial", "DejaVu Sans"],
-    "font.size": 9,
+    # Serif to match the paper body (lmodern). Latin Modern Roman is registered
+    # above from TeX Live; DejaVu Serif is the always-present fallback.
+    "font.family": "serif",
+    "font.serif": ["Latin Modern Roman", "CMU Serif", "DejaVu Serif"],
+    "mathtext.fontset": "cm",
+    "font.size": 16,
     "axes.linewidth": 0.8,
     "xtick.major.width": 0.8,
     "ytick.major.width": 0.8,
@@ -50,40 +78,56 @@ def fig1_per_level():
     chance = [lv[l]["chance"] for l in levels]
     ns = [lv[l]["n"] for l in levels]
 
-    fig, ax = plt.subplots(figsize=(7.0, 3.2))
+    # Width matches the printed width (\textwidth = 6.5in at letterpaper/1in
+    # margins), so LaTeX does not rescale and the font sizes below are literal
+    # points on the page.
+    fig, ax = plt.subplots(figsize=(6.5, 3.0))
     x = np.arange(len(levels))
     # Derived from the data, never hardcoded: a hardcoded band silently went stale
     # when the T11/T12 anatomy fix moved T11 from below chance to above it.
     failing = [r >= c for r, c in zip(ranks, chance)]
-    colors = [VERMILION if f else BLUE for f in failing]
+    colors = [BRICK if f else BLUE for f in failing]
 
     ax.bar(x, ranks, width=0.6, color=colors, zorder=3)
-    ax.plot(x, chance, marker="o", markersize=3, linewidth=1.0, color=GREY,
+    ax.plot(x, chance, marker="o", markersize=3, linewidth=1.0, color=INK,
              linestyle="--", zorder=4)
 
     ax.set_xticks(x)
-    ax.set_xticklabels(levels, fontsize=8)
-    ax.set_ylabel("mean rank (lower = better)")
+    # Counts ride with the tick labels. Previously they were white rotated text
+    # inside each bar, which disappeared off the top of the shortest bars.
+    # Bare count on the second line: "(n=17)" at 17 levels across 6.5in collides
+    # with its neighbors, so the "n=" is stated once in the axis label instead.
+    ax.set_xticklabels([f"{l}\n{n}" for l, n in zip(levels, ns)], fontsize=12)
+    ax.set_xlabel("vertebral level (lesion count below each label)", fontsize=14)
+    # Explicit, smaller than the 16pt base: rotated 90 degrees, this string is
+    # long enough that the base size clipped off the figure's left edge.
+    # labelpad lifts it clear of the tick numbers, which it otherwise touches.
+    ax.set_ylabel("mean rank (lower = better)", fontsize=13, labelpad=12)
     ax.set_ylim(0, max(max(ranks), max(chance)) * 1.15)
+    # Integer ticks: the stacked legend shortens the axes enough that the
+    # default locator falls back to 0.0/2.5, which reads oddly for a rank.
+    ax.set_yticks(np.arange(0, int(max(max(ranks), max(chance))) + 1))
     ax.spines["top"].set_visible(False)
     ax.spines["right"].set_visible(False)
     ax.tick_params(axis="both", length=3)
 
-    for xi, n in zip(x, ns):
-        ax.annotate(f"n={n}", (xi, 0.05), rotation=90, fontsize=6,
-                    color="white", ha="center", va="bottom")
-
     from matplotlib.patches import Patch
     from matplotlib.lines import Line2D
-    beats = ", ".join(l for l, f in zip(levels, failing) if not f)
-    fails = ", ".join(l for l, f in zip(levels, failing) if f)
+    # Labels stay short and the key sits ABOVE the axes: interpolating the level
+    # names produced a legend string wider than the plot, laid over the bars.
+    # The bar colors already show which levels fail, so the key only has to say
+    # what the colors mean.
     handles = [
-        Patch(facecolor=BLUE, label=f"beats chance ({beats})"),
-        Patch(facecolor=VERMILION, label=f"at/below chance ({fails})"),
-        Line2D([0], [0], color=GREY, linestyle="--", marker="o", markersize=3,
+        Patch(facecolor=BLUE, label="beats chance"),
+        Patch(facecolor=BRICK, label="at or below chance"),
+        Line2D([0], [0], color=INK, linestyle="--", marker="o", markersize=3,
                label="chance (order statistic)"),
     ]
-    ax.legend(handles=handles, frameon=False, fontsize=7, loc="upper left")
+    # Stacked one per line rather than spread across the top: the three labels
+    # read as a list this way instead of running together into one strip.
+    ax.legend(handles=handles, frameon=False, fontsize=12,
+              loc="lower left", bbox_to_anchor=(0, 1.02),
+              ncol=1, borderaxespad=0, labelspacing=0.35, handlelength=1.8)
 
     fig.tight_layout()
     fig.savefig(OUT / "fig1_per_level.svg", bbox_inches="tight", transparent=True)
@@ -95,20 +139,26 @@ def fig2_index_dist():
     summary = json.loads(Path("results/bone_index/summary.json").read_text())
     values = np.array(sorted(summary["per_case"].values()))
 
-    fig, ax = plt.subplots(figsize=(3.4, 3.0))
+    # Was 3.4in wide but placed at \textwidth, so LaTeX blew it up 1.9x and every
+    # 9pt label rendered near 17pt. Drawn at printed width instead.
+    fig, ax = plt.subplots(figsize=(6.5, 2.8))
     ax.hist(values, bins=12, color=BLUE, edgecolor="white", linewidth=0.6, zorder=3)
-    ax.axvline(summary["mean"], color=VERMILION, linewidth=1.2, linestyle="-",
+    ax.axvline(summary["mean"], color=BRICK, linewidth=1.2, linestyle="-",
                zorder=4, label=f"mean = {summary['mean']:.3f}")
-    ax.axvline(summary["median"], color=GREY, linewidth=1.2, linestyle="--",
+    ax.axvline(summary["median"], color=INK, linewidth=1.2, linestyle="--",
                zorder=4, label=f"median = {summary['median']:.3f}")
 
-    ax.set_xlabel("index score (max blended overlap+proximity)")
-    ax.set_ylabel("patients (n)")
+    ax.set_xlabel("index score (max blended overlap+proximity)", labelpad=10)
+    ax.set_ylabel("patients (n)", labelpad=12)
     ax.spines["top"].set_visible(False)
     ax.spines["right"].set_visible(False)
     ax.tick_params(axis="both", length=3)
-    ax.legend(frameon=False, fontsize=7, loc="upper right")
-    ax.set_title(f"n = {summary['n']} patients", fontsize=8, loc="left", color="#555555")
+    # Key sits inside the axes at top right, stacked one entry per line: the
+    # distribution is right-skewed, so that corner is empty in every run.
+    # The embedded title is gone -- the LaTeX \caption already names the figure,
+    # and n is stated there.
+    ax.legend(frameon=False, fontsize=12, loc="upper right", ncol=1,
+              borderaxespad=0.8, labelspacing=0.4, handlelength=1.8)
 
     fig.tight_layout()
     fig.savefig(OUT / "fig2_index_dist.svg", bbox_inches="tight", transparent=True)

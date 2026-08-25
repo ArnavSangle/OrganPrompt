@@ -6,7 +6,8 @@ L2-normalize, downsample the mask to the 14x14 grid, BCE per patch. At inference
 the path changes (blocks 8-11 fused, no gradients, no mask). This figure shows
 both so the difference between them is visible rather than inferred.
 
-Palette is Okabe-Ito, matching scripts/make_lesion_figures.py.
+Palette matches scripts/make_lesion_figures.py: muted, print-safe,
+validated colorblind-safe.
 
 Usage:
     python scripts/make_pipeline_figure.py   # -> figures/paper/fig0_pipeline.{svg,png}
@@ -20,18 +21,41 @@ from matplotlib.patches import FancyArrowPatch, FancyBboxPatch
 
 OUT = Path("figures/paper")
 
-BLUE = "#0072B2"       # image path
-ORANGE = "#E69F00"     # text path
-GREEN = "#009E73"      # similarity / mask
-VERMILION = "#D55E00"  # loss / index
-GREY = "#7F7F7F"
+# Three muted hues carry the three paths; the loss/index endpoint and all
+# connective annotation wear ink instead of a fourth hue. Four MUTED hues do not
+# survive validation -- desaturating a 4-slot set drops adjacent pairs below the
+# normal-vision separation floor, so the fourth slot is deliberately achromatic.
+BLUE = "#3B6EA5"    # image path
+BRICK = "#B4543A"   # text path
+GREEN = "#1F8A66"   # similarity / mask
+INK = "#1A1A1A"     # loss/index endpoint, arrows, annotation
 LIGHT = "#F2F2F2"
 
 EN = "–"  # matplotlib text is not LaTeX: "--" would render literally
 
+def _register_latin_modern():
+    """Match the paper body font (main.tex loads lmodern).
+
+    TeX Live ships Latin Modern as OTF but does not install it as a system font,
+    so matplotlib cannot see it until it is registered. No-op without TeX Live.
+    """
+    import matplotlib.font_manager as fm
+    for root in (Path(r"C:/texlive"), Path("/usr/share/texmf-dist")):
+        if not root.exists():
+            continue
+        for otf in root.glob("**/fonts/opentype/public/lm/lmroman10-*.otf"):
+            try:
+                fm.fontManager.addfont(str(otf))
+            except Exception:
+                pass
+
+
+_register_latin_modern()
+
 plt.rcParams.update({
-    "font.family": "sans-serif",
-    "font.sans-serif": ["Helvetica", "Arial", "DejaVu Sans"],
+    "font.family": "serif",
+    "font.serif": ["Latin Modern Roman", "CMU Serif", "DejaVu Serif"],
+    "mathtext.fontset": "cm",
     "font.size": 8,
     "svg.fonttype": "none",
 })
@@ -45,20 +69,20 @@ def box(ax, x, y, w, h, label, color, sub=None, fs=7.5):
         ax.text(x + w / 2, y + h * 0.62, label, ha="center", va="center",
                 fontsize=fs, zorder=4)
         ax.text(x + w / 2, y + h * 0.26, sub, ha="center", va="center",
-                fontsize=fs - 1.3, color=GREY, style="italic", zorder=4)
+                fontsize=fs - 1.3, color=INK, style="italic", zorder=4)
     else:
         ax.text(x + w / 2, y + h / 2, label, ha="center", va="center",
                 fontsize=fs, zorder=4)
     return (x, y, w, h)
 
 
-def arrow(ax, p, q, color=GREY, lw=1.0, rad=0.0):
+def arrow(ax, p, q, color=INK, lw=1.0, rad=0.0):
     ax.add_patch(FancyArrowPatch(
         p, q, arrowstyle="-|>", mutation_scale=8, linewidth=lw, color=color,
         zorder=2, connectionstyle=f"arc3,rad={rad}", shrinkA=2, shrinkB=3))
 
 
-def polyline(ax, pts, color=GREY, lw=1.0):
+def polyline(ax, pts, color=INK, lw=1.0):
     """Explicit right-angle routing, then a single arrowhead on the last leg."""
     for a, b in zip(pts[:-1], pts[1:-1]):
         ax.plot([a[0], b[0]], [a[1], b[1]], color=color, lw=lw, zorder=2,
@@ -86,32 +110,32 @@ def panel_training(ax):
     tok = box(ax, 0.320, y1, 0.150, h, "196 patch tokens", BLUE, "CLS dropped")
     prj = box(ax, 0.500, y1, 0.130, h, "visual.head", BLUE, "768 $\\to$ 512")
 
-    pr = box(ax, 0.00, y2, 0.115, h, "Organ prompt", ORANGE, "few-shot text")
-    bert = box(ax, 0.145, y2, 0.145, h, "PubMedBERT", ORANGE, f"blocks 8{EN}11")
-    tem = box(ax, 0.320, y2, 0.150, h, "text embedding", ORANGE, "512-d, $L_2$")
+    pr = box(ax, 0.00, y2, 0.115, h, "Organ prompt", BRICK, "few-shot text")
+    bert = box(ax, 0.145, y2, 0.145, h, "PubMedBERT", BRICK, f"blocks 8{EN}11")
+    tem = box(ax, 0.320, y2, 0.150, h, "text embedding", BRICK, "512-d, $L_2$")
 
     gt = box(ax, 0.320, y3, 0.150, h, "GT organ mask", GREEN,
              "area-pool $\\to$ 14$\\times$14")
 
     sim = box(ax, 0.665, y2, 0.135, h, "per-patch\ncosine sim.", GREEN)
-    loss = box(ax, 0.840, y2, 0.150, h, "BCE", VERMILION,
+    loss = box(ax, 0.840, y2, 0.150, h, "BCE", INK,
                "$\\mathcal{L}_{patch}$,  $\\lambda = 0.5$")
 
     for a, b in [(ct, vit), (vit, tok), (tok, prj)]:
         arrow(ax, R(a), L(b), BLUE)
     for a, b in [(pr, bert), (bert, tem)]:
-        arrow(ax, R(a), L(b), ORANGE)
+        arrow(ax, R(a), L(b), BRICK)
 
     # three paths converge on the similarity box
     polyline(ax, [R(prj), (0.6325, y1 + h / 2), (0.6325, y2 + h * 0.72),
                   (0.665, y2 + h * 0.72)], BLUE)
-    arrow(ax, R(tem), (0.665, y2 + h * 0.42), ORANGE)
+    arrow(ax, R(tem), (0.665, y2 + h * 0.42), BRICK)
     polyline(ax, [R(gt), (0.6325, y3 + h / 2), (0.6325, y2 + h * 0.16),
                   (0.665, y2 + h * 0.16)], GREEN)
 
-    arrow(ax, R(sim), L(loss), VERMILION)
+    arrow(ax, R(sim), L(loss), INK)
     ax.text(0.915, y2 - 0.055, "supervises every patch,\nnot only the CLS token",
-            ha="center", va="top", fontsize=6.6, color=VERMILION)
+            ha="center", va="top", fontsize=6.6, color=INK)
 
 
 def panel_inference(ax):
@@ -137,25 +161,25 @@ def panel_inference(ax):
         arrow(ax, R(a), L(b), BLUE if b is head else GREEN)
 
     stack = box(ax, 0.00, yb, 0.150, h, "stack slices", BLUE, "3D volume")
-    comp = box(ax, 0.185, yb, 0.180, h, "competitive\nassignment", VERMILION)
-    dist = box(ax, 0.395, yb, 0.175, h, "overlap +\nKD-tree distance", VERMILION)
-    idx = box(ax, 0.600, yb, 0.180, h, "metastasis index", VERMILION,
+    comp = box(ax, 0.185, yb, 0.180, h, "competitive\nassignment", INK)
+    dist = box(ax, 0.395, yb, 0.175, h, "overlap +\nKD-tree distance", INK)
+    idx = box(ax, 0.600, yb, 0.180, h, "metastasis index", INK,
               "$\\alpha\\,$ov $+\\ \\beta\\,$prox")
 
     # wrap from the end of the top row back to the start of the bottom row,
     # routed through the empty lane so it crosses nothing
-    polyline(ax, [B_(m2d), (0.9175, lane), (0.075, lane), T(stack)], GREY)
+    polyline(ax, [B_(m2d), (0.9175, lane), (0.075, lane), T(stack)], INK)
     ax.text(0.50, lane + 0.018, "repeat per axial slice, all 11 organs",
-            ha="center", va="bottom", fontsize=6.6, color=GREY)
+            ha="center", va="bottom", fontsize=6.6, color=INK)
 
     for a, b in [(stack, comp), (comp, dist), (dist, idx)]:
-        arrow(ax, R(a), L(b), VERMILION)
+        arrow(ax, R(a), L(b), INK)
 
     ax.text(0.275, yb - 0.035, "organs that lose their own peak\nare reported absent",
-            ha="center", va="top", fontsize=6.6, color=VERMILION)
+            ha="center", va="top", fontsize=6.6, color=INK)
     ax.text(0.855, yb + h * 0.5, "per lesion", ha="left", va="center",
-            fontsize=6.6, color=VERMILION)
-    arrow(ax, R(idx), (0.845, yb + h * 0.5), VERMILION)
+            fontsize=6.6, color=INK)
+    arrow(ax, R(idx), (0.845, yb + h * 0.5), INK)
 
 
 def main():

@@ -42,7 +42,7 @@ def phantom_lesions(per_lesion, families=FAMILIES, max_mm=50.0,
 
     Distance matters. Proximity is 1/(1+d), so a bladder winning from 400mm is
     a scoring artifact and tells us nothing; one winning from 12mm means a
-    bladder-labelled mask is sitting next to a thoracic vertebra.
+    bladder-labeled mask is sitting next to a thoracic vertebra.
     """
     out = []
     for key, v in per_lesion.items():

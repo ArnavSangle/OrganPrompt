@@ -149,16 +149,43 @@ def load_totalsegmentator(
     if cache_path.exists():
         with open(cache_path) as f:
             all_items = json.load(f)
+        # Match on the volume's directory NAME (s0000), not its recorded absolute
+        # path. The index caches whatever path the dataset had when it was built,
+        # so moving the dataset -- even between machines -- silently emptied every
+        # split: the lookup missed on all 44k items and the loader returned zero
+        # slices with no error. Names are stable across moves, and the split
+        # itself is reproducible from the current dirs plus the seed.
         vol_to_split = {
-            str(d.resolve()): name
+            d.name: name
             for name, dlist in split_dirs.items()
             for d in dlist
         }
+        by_name = {d.name: d for dlist in split_dirs.values() for d in dlist}
         split_items: dict[str, list] = {"train": [], "val": [], "test": []}
+        stale = 0
         for item in all_items:
-            sp = vol_to_split.get(item["volume_dir"])
-            if sp:
-                split_items[sp].append(item)
+            name = Path(item["volume_dir"]).name
+            sp = vol_to_split.get(name)
+            if not sp:
+                continue
+            # Rebase any recorded path onto this checkout, so the slow NIfTI path
+            # and the precomputed .npy fast path both resolve after a move.
+            cur = by_name[name]
+            if Path(item["volume_dir"]) != cur:
+                item = {**item, "volume_dir": str(cur)}
+                stale += 1
+            if "slice_path" in item and not Path(item["slice_path"]).exists():
+                cand = root / "precomputed" / Path(item["slice_path"]).name
+                if cand.exists():
+                    item["slice_path"] = str(cand)
+            split_items[sp].append(item)
+        if stale:
+            print(f"  (rebased {stale} cached volume paths onto {root})")
+        if not any(split_items.values()):
+            raise RuntimeError(
+                f"Slice index {cache_path} matched no volumes under {root}. "
+                "Delete it to rebuild."
+            )
     else:
         print(f"Building slice index for {n} volumes (first run — may take several minutes)...")
         split_items = {}

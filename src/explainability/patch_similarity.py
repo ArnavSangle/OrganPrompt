@@ -56,16 +56,16 @@ class BioMedCLIPPatchSimilarity:
         """
         Args:
             image: (1, 3, H, W) on self.device
-            text_features: (num_classes, 512) L2-normalised, on self.device
+            text_features: (num_classes, 512) L2-normalized, on self.device
             target_class: index into text_features to explain
-            neg_text_features: (num_neg, 512) L2-normalised hard negatives
+            neg_text_features: (num_neg, 512) L2-normalized hard negatives
             image_size: spatial size of the returned mask
 
         Returns:
             mask: (image_size, image_size) float32 array of RAW cosine
-                similarities. Bounded by [-1, 1] (both operands are L2-normalised),
+                similarities. Bounded by [-1, 1] (both operands are L2-normalized),
                 or [-2, 2] when neg_text_features subtracts a second similarity.
-                NOT normalised to [0, 1] -- see the class docstring.
+                NOT normalized to [0, 1] -- see the class docstring.
         """
         self._layer_features.clear()
         self.model.encode_image(image)  # triggers 4 hooks → fills _layer_features
@@ -105,7 +105,7 @@ class BioMedCLIPVanillaGradient:
     """Vanilla input-gradient saliency for BioMedCLIP (ViT-B/16).
 
     Backprops the image-text cosine similarity to the INPUT PIXELS and takes
-    |d(score)/d(pixel)| summed over colour channels. This is plain gradient
+    |d(score)/d(pixel)| summed over color channels. This is plain gradient
     saliency, NOT Grad-CAM: no activation map is involved, and the hooks
     registered below are captured but never used by generate().
 
@@ -158,7 +158,7 @@ class BioMedCLIPVanillaGradient:
         """
         Args:
             image: (1, 3, H, W) on self.device
-            text_features: (num_classes, 512) L2-normalised, on self.device
+            text_features: (num_classes, 512) L2-normalized, on self.device
             target_class: index into text_features to explain
             image_size: spatial size of the returned mask
 
@@ -173,10 +173,10 @@ class BioMedCLIPVanillaGradient:
         score.backward()
 
         # Vanilla gradient: d(score)/d(image) — no hooks, works if any gradient flows
-        # Sum absolute gradient across colour channels → (1, H, W) → (H, W)
+        # Sum absolute gradient across color channels → (1, H, W) → (H, W)
         cam = image.grad.abs().sum(dim=1).squeeze()  # (224, 224)
 
-        # normalise to [0, 1]
+        # normalize to [0, 1]
         cam_min, cam_max = cam.min(), cam.max()
         if cam_max > cam_min:
             cam = (cam - cam_min) / (cam_max - cam_min)
@@ -199,7 +199,7 @@ def post_process_mask(
       1. Threshold → binary
       2. Remove connected components smaller than min_size pixels
       3. Fill enclosed holes
-      4. Optional Gaussian smooth (re-normalised to [0, 1])
+      4. Optional Gaussian smooth (re-normalized to [0, 1])
 
     Returns float32 [0, 1].
     """

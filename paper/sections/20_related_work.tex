@@ -3,6 +3,17 @@
 
 \subsection{Vision--language pretraining and its biomedical adaptations}
 
+Conventional recognition models are trained against a fixed, closed set of
+labels chosen in advance, so every additional category requires fresh labeled
+examples and usually a new output layer. Vision--language pretraining replaces
+that arrangement with a joint embedding space for images and free text, learned
+by contrastively aligning large corpora of image--caption pairs, so that a
+category is specified at inference by writing it in natural language rather than
+by having been enumerated at training time. The supervision is not free, since
+captions are themselves human-written text paired with images, but it is
+open-vocabulary, and that property is what makes the paradigm attractive for a
+problem in which the structures of interest are not fixed in advance.
+
 CLIP established that predicting which caption belongs to which image, over 400
 million web-collected pairs, yields representations strong enough for zero-shot
 transfer across more than 30 vision benchmarks \cite{radford2021clip}. SigLIP
@@ -31,17 +42,42 @@ captions \cite{zhang2025biomedclip}. That longer context is what makes
 multi-sentence anatomical prompts expressible at all, and this work builds on
 BiomedCLIP for that reason.
 
-The limitation these models share is the one this work addresses. All of them
-optimize alignment between a whole image and a whole caption at the level of a
-pooled global embedding. Nothing in that objective requires any individual patch
-token to be spatially discriminative, so per-patch similarity read off a
-CLS-trained model carries little localization signal. Section~\ref{sec:results}
-quantifies this: before fine-tuning, the pipeline reaches 0.003 mIoU.
+What none of these models supplies, however, is spatial grounding, and the
+reason is worth setting out as a diagnosis rather than a complaint, because
+these models are behaving exactly as their objective specifies. That objective
+constrains only the pooled image representation against the pooled caption
+representation: the pooled vector is what is projected into the shared embedding
+space and scored, and individual patch tokens enter the loss only indirectly,
+through whatever the pooling operation draws from them. No gradient therefore
+ever asks a particular patch token to align with the text on its own, which
+means a model can minimize the objective perfectly while its patch tokens hold
+representations that are useful for assembling the pooled summary yet not
+individually meaningful when compared against a text embedding. Two further
+properties of the architecture compound this. The projection head is fit to the
+distribution of pooled representations, so pushing patch tokens through that
+same head asks it to do something it was never trained for; and self-attention
+in the deeper blocks mixes information globally, so a late-layer patch token
+reflects image-wide context rather than the evidence at its own location, which
+is precisely the locality a similarity map would need.
+
+That the pooling stage is implicated is not a new observation. MaskCLIP
+recovers a substantial amount of dense signal by reading CLIP's value projection
+instead of the attention-pooled output \cite{zhou2022maskclip}, later work in
+the same line pushes that recovery further \cite{yang2025clipdense}, and
+methods that re-pose the objective at pixel level \cite{rao2022denseclip} or
+attach a decoder trained for the purpose \cite{lueddecke2022clipseg} restore
+dense behavior by other means. Read naively, then, per-patch similarity from a
+CLS-trained model has no reason to carry a localization signal, and the
+untrained pipeline recovers almost none: gradient saliency on the pretrained
+model reaches 0.003 mIoU before any fine-tuning (\S\ref{sec:results}). The
+question this work takes up is what supplies the gradient pressure the
+pretraining objective never had reason to apply.
 
 \subsection{Dense and local alignment from vision--language models}
 
-We are not the first to observe that global alignment is the obstacle, and the
-work closest to ours attacks it in three distinguishable ways.
+Those repairs are worth separating out, because global alignment has been
+identified as the obstacle before, and the closest work attacks it in three
+distinguishable ways.
 
 The first extracts dense correspondence from an already-trained model without
 changing its weights. MaskCLIP shows that CLIP's value projection retains
@@ -52,117 +88,115 @@ Subsequent work pushes this further for weakly supervised semantic segmentation
 localizes poorly and how its explainability can be repaired
 \cite{li2024clipexplain}. Self-supervised vision transformers exhibit a similar
 property, with DINO producing segmentation-like attention maps without any
-textual supervision \cite{caron2021dino}. We take the same view of where the
-signal lives, but we train the property in rather than recovering it, because
-our downstream index requires organ maps that vanish where the organ is absent,
-which is a calibration property rather than a localization one.
+textual supervision \cite{caron2021dino}. OrganPrompt takes the same view of
+where the signal lives but trains the property in rather than recovering it,
+because the downstream index requires organ maps that vanish where the organ is
+absent, which is a calibration property rather than a localization one.
 
-The second adapts the model to dense prediction with a task head. DenseCLIP
-converts image-text matching into pixel-text matching and fine-tunes with a
-dense decoder \cite{rao2022denseclip}, and CLIPSeg attaches a lightweight
-transformer decoder that emits a segmentation from a text or image prompt
-\cite{lueddecke2022clipseg}. Both produce better boundaries than we do. Both
-also place a trained decoder between the prompt and the mask, which is precisely
-the attribution problem we describe below.
+The second, instead of reading the signal out of frozen weights, adapts the
+model to dense prediction with a task head. DenseCLIP converts image-text
+matching into pixel-text matching and fine-tunes with a dense decoder
+\cite{rao2022denseclip}, and CLIPSeg attaches a lightweight transformer decoder
+that emits a segmentation from a text or image prompt
+\cite{lueddecke2022clipseg}. Both produce better boundaries than OrganPrompt,
+but both also place a trained decoder between the prompt and the mask, which is
+precisely the attribution problem described below.
 
-The third is local alignment during pretraining, and GLoRIA is the closest
-medical antecedent: it learns global and local representations jointly by
-matching image sub-regions to individual words in radiology reports
-\cite{huang2021gloria}. Our objective is the same in spirit. It differs in
-supervision and in target: GLoRIA attends over report words to build
-localized representations for label-efficient recognition, whereas we supervise
-each of the 196 patch tokens directly against a downsampled organ mask, so that
-the resulting per-patch similarity is itself the segmentation rather than an
-intermediate representation.
-
-\subsection{Class activation maps and post-hoc localization}
-
-The established route from image-level labels to spatial maps is the CAM family.
-CAM recovers localization from a classifier's final-layer activations
-\cite{zhou2016cam}, and Grad-CAM generalizes this to arbitrary architectures by
-weighting activations with backpropagated gradients \cite{selvaraju2017gradcam},
-with later refinements such as Grad-CAM++ improving multi-instance localization
-\cite{chattopadhay2018gradcampp}.
-Both explain where a trained classifier looked.
-
-That framing is a poor fit here, for a reason worth stating plainly rather than
-asserting. A CAM explains a decision the network already makes. A contrastively
-pretrained vision--language model makes no per-organ decision to explain; it
-produces an embedding whose alignment with a text embedding is a similarity, not
-a class logit. Applying gradient-based localization to it recovers almost
-nothing, which is what the 0.003 starting point in Table~\ref{tab:progression}
-measures. This work therefore trains the spatial property directly instead of
-attempting to extract it post hoc, and the name reflects that: the prompt does
-the localizing, and no activation map is involved.
+The third builds the local property in during pretraining rather than adding it
+afterwards, and GLoRIA is the closest medical antecedent: it learns global and
+local representations jointly by matching image sub-regions to individual words
+in radiology reports \cite{huang2021gloria}. The objective here is the same in
+spirit, but it differs in supervision and in target, because GLoRIA attends over
+report words to build localized representations for label-efficient recognition,
+whereas we supervise each of the 196 patch tokens directly against a downsampled
+organ mask, so that the resulting per-patch similarity is itself the
+segmentation rather than an intermediate representation.
 
 \subsection{Text-driven medical image segmentation}
 
-The closest methodological relative is MedCLIP-SAMv2, which shares both the
-BiomedCLIP backbone and the premise that a text prompt can drive segmentation
+Within text-driven medical segmentation itself, the closest methodological
+relative is MedCLIP-SAMv2, which shares both the BiomedCLIP backbone and the
+premise that a text prompt can drive segmentation
 \cite{koleilat2025medclipsamv2}, extending an earlier version of the same
 framework \cite{koleilat2024medclipsam}. It differs in where the mask comes from:
 saliency derived from the vision--language model is used to prompt SAM
 \cite{kirillov2023sam}, which produces the final boundary, in a lineage that
 includes MedSAM's adaptation of SAM to medical images \cite{ma2024medsam}.
 
-Delegating mask formation to a second model is the stronger engineering choice
-and generally yields better boundaries. It also changes what the pipeline can be
-asked. When a refiner sits between the prompt and the output, a failure cannot
-be attributed cleanly to the text, because the refiner may repair a bad
-localization or corrupt a good one. Reading patch similarity directly, as here,
-gives up boundary quality and gains attribution: the caption ablation in
-\S\ref{sec:results:ablation} is only interpretable because nothing stands
-between the prompt and the mask. We regard that trade as the substantive
-difference between the two approaches, not the scores in
-Table~\ref{tab:weaksup}, which are computed on different datasets and organ
-sets.
+Delegating mask formation to a second model, as that lineage does, is the
+stronger engineering choice and generally yields better boundaries, but it also
+changes what the pipeline can be asked. When a refiner sits between the prompt
+and the output, a failure cannot be attributed cleanly to the text, because the
+refiner may repair a bad localization or corrupt a good one. Reading patch
+similarity directly, as here, gives up boundary quality and gains attribution in
+exchange: the caption ablation in \S\ref{sec:results:ablation} is only
+interpretable because nothing stands between the prompt and the mask. We regard
+that trade as the substantive difference between the two approaches, not the
+scores in Table~\ref{tab:weaksup}, which are computed on different datasets and
+organ sets.
 
 \subsection{Weak supervision, stratified by annotation cost}
 
-``Weakly supervised'' covers a wide range of supervision strength, and comparing
-across that range without saying so is misleading. Point-supervised methods
-receive one clicked pixel inside each structure; scribble-supervised methods
-receive a stroke through it. Recent work in this tier reports substantial gains
+That lineage and OrganPrompt are both weakly supervised in the broad sense,
+which is exactly the problem: ``weakly supervised'' covers a wide range of
+supervision strength, and comparing across that range without saying so is
+misleading.
+Point-supervised methods receive one clicked pixel inside each structure;
+scribble-supervised methods receive a stroke through it. Recent work in this
+tier reports substantial gains
 over prior point- and scribble-supervised baselines on BTCV and CHAOS
 \cite{jiang2024probabilistic}. Multi-organ abdominal CT benchmarks such as AMOS
 \cite{ji2022amos} and WORD \cite{luo2022word} are the usual evaluation targets in
 this tier, which is one reason no row of Table~\ref{tab:weaksup} shares a dataset
-with our work.
+with the evaluation here.
 
-Both forms of annotation answer ``where'' for each training image. Image-level
-text supervision does not, which is the entire problem being solved here, so
-these methods are context rather than baselines. The strictly comparable tier is
-image-level supervision, where weakly supervised CAM-based lesion segmentation
-in PET-CT reports a median Dice of 0.47 against 0.72 for a fully supervised
-U-Net \cite{ronneberger2015unet} on the same task \cite{fruh2021petct}. That ratio, roughly two thirds of
-supervised performance recovered from image-level labels alone, is the
+What point and scribble annotation have in common is that both answer ``where''
+for each training image. Image-level text supervision does not answer it at all,
+which is the entire problem being solved here, so these methods are context
+rather than baselines. The strictly comparable tier is instead image-level
+supervision, where weakly supervised CAM-based lesion segmentation in PET-CT
+reports a median Dice of 0.47 against 0.72 for a fully supervised U-Net
+\cite{ronneberger2015unet} on the same task \cite{fruh2021petct}, the fully
+supervised tier in which transformer architectures such as TransUNet
+\cite{chen2021transunet} are now a common alternative. That ratio, roughly two
+thirds of supervised performance recovered from image-level labels alone, is the
 expectation this work should be read against.
 
-\subsection{Fully supervised reference}
+\subsection{Class activation maps and post-hoc localization}
 
-TotalSegmentator provides both the dataset and the supervised ceiling. It trains
-an nnU-Net \cite{isensee2021nnunet} on 1{,}204 CT examinations sampled from
-routine clinical practice, covering 104 anatomical structures, and reports a
-mean Dice of 0.943 on a test set spanning a wide range of pathology
-\cite{wasserthal2023totalsegmentator}. Transformer-based architectures such as
-TransUNet \cite{chen2021transunet} are a common alternative in this fully
-supervised setting. The released dataset
-\cite{wasserthal2023totalsegdataset} is what this work trains on, and the
-published per-structure Dice is the reference against which
-Table~\ref{tab:fullysup} is read, subject to the 2D/3D metric caveat stated
-there.
+The image-level tier has an established localization technique of its own, and
+it starts from a classifier rather than from a vision--language model: the CAM
+family. CAM recovers localization from a classifier's final-layer activations
+\cite{zhou2016cam}, and Grad-CAM generalizes this to arbitrary architectures by
+weighting activations with backpropagated gradients \cite{selvaraju2017gradcam},
+with later refinements such as Grad-CAM++ improving multi-instance localization
+\cite{chattopadhay2018gradcampp}. What every member of the family has in common
+is that it explains where a trained classifier looked.
+
+That shared framing is what makes the family a poor fit here, for a reason worth
+stating plainly rather than asserting. A CAM explains a decision the network
+already makes, and a contrastively pretrained vision--language model makes no
+per-organ decision to explain, because it produces an embedding whose alignment
+with a text embedding is a similarity rather than a class logit. Applying
+gradient-based localization to it consequently recovers almost nothing, which is
+what the 0.003 starting point in Table~\ref{tab:progression} measures. Because
+there is no decision to explain, this work trains the spatial property directly
+instead of attempting to extract it post hoc, and the name reflects that: the
+prompt does the localizing, and no activation map is involved.
 
 \subsection{Positioning}
 
-We validated the underlying idea on the OrganAMNIST subset of MedMNIST v2
-\cite{yang2023medmnist} before moving to full-resolution CT, and we report
-results here only on the latter.
+Those observations locate this work. It sits in the image-level tier and differs
+from its nearest neighbors in three respects, the first of which the preceding
+subsection has already anticipated. It trains patch-level text--image alignment
+as an explicit objective instead of extracting localization post hoc from a
+classifier. It reads the resulting similarity map directly, with no second-stage
+refiner, which preserves the ability to attribute failures to the prompt. And it
+carries the same frozen model into a downstream
+clinical question, the bone-metastasis proximity index of
+\S\ref{sec:results:index}, on a dataset and acquisition protocol the model never
+saw during training.
 
-This work sits in the image-level tier and differs from its nearest neighbours
-in three respects. It trains patch-level text--image alignment as an explicit
-objective instead of extracting localization post hoc from a classifier. It
-reads the resulting similarity map directly, with no second-stage refiner, which
-preserves the ability to attribute failures to the prompt. And it carries the
-same frozen model into a downstream clinical question, the bone-metastasis
-proximity index of \S\ref{sec:results:index}, on a dataset and acquisition
-protocol the model never saw during training.
+One point of provenance completes that picture. The underlying idea was
+validated on the OrganAMNIST subset of MedMNIST v2 \cite{yang2023medmnist}
+before the move to full-resolution CT; the results here are on the latter only.

@@ -1,4 +1,4 @@
-"""Compute the bone-metastasis index for every labelled Spine-Mets patient."""
+"""Compute the bone-metastasis index for every labeled Spine-Mets patient."""
 import argparse
 import json
 import sys
@@ -36,7 +36,7 @@ def main():
     labels = load_lesion_labels(str(Path(a.root) / "Spine-Mets-CT-SEG_Clinical.xlsx"))
     cases_dir = Path(a.root) / "spine_mets_ct_seg"
     todo = [c for c in sorted(cases_dir.iterdir()) if c.is_dir() and labels.get(c.name)]
-    print(f"[batch_index] {len(todo)} labelled patients to process", flush=True)
+    print(f"[batch_index] {len(todo)} labeled patients to process", flush=True)
     per_case = {}
     for i, c in enumerate(todo):
         cached = Path(a.out_dir, f"{c.name}.json")

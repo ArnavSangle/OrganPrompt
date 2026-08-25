@@ -3,7 +3,7 @@
 The per-lesion validation leaves 38 anatomically impossible top-1 detections,
 and bladder plus femur account for 24 of them -- 15 at thoracic levels. Because
 proximity is 1/(1+d), a distant organ cannot outrank a close one; a bladder that
-wins a T4 lesion from 12mm away is a bladder-labelled mask sitting in the chest,
+wins a T4 lesion from 12mm away is a bladder-labeled mask sitting in the chest,
 not a real bladder being mis-scored from the pelvis.
 
 That leaves one question worth answering before any fix is written: was the
@@ -20,7 +20,7 @@ per patient and needs no GPU.
 
 The SEG carries only the vertebrae somebody annotated, so its span is a LOWER
 bound on the imaged anatomy, never an equality. That is why caudal_margin_mm
-exists: the unlabelled millimetres below the last segmented vertebra are the
+exists: the unlabeled millimeters below the last segmented vertebra are the
 part of the scan the segmentation says nothing about.
 """
 import pydicom
@@ -44,13 +44,13 @@ def level_rank(level):
 
 
 def lowest_level(levels):
-    """The most caudal recognised vertebra, ignoring non-vertebral segments."""
+    """The most caudal recognized vertebra, ignoring non-vertebral segments."""
     ranked = [(r, lvl) for lvl in levels if (r := level_rank(lvl)) is not None]
     return max(ranked)[1] if ranked else None
 
 
 def caudal_margin_mm(vert_z, z_min):
-    """Millimetres of imaged anatomy below the last segmented vertebra.
+    """Millimeters of imaged anatomy below the last segmented vertebra.
 
     None when nothing was segmented -- an absent measurement, which must not be
     confused with a measured zero.

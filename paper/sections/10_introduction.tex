@@ -2,75 +2,99 @@
 \label{sec:intro}
 
 Dense per-voxel annotation is the binding constraint on CT segmentation. A
-fully supervised model such as TotalSegmentator reaches a mean Dice of 0.943
-across 104 anatomical structures \cite{wasserthal2023totalsegmentator}, but that
-performance rests on expert voxel-level labels for every structure of interest.
-Extending such a system to a new structure, a new protocol, or a new clinical
-question means commissioning new annotation.
+fully supervised model such as TotalSegmentator already segments more than a
+hundred anatomical structures at a level of agreement comparable to an expert
+reader \cite{wasserthal2023totalsegmentator}, so accuracy is not the open
+problem; that performance instead rests entirely on expert voxel-level labels
+for every structure of interest. Because it is the labels rather than the
+architecture that determine which structures such a system can recognize,
+extending it to a new structure, a new protocol, or a new clinical question
+means commissioning new annotation.
 
-Vision--language pretraining suggests an alternative. Models in the CLIP family
-learn visual concepts from natural-language supervision alone
-\cite{radford2021clip, zhai2023siglip}, and biomedical adaptations such as
-PMC-CLIP \cite{lin2023pmcclip} and BiomedCLIP \cite{zhang2025biomedclip} bring
-that capability into the medical domain at scale. If a text prompt could select
-a region as well as it selects a label, segmentation would need no pixels at
-all.
+That commissioning is expensive because voxel-level delineation of CT is not
+unskilled work. It requires a reader trained in cross-sectional anatomy who can
+identify organ boundaries on axial slices where soft-tissue contrast is often
+poor and where adjacent structures share intensity, and such expertise is
+correspondingly scarce and costly to secure. The burden also scales
+multiplicatively rather than additively, since every structure must be traced on
+every slice of every volume, and a single CT volume comprises hundreds of
+slices. As a result, densely labeled CT datasets are few in number, and each
+one is fixed in the label set that a particular funding decision chose to
+support \cite{ji2022amos, luo2022word, rister2020ctorg}, which means a structure
+outside that set is simply unavailable to anyone working from it. A second
+consequence follows from the same difficulty: where expert judgment is genuinely
+ambiguous, as it is at low-contrast boundaries, even careful annotators
+disagree, and therefore the ground truth against which these models are trained
+and scored itself carries reader variability \cite{nikolov2021nsd}. The
+limitation that matters here is consequently not model capacity but the
+annotation itself, which raises the question of whether the supervision might
+instead be drawn from a source that already exists rather than one that has to
+be created.
+
+Text is the natural candidate for such a source, because descriptions of
+anatomy are already abundant in clinical reports and in the biomedical
+literature, and vision--language pretraining offers a means of learning from
+them. Models in the CLIP family learn visual concepts from natural-language
+supervision alone \cite{radford2021clip, zhai2023siglip}, and biomedical
+adaptations such as PMC-CLIP \cite{lin2023pmcclip} and BiomedCLIP
+\cite{zhang2025biomedclip} bring that capability into the medical domain at
+scale. If a text prompt could select a region as well as it selects a label,
+segmentation would need no pixels at all.
 
 The obstacle is that these models are trained for global alignment. The
 contrastive objective relates a pooled image embedding to a pooled caption
 embedding, and nothing in it requires an individual patch token to be spatially
-discriminative. Reading per-patch similarity off such a model recovers almost
-no localization: measured here, 0.003 mIoU. The conventional workaround is the
-CAM family \cite{zhou2016cam, selvaraju2017gradcam}, which extracts spatial
-maps post hoc from a classifier, but a contrastively pretrained model makes no
-per-organ decision for a CAM to explain.
+discriminative. The conventional way to recover a spatial map from a trained
+network is the CAM family \cite{zhou2016cam, selvaraju2017gradcam}, which
+extracts one post hoc from a classifier; that route is closed here, however,
+because a contrastively pretrained model makes no per-organ decision for a CAM
+to explain. What remains available is to backpropagate the image--text
+similarity to the input pixels, and that gradient saliency recovers almost no
+localization: applied to the pretrained model, it reaches 0.003 mIoU.
 
-We make the spatial property an explicit training objective instead.
-We align each of the 196 ViT patch tokens with the organ's text embedding
-against the downsampled ground-truth mask, so that per-patch cosine similarity
-becomes directly readable as a segmentation map at inference, with no gradients,
-no classifier, and no second-stage mask refiner. We claim the following
-contributions.
+This work makes the spatial property an explicit training objective instead.
+That objective aligns each of the 196 ViT patch tokens with the organ's text
+embedding against the downsampled ground-truth mask, so that per-patch cosine
+similarity becomes directly readable as a segmentation map at inference. Because
+the map is read straight off the forward pass, the method requires no gradient
+computation, no classifier, and no second-stage mask refiner. The contributions
+are as follows.
 
 \textbf{A patch-level alignment objective that makes text-prompted localization
-work.} On 11 organ classes from TotalSegmentator, we reach 0.653 mIoU
-and 0.757 Dice using no per-pixel labels at inference. The patch loss is the
-single largest contributor, taking mIoU from 0.063 to 0.307 in one step, and a
-subsequent calibration correction adds a further 0.059 with no retraining at all
+work.} Aligning each patch token directly with the organ's text embedding
+reaches 0.653 mIoU on 11 organ classes from TotalSegmentator while requiring no
+per-pixel labels at inference, and the patch loss contributes more of that
+localization than any other component of the method
 (\S\ref{sec:results:phase1}).
 
 \textbf{A prompt ablation that establishes what the text is actually doing, and
-what it is not.} We show that corrupting the positional content of the prompts collapses
-precisely the classes that depend on laterality while leaving uniquely-positioned
-organs untouched, which demonstrates the text is load-bearing rather than acting
-as a class index. The same experiment shows us that elaboration is not where the value lies: a bare class name recovers 96.9\% of the full multi-sentence
-anatomical description's mIoU, and a one-line generic caption matches it
-outright (\S\ref{sec:results:ablation}).
+what it is not.} Corrupting the positional content of the prompts collapses
+precisely the classes that depend on laterality while leaving
+uniquely-positioned organs untouched, which establishes that the prompt is
+load-bearing rather than acting as a class index
+(\S\ref{sec:results:ablation}).
 
 \textbf{A safety-relevant failure mode.} An accidental two-word error in one of
-eleven prompts produced not a degraded output but a confident, clean segmentation
-of the wrong organ, costing 55 IoU points on the affected class while leaving its
-bilateral partner untouched. Failures of this method are directional rather than
-degradative, which is the more dangerous kind, because nothing in the output
-signals that anything went wrong (\S\ref{sec:results:ablation}).
+eleven prompts produced not a degraded output but a confident, clean
+segmentation of the wrong organ, which means that failures of this method are
+directional rather than degradative and are therefore unsignaled by the output
+itself (\S\ref{sec:results:ablation}).
 
-\textbf{A downstream clinical application of the frozen model.} The same weights
-are carried, unmodified, onto Spine-Mets-CT-SEG \cite{pieper2024spinemets}, a
-dataset and acquisition protocol never seen in training, to compute a
-bone-metastasis proximity index: which organ a vertebral metastasis is closest to
-invading. Validating per lesion across 180 lesions in 46 patients, we find the correct
-organ ranks 1.78 on average against a chance rank of 2.91, with $p < 0.0001$
-under a patient-clustered permutation test (\S\ref{sec:results:lesion}).
+\textbf{A downstream clinical application of the frozen model.} Carried
+unmodified onto Spine-Mets-CT-SEG \cite{pieper2024spinemets}, a dataset and
+acquisition protocol never seen in training, the same weights rank the organ
+nearest a vertebral metastasis well above chance across 180 lesions in 46
+patients, at $p < 0.0001$ under a patient-clustered permutation test
+(\S\ref{sec:results:lesion}).
 
-\textbf{Negative results with diagnosed mechanisms.} Two pre-registered
-calibration variants were run and neither was adopted, each for an identified
-reason rather than an unexplained regression (\S\ref{sec:results:negatives}). A
-per-level analysis further shows the localization failure is not diffuse: it
-concentrates in two of eleven classes, one of which never ranks first at any
-level where it is anatomically correct, while winning 14 times where it is not
-(\S\ref{sec:discussion}).
+\textbf{Negative results with diagnosed mechanisms.} Neither of two
+pre-registered calibration variants was adopted, in each case for an identified
+reason rather than for an unexplained regression
+(\S\ref{sec:results:negatives}) -- a diagnosis that extends to the residual
+localization failure itself, which is not diffuse but concentrates in two of
+eleven classes (\S\ref{sec:discussion}).
 
-We also report a ground-truth error found in our own evaluation table and
-corrected from anatomical literature, along with a calibration leak found and
-repaired. Both changed headline numbers. Reporting them is part of what the
-paper claims.
+We also report a ground-truth error that we found in our own evaluation table
+and corrected from anatomical literature, together with a calibration leak that
+we found and repaired. Because both of these changed headline numbers,
+reporting them is part of what the paper claims rather than an aside to it.

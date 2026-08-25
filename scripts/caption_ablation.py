@@ -228,10 +228,8 @@ def plot_heatmap(all_results: dict, out_path: Path):
     is adjacent, and the groups themselves are ordered by their mean IoU on the
     non-adversarial levels, preserving the easy-to-hard gradient.
     """
-    plt.rcParams.update({
-        "font.family": "sans-serif",
-        "font.sans-serif": ["Helvetica", "Arial", "DejaVu Sans"],
-    })
+    from scripts._figstyle import apply_paper_style
+    apply_paper_style(font_size=16)
 
     levels_all = sorted(all_results.keys())
     non_adv    = [l for l in levels_all if l != 5]
@@ -266,30 +264,44 @@ def plot_heatmap(all_results: dict, out_path: Path):
         for i, c in enumerate(classes):
             matrix[i, j] = all_results[l]["per_class"][c]["iou"]
 
-    fig, ax = plt.subplots(figsize=(11, 7.5))
+    # Drawn at 0.65\textwidth (4.2in), the width it is placed at, so LaTeX does
+    # not rescale and the sizes below are literal points on the page. It sits
+    # beside the metrics table rather than under it.
+    fig, ax = plt.subplots(figsize=(4.2, 3.8))
     im = ax.imshow(matrix, cmap="viridis", aspect="auto", vmin=0, vmax=1)
 
     ax.set_xticks(range(len(levels_all)))
-    ax.set_xticklabels([f"L{l}\n{LEVEL_NAMES[l]}" for l in levels_all], fontsize=10)
+    # Level number only. The formulation names live in the Methods
+    # correspondence table, which the caption points at, and spelling them out
+    # here cost the width that set the label size: "generic_clinical" caps the
+    # labels near 6pt, "L2" has no width pressure at all.
+    ax.set_xticklabels([f"L{l}" for l in levels_all], fontsize=9.5)
     ax.set_yticks(range(len(classes)))
-    ax.set_yticklabels([CLASS_NAMES[c] for c in classes], fontsize=10)
+    ax.set_yticklabels([CLASS_NAMES[c] for c in classes], fontsize=8)
+    # Tick marks removed, so the labels would otherwise sit flush against the
+    # heatmap edge. pad buys the gap the absent ticks used to provide.
     ax.tick_params(axis="both", length=0)
+    ax.tick_params(axis="x", pad=6)
+    ax.tick_params(axis="y", pad=5)
 
     for i in range(len(classes)):
         for j in range(len(levels_all)):
             v = matrix[i, j]
             ax.text(j, i, f"{v:.2f}", ha="center", va="center",
-                    color="white" if v < 0.5 else "black", fontsize=10)
+                    color="white" if v < 0.5 else "black", fontsize=7.5)
 
-    ax.set_title(
-        "Caption ablation: per-class IoU across five prompt formulation levels\n"
-        "(bilateral pairs adjacent; groups ordered easy → hard by mean IoU on L1–L4)",
-        fontsize=12, pad=10,
-    )
+    # No embedded title: the LaTeX \caption already states both things this one
+    # said (bilateral pairs adjacent, groups ordered easy to hard), and at this
+    # width a two-line title costs vertical space for nothing.
 
-    cbar = plt.colorbar(im, ax=ax, fraction=0.035, pad=0.02)
-    cbar.set_label("IoU", fontsize=11)
-    cbar.ax.tick_params(labelsize=9)
+    # Back on the right, vertical. It went horizontal when the x-axis carried
+    # the formulation names and width set the label size; with bare L1--L5
+    # labels width is no longer the binding constraint, and standing the bar up
+    # buys back the vertical space, which now matters more -- the figure sits
+    # beside a narrow table and a shorter figure balances that column better.
+    cbar = fig.colorbar(im, ax=ax, fraction=0.035, pad=0.03)
+    cbar.set_label("IoU", fontsize=8)
+    cbar.ax.tick_params(labelsize=7)
 
     fig.tight_layout()
     fig.savefig(out_path, dpi=300, bbox_inches="tight", facecolor="white")

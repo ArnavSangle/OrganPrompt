@@ -172,7 +172,7 @@ def run(root, checkpoint, device, out, stride=2, max_cases=0,
         try:
             p = load_patient(root, case, labels)
             # full uncropped volume: an organ's true peak can sit anywhere in the
-            # scan, and a tumor-centred crop would bias every constant downward.
+            # scan, and a tumor-centered crop would bias every constant downward.
             # Sparse subsampling only, never a range crop -- organs span many
             # consecutive slices, so a stride of 2 barely moves the peak.
             ct = p.ct[::stride] if stride > 1 else p.ct

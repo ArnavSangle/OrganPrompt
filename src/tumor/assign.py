@@ -144,7 +144,7 @@ class CompetitiveAssigner:
     def __init__(self, shape, peaks=None, unassigned=-1, calibration="scale",
                  stats=None):
         """
-        calibration: "scale" (default, today's exact behaviour) divides raw
+        calibration: "scale" (default, today's exact behavior) divides raw
         similarity by TYPICAL_PEAK (or `peaks`), giving a "fraction of typical
         peak" ratio. "zscore" instead computes (raw - mean) / sd per organ,
         using ORGAN_MEAN/ORGAN_SD (or `stats`, an organ_name -> (mean, sd)

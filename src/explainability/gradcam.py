@@ -74,7 +74,7 @@ class BioMedCLIPGradCAM:
         grid = int(cam.shape[0] ** 0.5)        # 14 for ViT-B/16 at 224px
         cam = cam.reshape(grid, grid)
 
-        # normalise to [0, 1]
+        # normalize to [0, 1]
         cam_min, cam_max = cam.min(), cam.max()
         if cam_max > cam_min:
             cam = (cam - cam_min) / (cam_max - cam_min)

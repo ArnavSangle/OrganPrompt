@@ -104,9 +104,9 @@ def plot_distributions(per_class, key, out_path, title):
     """
     import string
 
+    from scripts._figstyle import apply_paper_style
+    apply_paper_style(font_size=16)
     plt.rcParams.update({
-        "font.family": "sans-serif",
-        "font.sans-serif": ["Helvetica", "Arial", "DejaVu Sans"],
         "axes.spines.top":   False,
         "axes.spines.right": False,
     })
@@ -134,7 +134,7 @@ def plot_distributions(per_class, key, out_path, title):
 
         if fg.size == 0 or bg.size == 0:
             ax.set_title(f"{panel_letters[c]}  {CLASS_NAMES[c]} (no samples)",
-                         fontsize=10, loc="left", fontweight="bold")
+                         fontsize=18, loc="left", fontweight="bold")
             ax.set_xticks([])
             ax.set_yticks([])
             continue
@@ -151,14 +151,14 @@ def plot_distributions(per_class, key, out_path, title):
         gap = fg.mean() - bg.mean()
         ax.set_title(
             f"{panel_letters[c]}  {CLASS_NAMES[c]}",
-            fontsize=11, loc="left", fontweight="bold", pad=4,
+            fontsize=19, loc="left", fontweight="bold", pad=4,
         )
         ax.text(0.98, 0.95, f"gap={gap:+.3f}\nOtsu={thr:+.3f}",
                 transform=ax.transAxes, ha="right", va="top",
-                fontsize=8, bbox=dict(boxstyle="round,pad=0.25",
+                fontsize=14, bbox=dict(boxstyle="round,pad=0.25",
                                       facecolor="white", edgecolor="lightgrey",
                                       linewidth=0.5))
-        ax.tick_params(axis="both", labelsize=8)
+        ax.tick_params(axis="both", labelsize=14)
         ax.set_xlim(x_lo, x_hi)
 
     # Hide unused subplots but retain the layout
@@ -166,8 +166,8 @@ def plot_distributions(per_class, key, out_path, title):
         axes[c].axis("off")
 
     # Shared axis labels
-    fig.supxlabel("Raw patch-text cosine similarity", fontsize=11, y=0.02)
-    fig.supylabel("Density", fontsize=11, x=0.005)
+    fig.supxlabel("Raw patch-text cosine similarity", fontsize=19, y=0.02)
+    fig.supylabel("Density", fontsize=19, x=0.005)
 
     # Single legend at top
     handles = [
@@ -176,9 +176,9 @@ def plot_distributions(per_class, key, out_path, title):
         plt.Line2D([], [], color="black", linestyle="--", linewidth=0.8, label="Otsu threshold"),
     ]
     fig.legend(handles=handles, loc="upper center", ncol=3,
-               bbox_to_anchor=(0.5, 0.965), fontsize=10, frameon=False)
+               bbox_to_anchor=(0.5, 0.965), fontsize=18, frameon=False)
 
-    fig.suptitle(title, fontsize=13, y=1.005)
+    fig.suptitle(title, fontsize=23, y=1.005)
     fig.tight_layout(rect=[0.01, 0.02, 1, 0.94])
     fig.savefig(out_path, dpi=300, bbox_inches="tight", facecolor="white")
     plt.close(fig)

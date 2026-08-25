@@ -78,20 +78,28 @@ def main():
     OUT.mkdir(parents=True, exist_ok=True)
     model, tf = load_organcam(ci.DEFAULT_CKPT, "cuda")
 
-    fig, axes = plt.subplots(2, 2, figsize=(6.4, 6.6))
+    # rcParams must be set BEFORE the figure is created -- previously this block
+    # ran after plt.subplots() and so missed anything fixed at creation time.
+    # Serif matches the paper body (lmodern); Latin Modern Roman ships with
+    # TeX Live, DejaVu Serif is the always-present fallback.
     plt.rcParams.update({
-        "font.family": "sans-serif",
-        "font.sans-serif": ["Helvetica", "Arial", "DejaVu Sans"],
-        "font.size": 9,
+        "font.family": "serif",
+        "font.serif": ["Latin Modern Roman", "CMU Serif", "DejaVu Serif"],
+        "mathtext.fontset": "cm",
+        "font.size": 8,
+        "svg.fonttype": "none",
     })
+    # One row of four rather than 2x2: the same content in roughly a third of the
+    # vertical space, drawn at full printed width (6.5in) so LaTeX does not
+    # rescale it. Panels run [case A lesion | case A map | case B lesion | case B map].
+    fig, axes = plt.subplots(1, 4, figsize=(6.5, 1.95))
 
     for row, info in enumerate(CASES):
         ct_disp, lesion_mask, sim_slice = render_case(info, model, tf, "cuda")
 
-        ax0, ax1 = axes[row]
+        ax0, ax1 = axes[2 * row], axes[2 * row + 1]
         ax0.imshow(ct_disp, cmap="gray")
         ax0.imshow(np.ma.masked_where(~lesion_mask, lesion_mask), cmap="autumn", alpha=0.8)
-        ax0.set_title(f"{info['case']}:{info['level']} — lesion", fontsize=9)
         ax0.axis("off")
 
         ax1.imshow(ct_disp, cmap="gray")
@@ -105,14 +113,16 @@ def main():
         sim_masked = np.ma.masked_where(sim_slice < thresh, sim_slice)
         im = ax1.imshow(sim_masked, cmap="viridis", alpha=0.65,
                         vmin=thresh, vmax=float(sim_slice.max()))
-        color = "#0072B2" if info["label"] == "correct detection" else "#D55E00"
+        # Muted print palette, matching make_lesion_figures.py.
+        color = "#3B6EA5" if info["label"] == "correct detection" else "#B4543A"
         ax1.set_title(f"top-ranked: {info['top_organ']} ({info['distance_mm']:.0f}mm)\n"
-                      f"expected: {info['expected']}", fontsize=8, color=color)
+                      f"expected: {info['expected']}", fontsize=6.5, color=color)
         ax1.axis("off")
 
-        axes[row, 0].text(-0.05, 0.5, info["label"].upper(), transform=axes[row, 0].transAxes,
-                          rotation=90, va="center", ha="center", fontsize=9, fontweight="bold",
-                          color=color)
+        # With no rows left to label down the side, the case identity rides on
+        # the lesion panel's own title.
+        ax0.set_title(f"{info['label'].upper()}\n{info['case']}:{info['level']} — lesion",
+                      fontsize=6.5, fontweight="bold", color=color)
 
     fig.tight_layout()
     fig.savefig(OUT / "fig3_qualitative.svg", bbox_inches="tight", transparent=True)
