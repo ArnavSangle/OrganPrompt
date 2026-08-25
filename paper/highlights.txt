@@ -1,0 +1,7 @@
+Highlights
+
+- Per-patch text-image alignment segments 11 CT organs at 0.653 mIoU, no pixel labels
+- The organ's class name alone recovers 96.9% of a full anatomical description
+- Swapping left/right in prompts collapses only laterality-dependent classes
+- A two-word prompt error gave a clean, confident segmentation of the wrong organ
+- Frozen, the model ranks the organ nearest a spinal metastasis 1.78 vs 2.91 chance
