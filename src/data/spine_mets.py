@@ -61,13 +61,82 @@ def _level_from_label(label):
     return tok if len(tok) >= 2 and tok[0] in "CTLS" and tok[1:].isdigit() else None
 
 
+def _axis_aligned(iop):
+    """IOP as a 2x3 array of (row-direction, column-direction) cosines.
+
+    Only axis-aligned orientations are supported (every cosine -1, 0 or 1); an
+    oblique acquisition would need real resampling, so it raises rather than
+    being rounded onto the wrong voxels.
+    """
+    v = np.asarray([float(x) for x in iop], dtype=np.float64).reshape(2, 3)
+    if not np.allclose(v, np.round(v), atol=1e-4):
+        raise ValueError(f"non axis-aligned orientation {list(iop)}")
+    return np.round(v)
+
+
+def _resample_seg_frame(frame, seg_iop, seg_ipp, seg_ps, ct_iop, ct_ipp, ct_ps,
+                        ct_shape):
+    """Place one SEG frame on the CT's in-plane grid through both headers' geometry.
+
+    DICOM puts pixel (r, c) at IPP + c*ps[1]*rowdir + r*ps[0]*coldir, with
+    PixelSpacing ordered (row spacing, col spacing). Spine-Mets SEGs store the
+    column direction as (0,-1,0) against the CT's (0,1,0), so their rows run
+    posterior-to-anterior: pasting frames onto the CT by z alone mirrored every
+    vertebra anterior-posterior (Reviewer 5, BSPC revision). Each foreground SEG
+    pixel is taken to patient (x, y) and back into CT (row, col) instead.
+
+    seg_ipp/ct_ipp are the in-plane (x, y) of the frame's first pixel. Raises if
+    either orientation is oblique or any SEG pixel falls outside the CT grid --
+    silent misplacement is what hid the original bug.
+    """
+    s, c = _axis_aligned(seg_iop), _axis_aligned(ct_iop)
+    r, k = np.nonzero(frame)
+    pos = (np.asarray(seg_ipp[:2], dtype=np.float64)[None]
+           + k[:, None] * float(seg_ps[1]) * s[0, :2][None]
+           + r[:, None] * float(seg_ps[0]) * s[1, :2][None])
+    rel = pos - np.asarray(ct_ipp[:2], dtype=np.float64)[None]
+    ct_c = np.rint(rel @ c[0, :2] / float(ct_ps[1])).astype(int)
+    ct_r = np.rint(rel @ c[1, :2] / float(ct_ps[0])).astype(int)
+    inside = ((ct_r >= 0) & (ct_r < ct_shape[0])
+              & (ct_c >= 0) & (ct_c < ct_shape[1]))
+    if not inside.all():
+        raise ValueError(f"{int((~inside).sum())} SEG pixels fall outside the CT grid")
+    out = np.zeros(ct_shape, dtype=bool)
+    out[ct_r, ct_c] = True
+    return out
+
+
+def _seg_frame_geometry(seg, fg):
+    """(IOP, IPP, PixelSpacing) for one SEG frame; shared groups as fallback."""
+    shared = seg.SharedFunctionalGroupsSequence[0]
+
+    def pick(name):
+        for g in (fg, shared):
+            if name in g:
+                return g[name].value[0]
+        raise KeyError(f"SEG frame has no {name}")
+    iop = pick("PlaneOrientationSequence").ImageOrientationPatient
+    ipp = [float(x) for x in pick("PlanePositionSequence").ImagePositionPatient]
+    ps = [float(x) for x in pick("PixelMeasuresSequence").PixelSpacing]
+    return iop, ipp, ps
+
+
 def load_vertebra_masks(seg_path, ct_paths):
-    """Return {level: bool_mask[D,H,W]} placed on the CT grid by z-position."""
+    """Return {level: bool_mask[D,H,W]} on the CT grid.
+
+    Slices are matched by z-position; within a slice each frame is mapped through
+    the SEG and CT orientation/origin/spacing (see _resample_seg_frame), not
+    pasted index-for-index.
+    """
     seg = pydicom.dcmread(seg_path)
     frames = seg.pixel_array
     if frames.ndim == 2:
         frames = frames[None]
-    H, W = int(seg.Rows), int(seg.Columns)
+    ct0 = pydicom.dcmread(ct_paths[0], stop_before_pixels=True)
+    H, W = int(ct0.Rows), int(ct0.Columns)
+    ct_iop = ct0.ImageOrientationPatient
+    ct_ipp = [float(x) for x in ct0.ImagePositionPatient]
+    ct_ps = [float(x) for x in ct0.PixelSpacing]
     ct_z = np.array([
         float(pydicom.dcmread(p, stop_before_pixels=True).ImagePositionPatient[2])
         for p in ct_paths
@@ -81,13 +150,16 @@ def load_vertebra_masks(seg_path, ct_paths):
         level = seg_level.get(seg_num)
         if level is None:
             continue
-        zpos = float(fg.PlanePositionSequence[0].ImagePositionPatient[2])
+        seg_iop, seg_ipp, seg_ps = _seg_frame_geometry(seg, fg)
+        zpos = seg_ipp[2]
         z = int(np.argmin(np.abs(ct_z - zpos)))
         if abs(ct_z[z] - zpos) > 2.0:            # mm tolerance
             continue
         if level not in masks:
             masks[level] = np.zeros((D, H, W), dtype=bool)
-        masks[level][z] |= frames[f_idx].astype(bool)
+        masks[level][z] |= _resample_seg_frame(
+            frames[f_idx].astype(bool), seg_iop, seg_ipp, seg_ps,
+            ct_iop, ct_ipp, ct_ps, (H, W))
     return {lvl: m for lvl, m in masks.items() if m.any()}
 
 

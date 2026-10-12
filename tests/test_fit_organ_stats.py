@@ -352,3 +352,25 @@ def test_run_output_carries_every_field_the_calibration_needs(tmp_path, monkeypa
         for key in ("peak_mean", "peak_sd", "mean", "sd", "n_patients", "n_voxels"):
             assert key in v, (name, key)
     assert set(data["per_case"]) == {"b"}
+
+
+def test_accumulator_records_per_patient_moments_for_crossfitting():
+    """src/tumor/crossfit.fold_stats re-pools mean/sd per fold, which needs each
+    patient's raw (sum, sumsq, count), not just the pooled totals."""
+    acc = fos.OrganStatsAccumulator()
+    acc.add_patient("a", {"liver": (0.4, 2.0, 3.0, 4)})
+    acc.add_patient("b", {"liver": (0.6, 1.0, 5.0, 2)})
+    assert acc.per_case_moments == {"a": {"liver": [2.0, 3.0, 4]},
+                                    "b": {"liver": [1.0, 5.0, 2]}}
+
+
+def test_run_output_carries_per_case_moments(tmp_path, monkeypatch):
+    labels = {"b": {"T2": "lytic", "L4": "lytic"}}
+    root = _fake_root(tmp_path, ["b"])
+    _stub_pipeline(monkeypatch, labels)
+    out = tmp_path / "stats.json"
+    fos.run(str(root), "ckpt/v5.pt", "cpu", str(out), stride=1)
+    data = json.loads(out.read_text())
+    assert set(data["per_case_moments"]) == {"b"}
+    for name, m in data["per_case_moments"]["b"].items():
+        assert len(m) == 3 and m[2] > 0, name

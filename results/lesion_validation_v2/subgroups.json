@@ -1,0 +1,126 @@
+{
+  "summary": "results/lesion_validation_v2/summary.json",
+  "exploratory": true,
+  "rows": [
+    {
+      "factor": "sex",
+      "group": "F",
+      "n_patients": 18,
+      "n_lesions": 67,
+      "n_ranked": 66,
+      "mean_rank": 1.9242424242424243,
+      "chance": 2.912121212121212,
+      "top1": 0.5373134328358209
+    },
+    {
+      "factor": "sex",
+      "group": "M",
+      "n_patients": 28,
+      "n_lesions": 113,
+      "n_ranked": 112,
+      "mean_rank": 1.7589285714285714,
+      "chance": 2.908928571428571,
+      "top1": 0.6283185840707964
+    },
+    {
+      "factor": "age",
+      "group": "<= 67.5",
+      "n_patients": 23,
+      "n_lesions": 73,
+      "n_ranked": 73,
+      "mean_rank": 1.9315068493150684,
+      "chance": 2.8643835616438356,
+      "top1": 0.547945205479452
+    },
+    {
+      "factor": "age",
+      "group": "> 67.5",
+      "n_patients": 23,
+      "n_lesions": 107,
+      "n_ranked": 105,
+      "mean_rank": 1.7428571428571429,
+      "chance": 2.9419047619047616,
+      "top1": 0.6261682242990654
+    },
+    {
+      "factor": "primary",
+      "group": "Breast",
+      "n_patients": 5,
+      "n_lesions": 39,
+      "n_ranked": 38,
+      "mean_rank": 1.9473684210526316,
+      "chance": 2.8105263157894735,
+      "top1": 0.5128205128205128
+    },
+    {
+      "factor": "primary",
+      "group": "Lung",
+      "n_patients": 6,
+      "n_lesions": 19,
+      "n_ranked": 19,
+      "mean_rank": 1.631578947368421,
+      "chance": 3.263157894736842,
+      "top1": 0.5789473684210527
+    },
+    {
+      "factor": "primary",
+      "group": "Prostate",
+      "n_patients": 19,
+      "n_lesions": 80,
+      "n_ranked": 79,
+      "mean_rank": 1.6962025316455696,
+      "chance": 2.920253164556962,
+      "top1": 0.6625
+    },
+    {
+      "factor": "primary",
+      "group": "Renal",
+      "n_patients": 8,
+      "n_lesions": 20,
+      "n_ranked": 20,
+      "mean_rank": 1.65,
+      "chance": 2.815,
+      "top1": 0.6
+    },
+    {
+      "factor": "primary",
+      "group": "Other",
+      "n_patients": 8,
+      "n_lesions": 22,
+      "n_ranked": 22,
+      "mean_rank": 2.3636363636363638,
+      "chance": 2.827272727272727,
+      "top1": 0.5
+    },
+    {
+      "factor": "lesion_type",
+      "group": "blastic",
+      "n_patients": 21,
+      "n_lesions": 58,
+      "n_ranked": 57,
+      "mean_rank": 2.0350877192982457,
+      "chance": 2.959649122807017,
+      "top1": 0.6724137931034483
+    },
+    {
+      "factor": "lesion_type",
+      "group": "lytic",
+      "n_patients": 22,
+      "n_lesions": 53,
+      "n_ranked": 53,
+      "mean_rank": 1.6603773584905661,
+      "chance": 2.8245283018867924,
+      "top1": 0.5849056603773585
+    },
+    {
+      "factor": "lesion_type",
+      "group": "mixed",
+      "n_patients": 12,
+      "n_lesions": 69,
+      "n_ranked": 68,
+      "mean_rank": 1.7647058823529411,
+      "chance": 2.9352941176470586,
+      "top1": 0.5362318840579711
+    }
+  ]
+}

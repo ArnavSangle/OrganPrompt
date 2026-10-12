@@ -32,6 +32,7 @@ from src.data.spine_mets import load_patient, stride_coords
 from src.tumor.organ_volume import load_organcam, iter_organ_similarity
 from src.tumor.index import score_organ_against_lesions
 from src.tumor.assign import CompetitiveAssigner
+from src.tumor.crossfit import load_crossfit
 from src.labels.templates import CLASS_NAMES
 from scripts.validate_anatomy import EXPECTED, detected, rank_of_expected, distances_mm
 import scripts.compute_index as ci
@@ -65,7 +66,7 @@ def default_floor(calibration):
 
 def score_patient(ct, lesion_coords, spacing, model, text_features, device,
                   floor=0.6, alpha=0.5, beta=0.5, neg_text_features=None,
-                  calibration="scale"):
+                  calibration="scale", peaks=None, stats=None):
     """{level: {organ: record}} for one patient, from a single inference pass.
 
     Organ masks are streamed one at a time and each is scored against EVERY
@@ -75,9 +76,14 @@ def score_patient(ct, lesion_coords, spacing, model, text_features, device,
     neg_text_features, if given, is forwarded to iter_organ_similarity so the
     per-organ similarity subtracts the strongest hard negative at each patch
     (see src/labels/templates.py NEGATIVE_PROMPTS).
+
+    peaks/stats override the module-level calibration constants; the
+    cross-fitted run passes each patient's own-fold constants here
+    (src/tumor/crossfit.py). None keeps the fixed constants in assign.py.
     """
     organs = list(range(len(CLASS_NAMES)))
-    assigner = CompetitiveAssigner(ct.shape, calibration=calibration)
+    assigner = CompetitiveAssigner(ct.shape, calibration=calibration,
+                                   peaks=peaks, stats=stats)
     for oc, sim in iter_organ_similarity(ct, model, text_features, device, organs,
                                          neg_text_features=neg_text_features):
         assigner.update(oc, sim)
@@ -113,7 +119,7 @@ def summarize(per_lesion):
     }
 
 
-def main():
+def parse_args(argv=None):
     ap = argparse.ArgumentParser()
     ap.add_argument("--root", default="data/Spine-Mets-CT-SEG_v1_2024")
     ap.add_argument("--checkpoint", default=ci.DEFAULT_CKPT)
@@ -130,9 +136,38 @@ def main():
     ap.add_argument("--alpha", type=float, default=0.5)
     ap.add_argument("--beta", type=float, default=0.5)
     ap.add_argument("--max_cases", type=int, default=0, help="0 = all")
-    a = ap.parse_args()
+    ap.add_argument("--negatives", action="store_true",
+                     help="subtract NEGATIVE_PROMPTS (incl. rib/humerus/aorta). "
+                          "Off by default: between d26258e and the BSPC revision "
+                          "this was silently always on.")
+    ap.add_argument("--crossfit", default=None,
+                     help="folds JSON (src/tumor/crossfit.py); score each patient "
+                          "with constants fitted outside its own fold")
+    ap.add_argument("--organ_stats", default=None,
+                     help="fit_organ_stats.py JSON over all patients "
+                          "(--include_single_level); required with --crossfit")
+    a = ap.parse_args(argv)
+    if a.crossfit and not a.organ_stats:
+        ap.error("--crossfit needs --organ_stats")
     if a.floor is None:
         a.floor = default_floor(a.calibration)
+    return a
+
+
+def run_config(a):
+    """Every choice that changes the numbers, written into summary.json so a
+    result file can never again be ambiguous about how it was produced."""
+    return {"stride": a.stride, "floor": a.floor, "calibration": a.calibration,
+            "negatives": bool(a.negatives), "crossfit": a.crossfit,
+            "organ_stats": a.organ_stats, "checkpoint": a.checkpoint,
+            "alpha": a.alpha, "beta": a.beta,
+            # SEG frames mapped via DICOM orientation/position (spine_mets.py);
+            # results before the BSPC revision were mirrored anterior-posterior
+            "seg_geometry": "dicom-iop-ipp"}
+
+
+def main():
+    a = parse_args()
 
     labels = load_lesion_labels(str(Path(a.root) / "Spine-Mets-CT-SEG_Clinical.xlsx"))
     cases_dir = Path(a.root) / "spine_mets_ct_seg"
@@ -145,7 +180,11 @@ def main():
 
     out_dir = Path(a.out_dir)
     out_dir.mkdir(parents=True, exist_ok=True)
-    model, tf, neg_tf = load_organcam(a.checkpoint, a.device, with_negatives=True)
+    if a.negatives:
+        model, tf, neg_tf = load_organcam(a.checkpoint, a.device, with_negatives=True)
+    else:
+        (model, tf), neg_tf = load_organcam(a.checkpoint, a.device), None
+    calib = load_crossfit(a.crossfit, a.organ_stats) if a.crossfit else None
 
     per_lesion, skipped = {}, []
     for i, (case, levels) in enumerate(todo.items()):
@@ -168,10 +207,12 @@ def main():
                     skipped.append(f"{case}:{lvl}")
             if not coords:
                 continue
+            peaks, stats = calib(case) if calib else (None, None)
             scored = score_patient(ct, coords, spacing, model, tf, a.device,
                                    a.floor, a.alpha, a.beta,
                                    neg_text_features=neg_tf,
-                                   calibration=a.calibration)
+                                   calibration=a.calibration,
+                                   peaks=peaks, stats=stats)
             del p, ct
         except Exception as e:
             print(f"[validate_lesions] {case}: SKIP ({e})", flush=True)
@@ -193,8 +234,7 @@ def main():
                   + ", ".join(f"{n}={dmm[n]:.0f}mm" for n in order[:4]), flush=True)
 
     summary = {"per_lesion": per_lesion, "skipped": skipped,
-               "stride": a.stride, "floor": a.floor, "calibration": a.calibration,
-               **summarize(per_lesion)}
+               **run_config(a), **summarize(per_lesion)}
     (out_dir / "summary.json").write_text(json.dumps(summary, indent=2))
     print(f"[validate_lesions] n_lesions={summary['n_lesions']} "
           f"n_patients={summary['n_patients']} top1={summary['top1']:.2f} "

@@ -92,6 +92,9 @@ class OrganStatsAccumulator:
         self.sumsq = {}          # organ -> sum of squares, ditto
         self.count = {}          # organ -> voxel count, ditto
         self.per_case = {}       # case -> {organ: that patient's peak}
+        # case -> {organ: [sum, sumsq, count]}: lets src/tumor/crossfit.py
+        # re-pool mean/sd over any subset of patients (per cross-fit fold)
+        self.per_case_moments = {}
 
     def add_patient(self, case, stats):
         """Fold one patient's {organ: (peak, sum, sumsq, count)} into the totals.
@@ -101,12 +104,15 @@ class OrganStatsAccumulator:
         than to an arbitrary prefix.
         """
         self.per_case[case] = {}
+        self.per_case_moments[case] = {}
         for name, (peak, total, total_sq, count) in stats.items():
             self.peaks.setdefault(name, []).append(float(peak))
             self.sum[name] = self.sum.get(name, 0.0) + float(total)
             self.sumsq[name] = self.sumsq.get(name, 0.0) + float(total_sq)
             self.count[name] = self.count.get(name, 0) + int(count)
             self.per_case[case][name] = float(peak)
+            self.per_case_moments[case][name] = [float(total), float(total_sq),
+                                                 int(count)]
 
     def result(self):
         """{organ: {peak_mean, peak_sd, mean, sd, n_patients, n_voxels}}.
@@ -200,6 +206,7 @@ def run(root, checkpoint, device, out, stride=2, max_cases=0,
         "held_out_single_level": held_out,
         "organs": organs,
         "per_case": acc.per_case,
+        "per_case_moments": acc.per_case_moments,
     }
     out_path = Path(out)
     out_path.parent.mkdir(parents=True, exist_ok=True)

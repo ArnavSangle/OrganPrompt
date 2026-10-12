@@ -177,3 +177,51 @@ def test_main_default_floor_depends_on_calibration_mode():
     the scale-mode floor makes no sense on a z-score scale."""
     assert vl.default_floor("scale") == 0.6
     assert vl.default_floor("zscore") == 2.0
+
+
+# --- BSPC revision: cross-fitted calibration + explicit negatives flag --------
+
+def _fake_iter(ct, model, tf, device, organs=None, neg_text_features=None):
+    organs = list(range(len(CLASS_NAMES))) if organs is None else organs
+    for oc in organs:
+        yield oc, np.full(ct.shape, 0.1, dtype=np.float32)
+
+
+def test_score_patient_forwards_crossfit_peaks_and_stats(monkeypatch):
+    shape = (3, 6, 6)
+    captured = {}
+
+    class SpyAssigner(vl.CompetitiveAssigner):
+        def __init__(self, *a, **kw):
+            captured.update(peaks=kw.get("peaks"), stats=kw.get("stats"))
+            super().__init__(*a, **kw)
+
+    monkeypatch.setattr(vl, "iter_organ_similarity", _fake_iter)
+    monkeypatch.setattr(vl, "CompetitiveAssigner", SpyAssigner)
+    peaks = {n: 0.2 for n in CLASS_NAMES.values()}
+    stats = {n: (0.0, 1.0) for n in CLASS_NAMES.values()}
+    vl.score_patient(np.zeros(shape, np.float32), {"T2": np.argwhere(_row(shape, 3))},
+                     (1.0, 1.0, 1.0), object(), None, "cpu", peaks=peaks, stats=stats)
+    assert captured == {"peaks": peaks, "stats": stats}
+
+
+def test_negatives_are_off_unless_asked_for():
+    """Since d26258e main() applied the rib/humerus/aorta negatives on every run
+    with no way to turn them off. The primary configuration has none."""
+    assert vl.parse_args([]).negatives is False
+    assert vl.parse_args(["--negatives"]).negatives is True
+
+
+def test_run_config_records_every_choice_that_changes_results():
+    a = vl.parse_args(["--crossfit", "folds.json", "--organ_stats", "s.json"])
+    cfg = vl.run_config(a)
+    for key in ("stride", "floor", "calibration", "negatives", "crossfit",
+                "organ_stats", "checkpoint", "seg_geometry"):
+        assert key in cfg, key
+    assert cfg["negatives"] is False and cfg["crossfit"] == "folds.json"
+    assert cfg["seg_geometry"] == "dicom-iop-ipp"
+
+
+def test_crossfit_requires_organ_stats():
+    with pytest.raises(SystemExit):
+        vl.parse_args(["--crossfit", "folds.json"])

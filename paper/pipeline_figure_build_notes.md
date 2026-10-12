@@ -227,3 +227,18 @@ Regenerate with: `python scripts/make_pipeline_node_images.py --device cuda`
 - [ ] Text-only boxes (3, 6, 10) built
 - [ ] Two connectors + two annotations added
 - [ ] Font pass (Georgia/Times New Roman throughout)
+
+## BSPC revision update (2026-09-30)
+
+Node 11 replaced. The old `node11_metastasis_index.png` drew the involved vertebra
+with the mirrored (index-for-index) SEG placement and showed the patient-level
+blended index, which the revision removed. New image:
+`figures/paper/pipeline_nodes/node11_distance_ranking.png` (`scripts/make_node11_ranking.py`):
+case 10355 **T3** (same level as nodes 8/9), assigned lung-right mask, vertebra
+outline, nearest-pair segment, label "lung-right, 27 mm".
+
+Label changes in the drawing:
+- "Metastasis Index — α·overlap + β·proximity" → "Organ ranking — distance from involved vertebra"
+- "Assignment & Scoring (competitive assignment overlap + KD-tree distance)" → "Assignment & Scoring (competitive assignment + KD-tree distance)"
+
+Nodes 8/9 keep the lung-left prompt; the caption says so.

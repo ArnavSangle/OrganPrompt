@@ -68,3 +68,13 @@ paper/*.zip
 paper/*.pdf
 paper/pdflatex*.fls
 texput.log
+
+# Peer-review material is confidential; journal/third-party documents are not ours
+BSPC-D-26-16296-reviews.zip
+paper/revision/
+Guide for authors*.pdf
+paper/41598_*
+# Generated or duplicate build artifacts and tool leftovers
+.playwright-mcp/
+paper/main_bspc_diff.*
+paper/*_submitted.*

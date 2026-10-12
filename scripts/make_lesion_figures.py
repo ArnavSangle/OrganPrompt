@@ -2,16 +2,21 @@
 
 Two figures, both pure data -- no GPU, no model, no patient volumes:
 
-  figures/paper/fig1_per_level.{svg,png}    per-vertebral-level mean rank vs. chance
-  figures/paper/fig2_index_dist.{svg,png}  index-score distribution across the cohort
+  fig1_per_level  per-vertebral-level mean rank vs. chance
+  fig2_rank_dist  rank of the first expected organ over all lesions vs. its exact
+                  chance distribution (BSPC revision: replaces the per-patient
+                  "index" histogram, since the alpha/beta blend reduces to distance
+                  and the patient-level maximum is no longer reported)
 
-Reads results/lesion_validation/summary.json and results/bone_index/summary.json,
-both already committed. Re-run any time either result changes -- these are cheap
-to regenerate and should never go stale relative to what's actually in the repo.
+Written to figures/paper/ and copied under the flat names the manuscript uses
+(paper/figures_for_upload/per_level_rank.png, rank_distribution.png).
 
 Usage:
-    python scripts/make_lesion_figures.py
+    python scripts/make_lesion_figures.py --summary results/lesion_validation_v2/summary.json
 """
+import argparse
+import shutil
+from math import comb
 import json
 import sys
 from pathlib import Path
@@ -24,6 +29,24 @@ from scripts.analyze_lesions import by_level
 from src.data.scan_extent import level_rank
 
 OUT = Path(__file__).parent.parent / "figures" / "paper"
+UPLOAD = Path(__file__).parent.parent / "paper" / "figures_for_upload"
+
+
+def chance_rank_pmf(k, n=11):
+    """P(best rank of k expected organs == r), r = 1..n, under a random ranking:
+    C(n-r, k-1) / C(n, k). Its mean is (n+1)/(k+1), the chance used everywhere."""
+    return np.array([comb(n - r, k - 1) / comb(n, k) for r in range(1, n + 1)])
+
+
+def rank_histogram(per_lesion, n=11):
+    """(observed counts per rank, expected counts under chance), ranked lesions only."""
+    obs, exp = np.zeros(n), np.zeros(n)
+    for v in per_lesion.values():
+        if v["rank"] is None:
+            continue
+        obs[v["rank"] - 1] += 1
+        exp += chance_rank_pmf(len(v["expected"]), n)
+    return obs, exp
 
 # Two-hue categorical set, muted for print. Validated colorblind-safe: passes
 # lightness band, chroma floor, CVD separation (worst adjacent dE 16.2 protan)
@@ -70,8 +93,8 @@ plt.rcParams.update({
 })
 
 
-def fig1_per_level():
-    summary = json.loads(Path("results/lesion_validation/summary.json").read_text())
+def fig1_per_level(summary_path):
+    summary = json.loads(Path(summary_path).read_text())
     lv = by_level(summary["per_lesion"])
     levels = sorted(lv, key=level_rank)  # craniocaudal (T1..T12, L1..L5), not alphabetical
     ranks = [lv[l]["mean_rank"] for l in levels]
@@ -135,43 +158,39 @@ def fig1_per_level():
     plt.close(fig)
 
 
-def fig2_index_dist():
-    summary = json.loads(Path("results/bone_index/summary.json").read_text())
-    values = np.array(sorted(summary["per_case"].values()))
-
-    # Was 3.4in wide but placed at \textwidth, so LaTeX blew it up 1.9x and every
-    # 9pt label rendered near 17pt. Drawn at printed width instead.
-    fig, ax = plt.subplots(figsize=(6.5, 2.8))
-    ax.hist(values, bins=12, color=BLUE, edgecolor="white", linewidth=0.6, zorder=3)
-    ax.axvline(summary["mean"], color=BRICK, linewidth=1.2, linestyle="-",
-               zorder=4, label=f"mean = {summary['mean']:.3f}")
-    ax.axvline(summary["median"], color=INK, linewidth=1.2, linestyle="--",
-               zorder=4, label=f"median = {summary['median']:.3f}")
-
-    ax.set_xlabel("index score (max blended overlap+proximity)", labelpad=10)
-    ax.set_ylabel("patients (n)", labelpad=12)
+def fig2_rank_dist(summary_path):
+    summary = json.loads(Path(summary_path).read_text())
+    obs, exp = rank_histogram(summary["per_lesion"])
+    r = np.arange(1, len(obs) + 1)
+    fig, ax = plt.subplots(figsize=(6.5, 2.6))
+    ax.bar(r, obs, width=0.6, color=BLUE, zorder=3, label="observed")
+    ax.plot(r, exp, marker="o", markersize=3, linewidth=1.0, color=INK,
+            linestyle="--", zorder=4, label="expected under chance")
+    ax.set_xticks(r)
+    ax.set_xlabel("rank of the first expected organ", fontsize=13)
+    ax.set_ylabel("lesions (n)", fontsize=13, labelpad=10)
     ax.spines["top"].set_visible(False)
     ax.spines["right"].set_visible(False)
     ax.tick_params(axis="both", length=3)
-    # Key sits inside the axes at top right, stacked one entry per line: the
-    # distribution is right-skewed, so that corner is empty in every run.
-    # The embedded title is gone -- the LaTeX \caption already names the figure,
-    # and n is stated there.
-    ax.legend(frameon=False, fontsize=12, loc="upper right", ncol=1,
-              borderaxespad=0.8, labelspacing=0.4, handlelength=1.8)
-
+    ax.tick_params(axis="both", labelsize=12)
+    ax.legend(frameon=False, fontsize=12, loc="upper right")
     fig.tight_layout()
-    fig.savefig(OUT / "fig2_index_dist.svg", bbox_inches="tight", transparent=True)
-    fig.savefig(OUT / "fig2_index_dist.png", dpi=300, bbox_inches="tight")
+    fig.savefig(OUT / "fig2_rank_dist.svg", bbox_inches="tight", transparent=True)
+    fig.savefig(OUT / "fig2_rank_dist.png", dpi=300, bbox_inches="tight")
     plt.close(fig)
 
 
 def main():
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--summary", default="results/lesion_validation_v2/summary.json")
+    a = ap.parse_args()
     OUT.mkdir(parents=True, exist_ok=True)
-    fig1_per_level()
-    print(f"[make_lesion_figures] wrote {OUT / 'fig1_per_level.png'}")
-    fig2_index_dist()
-    print(f"[make_lesion_figures] wrote {OUT / 'fig2_index_dist.png'}")
+    UPLOAD.mkdir(parents=True, exist_ok=True)
+    fig1_per_level(a.summary)
+    fig2_rank_dist(a.summary)
+    shutil.copy(OUT / "fig1_per_level.png", UPLOAD / "per_level_rank.png")
+    shutil.copy(OUT / "fig2_rank_dist.png", UPLOAD / "rank_distribution.png")
+    print(f"[make_lesion_figures] wrote {OUT} and copies in {UPLOAD}")
 
 
 if __name__ == "__main__":
